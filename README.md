@@ -4,7 +4,7 @@
 
 ## 跑法
 - `npm run dev`（預設 port 5190，見 `.claude/launch.json`）
-- `npm run build` → `dist/`（`base: './'`，可以放在任何子路徑）
+- `npm run build` → `dist/playground/`（`base: './'`）。正式站是 sui.funkuki.com/playground，由 sui 專案的 `vercel.json` rewrites 轉到這個 Vercel 專案；本專案的 `vercel.json` 把 `/` 轉到 `/playground/`，並統一補上結尾斜線，讓相對路徑正確
 
 ## 結構
 - `index.html`、`site/`：首頁（風格索引、作品列表、關於），`site/hero.js` 是 hero 的賽璐璐小島

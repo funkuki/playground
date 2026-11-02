@@ -7,6 +7,8 @@ const root = import.meta.dirname;
 export default defineConfig({
   base: './',
   build: {
+    // 正式站是 sui.funkuki.com/playground（由 sui 專案的 rewrites 轉過來），所以產出放在 dist/playground/
+    outDir: 'dist/playground',
     rollupOptions: {
       input: {
         main: resolve(root, 'index.html'),
