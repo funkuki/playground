@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dog Pool 狗狗泳池剖面 · sui's playground</title>
+    <style>
+      html, body { margin: 0; height: 100%; background: #f3e4d2; overflow: hidden; }
+      canvas { display: block; }
+      #ui {
+        position: fixed; right: 12px; bottom: 10px; display: flex; gap: 6px;
+      }
+      #ui button {
+        padding: 6px 12px; font: 12px/1.4 ui-sans-serif, system-ui, sans-serif; color: #2c5f5c;
+        background: rgba(253, 241, 228, 0.75); border: 1px solid rgba(49, 151, 146, 0.45); border-radius: 6px; cursor: pointer;
+      }
+      #ui button:hover { background: rgba(255, 250, 244, 0.95); }
+      #ui button:focus-visible { outline: 2px solid #319792; outline-offset: 2px; }
+      #hint {
+        position: fixed; left: 12px; bottom: 10px; color: #8a6e58;
+        font: 12px/1.4 ui-sans-serif, system-ui, sans-serif; opacity: .75; pointer-events: none;
+      }
+      .shot #ui, .shot #hint, .shot #info-btn, .shot .lab-back, .shot .lab-bar { display: none; }
+
+      /* ---------- 右上角 info 圖示 ---------- */
+      #info-btn {
+        position: fixed; top: 14px; right: 14px; width: 36px; height: 36px; padding: 0;
+        display: grid; place-items: center; color: #2c5f5c;
+        background: rgba(253, 241, 228, 0.75); border: 1px solid rgba(49, 151, 146, 0.45); border-radius: 50%;
+        cursor: pointer; transition: background .15s, transform .15s;
+      }
+      #info-btn:hover { background: rgba(255, 250, 244, 0.95); transform: scale(1.06); }
+      #info-btn:focus-visible, #info-close:focus-visible { outline: 2px solid #319792; outline-offset: 2px; }
+
+      /* ---------- 說明視窗：半透明 + 背景模糊 ---------- */
+      #info {
+        position: fixed; inset: 0; display: grid; place-items: center; padding: 16px;
+        background: rgba(40, 60, 58, 0.25);
+        opacity: 0; pointer-events: none; transition: opacity .2s;
+      }
+      #info.open { opacity: 1; pointer-events: auto; }
+      #info-panel {
+        position: relative; box-sizing: border-box; width: min(560px, 100%); max-height: calc(100vh - 32px);
+        overflow-y: auto; padding: 28px 28px 24px;
+        color: #2f3a38; font: 14px/1.75 "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+        background: rgba(252, 244, 234, 0.76);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
+        border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(30, 50, 48, 0.28);
+        transform: translateY(8px) scale(.98); transition: transform .2s;
+      }
+      #info.open #info-panel { transform: none; }
+      #info-panel h1 { margin: 0 0 2px; font-size: 20px; letter-spacing: .02em; }
+      #info-panel .sub { margin: 0 0 18px; color: #7a7066; font-size: 13px; }
+      #info-panel h2 { margin: 20px 0 6px; font-size: 13px; letter-spacing: .08em; color: #23807b; }
+      #info-panel p { margin: 0 0 8px; }
+      #info-panel ul { margin: 0; padding-left: 1.2em; }
+      #info-panel li { margin: 2px 0; }
+      #info-panel code {
+        font: 12px ui-monospace, Menlo, monospace; padding: 1px 5px;
+        background: rgba(49, 151, 146, 0.12); border-radius: 4px;
+      }
+      #info-close {
+        position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0;
+        display: grid; place-items: center; color: #5a6460;
+        background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+      }
+      #info-close:hover { background: rgba(0, 0, 0, 0.06); }
+    </style>
+    <link rel="icon" href="../../favicon.ico" sizes="any" />
+    <link rel="icon" href="../../site/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png" />
+    <link rel="manifest" href="../../site.webmanifest" />
+    <meta name="theme-color" content="#fdfcf9" />
+    <link rel="stylesheet" href="../../site/back.css" />
+  </head>
+  <body>
+    <a class="lab-back" href="../../#works" aria-label="回到 sui's playground 範例列表">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      <img src="../../site/logo.svg" width="20" height="20" alt="" /><b>sui's playground</b>
+    </a>
+    <div id="hint">拖曳旋轉・滾輪縮放・轉到側面時近側池壁會切開，看得到水下</div>
+    <div id="ui">
+      <button id="top" type="button">俯看</button>
+      <button id="side" type="button">側看</button>
+      <button id="sound" type="button" aria-pressed="true">音效 開</button>
+    </div>
+    <button id="info-btn" type="button" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r="0.6" fill="currentColor" />
+      </svg>
+    </button>
+
+    <div id="info" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+      <div id="info-panel">
+        <button id="info-close" type="button" aria-label="關閉說明">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <h1 id="info-title">Dog Pool — 狗狗泳池剖面</h1>
+        <p class="sub">Gouache-style pool diorama · Three.js</p>
+        <p>
+          夏天午後的泳池，從正上方看是一張平塗的水彩插畫：黑色臘腸狗只露出頭在游，柯基趴在香蕉浮板上，棕色狗仰躺著漂，旁邊漂著游泳圈和黃色小鴨；左邊池畔的大白熊犬會一再跳進水裡玩。把畫面轉到側面，靠近你的那側地面會被切開，池壁變成玻璃，看得到水面下狗狗划動的腿。
+        </p>
+
+        <h2>作法簡介</h2>
+        <ul>
+          <li><strong>全部用程式產生</strong>：泳池、階梯、扶手梯、兩把陽傘、棕櫚、躺椅和水桶都由方塊、圓柱、管狀曲線拼成；狗狗和小鴨用球、膠囊組合。沒有外部模型檔或圖片。</li>
+          <li><strong>水彩筆觸</strong>：用 canvas 畫出可無縫重複的短筆觸貼圖，透過 <code>onBeforeCompile</code> 依世界座標疊在石板地和水面上，水面再加零星白點。最後一道後製用同一張筆觸扭曲取樣位置，讓邊緣變毛，再疊上紙紋。</li>
+          <li><strong>平塗色塊</strong>：<code>MeshToonMaterial</code> 搭配三階 <code>gradientMap</code>；右上方的暖色陽光加上偏藍的環境光，所以影子是單純的偏藍色塊。</li>
+          <li><strong>水</strong>：水面是半透明平面，在頂點著色器裡用幾道正弦波起伏；浮在水上的東西用同一條公式算高度和傾斜，跟著水波上下晃。水體是半透明的藍綠盒子，池底和階梯有即時計算的光紋（caustics）。</li>
+          <li><strong>剖面</strong>：池子四邊各有一個裁切平面。鏡頭轉向哪一側，那一側的地面就從外緣滑到池壁被切開，切口補上地層剖面，池壁換成畫著水位線的玻璃；池畔道具被切到就整個藏起來。</li>
+          <li><strong>動態</strong>：臘腸狗身體斜斜沉在水裡，四肢交錯狗爬式划水，沿小圈慢慢游；仰躺的狗四腳朝天慢慢划；柯基在浮板上東張西望；小鴨和游泳圈隨水漂動。白色大白熊犬照一條 24 秒的時間軸循環：站在左側池畔蹲低、拋物線跳水，落水時濺起水花（受重力落下的水滴加擴散的漣漪），沿 <code>CatmullRomCurve3</code> 路線狗爬式游一圈，再走上階梯、甩甩水，沿池畔走回原位。</li>
+          <li><strong>音效</strong>：沒有音檔，全部用 Web Audio 即時合成。背景是低通過的棕噪音，用很慢的 LFO 推動音量和濾波，偶爾加上拍岸聲和水泡「啵」的一聲；大白熊犬落水時有低沉的噗通、往下掃的水花噪音和陸續落回水面的水滴，划水和上岸甩水也各有聲音，左右聲道跟著狗狗的位置。瀏覽器規定要先有點擊或按鍵才能出聲，右下角可以開關。</li>
+          <li><strong>視角</strong>：<code>PerspectiveCamera</code> 搭配 <code>OrbitControls</code>，預設從正上方俯看；右下角按鈕可以切換俯看和側看，鏡頭最低只到接近水平，不會轉到池底下方。</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module" src="../../site/work-nav.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

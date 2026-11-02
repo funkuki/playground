@@ -1,0 +1,45 @@
+/* 範例頁左上角：回到 three.js Lab 首頁的膠囊按鈕 */
+.lab-back {
+  position: fixed; top: 14px; left: 14px; z-index: 10;
+  display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px 0 10px;
+  font: 500 13px/1 Inter, "Noto Sans TC", system-ui, sans-serif; color: #0c0c0c; text-decoration: none;
+  background: rgba(255, 255, 255, 0.88); border-radius: 999px;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
+  transition: transform .25s cubic-bezier(0.22, 1, 0.36, 1), background .2s;
+}
+.lab-back:hover { transform: translateX(-2px); background: #fff; }
+.lab-back:focus-visible { outline: 2px solid #0c0c0c; outline-offset: 2px; }
+.lab-back svg { flex: none; }
+.lab-back img { display: block; border-radius: 5px; }
+.lab-back b { font-weight: 800; letter-spacing: -.01em; }
+
+/* 返回按鈕 + 上一個／下一個 */
+.lab-bar { position: fixed; top: 14px; left: 14px; z-index: 10; display: flex; gap: 8px; }
+.lab-bar .lab-back { position: static; }
+.lab-pager {
+  display: flex; align-items: center; height: 36px; padding: 0 3px;
+  font: 500 12px/1 Inter, "Noto Sans TC", system-ui, sans-serif; color: #0c0c0c;
+  background: rgba(255, 255, 255, 0.88); border-radius: 999px;
+  -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+  box-shadow: 0 2px 14px rgba(0, 0, 0, 0.12);
+}
+.lab-pager span { padding: 0 4px; color: #8f8a8a; font-variant-numeric: tabular-nums; }
+.lab-pager a {
+  position: relative; display: grid; place-items: center; width: 30px; height: 30px;
+  color: inherit; border-radius: 50%; transition: background .2s;
+}
+.lab-pager a:hover { background: rgba(0, 0, 0, 0.06); }
+.lab-pager a:focus-visible { outline: 2px solid #0c0c0c; outline-offset: 1px; }
+/* 滑過時在下方顯示範例名稱 */
+.lab-pager a::after {
+  content: attr(data-tip); position: absolute; top: calc(100% + 8px); left: 50%;
+  padding: 5px 10px; white-space: nowrap; font-size: 12px; color: #fff; background: #2e2e2e; border-radius: 8px;
+  opacity: 0; transform: translate(-50%, -4px); pointer-events: none;
+  transition: opacity .2s, transform .25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.lab-pager a:hover::after, .lab-pager a:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
+@media (max-width: 520px) {
+  .lab-back b { display: none; }
+  .lab-back { padding-right: 10px; }
+}

@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>sui's playground · three.js 風格範例集</title>
+    <meta name="description" content="sui's playground：three.js 風格範例集。收錄精選的 three.js 靈感，拆解作法並重製動態範例：賽璐璐、像素、水粉筆觸、等角、剖面、立體透視模型。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="icon" href="./favicon.ico" sizes="any" />
+    <link rel="icon" href="./site/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+    <link rel="manifest" href="./site.webmanifest" />
+    <meta name="theme-color" content="#fdfcf9" />
+    <link rel="stylesheet" href="./site/site.css" />
+  </head>
+  <body>
+    <header class="nav-wrap" id="nav-wrap">
+      <nav class="nav" id="nav" aria-label="主選單">
+        <a class="logo" href="./" aria-label="sui's playground 首頁">
+          <img src="./site/logo.svg" width="26" height="26" alt="" />
+          <span class="logo-name">sui's playground</span>
+        </a>
+        <div class="nav-links" id="nav-links">
+          <span class="nav-indicator" aria-hidden="true"></span>
+          <a href="#styles" data-spy="styles">styles</a>
+          <a href="#works" data-spy="works">examples</a>
+          <span class="nav-sep" aria-hidden="true"></span>
+          <a class="ext" href="https://sui.funkuki.com" target="_blank" rel="noopener">sui <span class="arrow" aria-hidden="true">↗</span></a>
+          <a class="nav-cta" href="https://sui.funkuki.com/playbook/threejs" target="_blank" rel="noopener">playbook <span class="arrow" aria-hidden="true">↗</span></a>
+        </div>
+        <button class="nav-menu" id="nav-menu" type="button" aria-expanded="false" aria-controls="nav-links" aria-label="開啟選單">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true">
+            <path class="l1" d="M4 8h16" /><path class="l2" d="M4 16h16" />
+          </svg>
+        </button>
+      </nav>
+    </header>
+
+    <main>
+      <!-- ---------- Hero ---------- -->
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow stagger">Three.js styles &amp; examples · 2026</p>
+          <h1 class="stagger">Tiny worlds,<br />many styles.</h1>
+          <p class="lead stagger">
+            收錄精選的 three.js 靈感，拆解作法並重製動態範例，一起學習創作 3D 互動世界！
+          </p>
+          <div class="cta stagger">
+            <a class="btn btn-dark" href="#works">看範例</a>
+            <a class="btn btn-light" href="#styles">風格索引</a>
+          </div>
+        </div>
+        <div class="hero-stage stagger" aria-hidden="true">
+          <canvas id="hero-canvas"></canvas>
+          <span class="hero-tag">drag me</span>
+        </div>
+        <div class="scroll-hint" aria-hidden="true"><span>SCROLL</span><i></i></div>
+      </section>
+
+      <!-- ---------- Styles ---------- -->
+      <section id="styles" class="section">
+        <div class="section-head reveal">
+          <h2>Styles</h2>
+          <p>點一個風格，下面的範例就只看那一種。</p>
+        </div>
+        <div class="style-grid" id="style-grid"></div>
+      </section>
+
+      <!-- ---------- Examples ---------- -->
+      <section id="works" class="section">
+        <div class="section-head reveal">
+          <h2>Examples</h2>
+          <div class="chips" id="filters" role="tablist" aria-label="依風格篩選"></div>
+        </div>
+        <div class="work-grid" id="work-grid"></div>
+
+        <!-- 關於：併在範例下方 -->
+        <aside class="lab-note reveal" aria-label="關於 Sui's Playground">
+          <h3>About Sui's Playground</h3>
+          <p>
+            所有的場景範例，全部由 three.js 程式產生：方塊、圓柱、擠出形狀拼成建築，<code>CanvasTexture</code> 畫招牌和磚牆，<code>InstancedMesh</code> 一次撒出上萬片葉子⋯⋯等。不需外部模型檔，打開網頁就能轉動、縮放，有些還搭配音效，創造沉浸式 3D 互動體驗。
+          </p>
+          <p>
+            每個範例頁右上角的 <span class="kbd">i</span> 按鈕會打開說明，寫著靈感來源和作法；左上角可以切換上一個／下一個範例。
+          </p>
+        </aside>
+      </section>
+
+    </main>
+
+    <footer class="footer">
+      <span>© 2026 Sui · Funkuki Studio</span>
+      <span>Made with three.js</span>
+    </footer>
+
+    <script type="module" src="./site/main.js"></script>
+  </body>
+</html>
