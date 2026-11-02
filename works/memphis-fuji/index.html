@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Fuji 孟菲斯微縮富士山 · sui's playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=Inter+Tight:wght@400;600&family=Noto+Sans+TC:wght@400;600&display=swap" rel="stylesheet" />
+    <style>
+      html, body { margin: 0; height: 100%; background: #FFFCF6; overflow: hidden; }
+      canvas { display: block; position: fixed; inset: 0; width: 100vw; height: 100vh; touch-action: none; }
+
+      /* 下方三行字（STYLE.md §4）：標題、一句話、小字資料，上面三個 Memphis 小符號 */
+      #caption {
+        position: fixed; left: 0; right: 0; text-align: center; pointer-events: none; opacity: 0;
+        padding: 0 16px; font-family: "Inter Tight", "Noto Sans TC", system-ui, sans-serif;
+      }
+      #caption .marks { display: block; margin: 0 auto 6px; }
+      #caption p { margin: 0; white-space: nowrap; }
+      #caption .l1 { font-weight: 600; font-size: 19px; line-height: 28px; color: #2B2840; letter-spacing: .01em; }
+      #caption .l2 { font-weight: 400; font-size: 14px; line-height: 22px; color: #8D8AA0; }
+      #caption .l3 { font: 400 12px/22px "IBM Plex Mono", ui-monospace, monospace; color: #B7B4C6; }
+      #caption .sep { display: inline-block; width: .8em; }
+      /* 右上角的按鈕和操作提示：和返回按鈕同一種膠囊 */
+      .pill {
+        display: inline-flex; align-items: center; gap: 7px; height: 36px; padding: 0 14px 0 11px;
+        font: 500 13px/1 Inter, "Noto Sans TC", system-ui, sans-serif; color: #2B2840;
+        background: rgba(255, 255, 255, 0.88); border: 0; border-radius: 999px;
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        box-shadow: 0 2px 14px rgba(37, 33, 74, 0.12);
+      }
+      /* 右上角留給 info 圖示（36px），白天／黃昏切換放在它下面 */
+      #tools { position: fixed; top: 58px; right: 14px; z-index: 10; display: flex; gap: 8px; }
+      #tools button { cursor: pointer; transition: transform .25s cubic-bezier(0.22, 1, 0.36, 1), background .2s; }
+      #tools button:hover { background: #fff; transform: translateY(-1px); }
+      #tools button:focus-visible { outline: 2px solid #25214A; outline-offset: 2px; }
+      #dusk .sw { width: 14px; height: 14px; border-radius: 50%; background: #FF9E7A; box-shadow: inset -4px -3px 0 #B9A0FF; }
+      #dusk[aria-pressed="true"] .sw { background: #FFD234; box-shadow: none; }
+      #hint {
+        position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
+        white-space: nowrap; color: #6E6A86; font-size: 12px; transition: opacity .6s, transform .6s;
+      }
+      #hint.gone { opacity: 0; transform: translate(-50%, -6px); }
+      #hint .short { display: none; }
+      /* ---------- 右上角 info 圖示 ---------- */
+      #info-btn {
+        position: fixed; top: 14px; right: 14px; z-index: 10; width: 36px; height: 36px; padding: 0;
+        display: grid; place-items: center; color: #25214A; cursor: pointer;
+        background: rgba(255, 255, 255, 0.88); border: 0; border-radius: 50%;
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        box-shadow: 0 2px 14px rgba(37, 33, 74, 0.12); transition: background .15s, transform .15s;
+      }
+      #info-btn:hover { background: #fff; transform: scale(1.06); }
+      #info-btn:focus-visible, #info-close:focus-visible { outline: 2px solid #25214A; outline-offset: 2px; }
+
+      /* ---------- 說明視窗：半透明 + 背景模糊 ---------- */
+      #info {
+        position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px;
+        background: rgba(37, 33, 74, 0.22);
+        opacity: 0; pointer-events: none; transition: opacity .2s;
+      }
+      #info.open { opacity: 1; pointer-events: auto; }
+      #info-panel {
+        position: relative; box-sizing: border-box; width: min(560px, 100%); max-height: calc(100vh - 32px);
+        overflow-y: auto; padding: 28px 28px 24px;
+        color: #2B2840; font: 14px/1.75 "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+        background: rgba(255, 252, 246, 0.82);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
+        border: 1px solid rgba(255, 255, 255, 0.6); border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(37, 33, 74, 0.28);
+        transform: translateY(8px) scale(.98); transition: transform .2s;
+      }
+      #info.open #info-panel { transform: none; }
+      #info-panel h1 { margin: 0 0 2px; font-size: 20px; letter-spacing: .02em; }
+      #info-panel .sub { margin: 0 0 18px; color: #8D8AA0; font-size: 13px; }
+      #info-panel h2 { margin: 20px 0 6px; font-size: 13px; letter-spacing: .08em; color: #2E5BE6; }
+      #info-panel p { margin: 0 0 8px; }
+      #info-panel ul { margin: 0; padding-left: 1.2em; }
+      #info-panel li { margin: 2px 0; }
+      #info-panel a { color: #2E5BE6; }
+      #info-panel code {
+        font: 12px ui-monospace, Menlo, monospace; padding: 1px 5px;
+        background: rgba(185, 160, 255, 0.2); border-radius: 4px;
+      }
+      #info-close {
+        position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0;
+        display: grid; place-items: center; color: #5A5670;
+        background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+      }
+      #info-close:hover { background: rgba(0, 0, 0, 0.06); }
+      /* 截封面用：?shot 會藏起所有介面 */
+      .shot #tools, .shot #hint, .shot #info-btn, .shot .lab-back, .shot .lab-bar, .shot #caption { display: none !important; }
+
+      @media (max-width: 700px) {
+        #hint { top: auto; bottom: 14px; font-size: 11px; height: 30px; }
+        #hint .long { display: none; }
+        #hint .short { display: inline; }
+        #caption .l1 { font-size: 16px; line-height: 24px; }
+        #caption .l2 { font-size: 12px; line-height: 18px; }
+        #caption .l2 span { display: block; }
+        #caption .l2 .sep { display: none; }
+        #caption .l3 { font-size: 11px; line-height: 20px; }
+      }
+    </style>
+    <link rel="icon" href="../../favicon.ico" sizes="any" />
+    <link rel="icon" href="../../site/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png" />
+    <link rel="manifest" href="../../site.webmanifest" />
+    <meta name="theme-color" content="#FFFCF6" />
+    <link rel="stylesheet" href="../../site/back.css" />
+  </head>
+  <body>
+    <a class="lab-back" href="../../#works" aria-label="回到 sui's playground 範例列表">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      <img src="../../site/logo.svg" width="20" height="20" alt="" /><b>sui's playground</b>
+    </a>
+    <canvas id="gl"></canvas>
+    <div id="tools">
+      <button id="dusk" class="pill" type="button" aria-pressed="false" aria-label="切換白天和黃昏"><i class="sw" aria-hidden="true"></i><span>黃昏</span></button>
+    </div>
+    <div id="hint" class="pill"><span class="long">拖曳旋轉・滾輪或雙指縮放・點點看富士山、五重塔、湖面、房子和櫻花</span><span class="short">拖曳旋轉・雙指縮放・點點看山、塔、湖和房子</span></div>
+    <button id="info-btn" type="button" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r="0.6" fill="currentColor" />
+      </svg>
+    </button>
+
+    <div id="info" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+      <div id="info-panel">
+        <button id="info-close" type="button" aria-label="關閉說明">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <h1 id="info-title">Fuji — 孟菲斯微縮富士山</h1>
+        <p class="sub">Memphis Diorama · Mt. Fuji &amp; Lake Kawaguchi · Three.js</p>
+        <p>
+          四月初，從河口湖北岸看富士山：山頂還留著雪，雪線順著山溝往下拉成一條條；湖畔一排櫻花開了，小鎮的房子、溫泉旅館、紅色大橋和小山上的五重塔，都做成桌上模型的樣子。天鵝船繞著湖、魚偶爾跳出水面、富士急行進站停一下又開走、白鷺排成斜線飛過，雲飄過時在地上留下紫色的雲影。
+        </p>
+
+        <h2>靈感與畫風來源</h2>
+        <ul>
+          <li>Eian（<a href="https://x.com/EianLu/status/2114650892934975667" target="_blank" rel="noopener">@EianLu</a>）用 Claude 寫程式做的「會動的微縮地圖」：Canvas 逐格畫、一鏡到底慢推、到處都有小動靜。</li>
+          <li>畫風依照 Eian 開源的 <a href="https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles/memphis-diorama/STYLE.md" target="_blank" rel="noopener">Memphis Diorama STYLE.md</a>（LemoLab，MIT 授權）。描邊、平塗材質和毛邊外框沿用它的 <code>memphis.js</code>，為了在網頁即時播放改成跟著視窗大小走。</li>
+        </ul>
+
+        <h2>作法簡介</h2>
+        <ul>
+          <li><strong>決定論的 <code>frame(i)</code></strong>：畫面只跟格數有關，時間是 <code>i / 60</code>。所有週期性的動態都整除 40 秒，所以整段可以無縫循環；網頁上用實際經過的時間換算格數播放，同一份程式也能離線逐格輸出成影片。</li>
+          <li><strong>平塗三階</strong>：自訂 <code>ShaderMaterial</code>，頂面最亮、向陽面原色、背光面變暗，沒有漸層；陰影是偏紫的硬陰影，陰影裡印著一格格網點，像孟菲斯印刷品。點點、斜紋、橫紋都用世界座標算。</li>
+          <li><strong>描邊和外框</strong>：另外畫一張法線和深度圖，在差異大的地方畫深靛色的線；最後一道把外面蓋成暖白紙色，邊緣用雜訊做出噴點般的毛邊，開場時從中間長開。雲另外畫在一個圖層，不描邊但會擋住後面的線。</li>
+          <li><strong>全部用程式產生</strong>：富士山是內凹的旋轉體，雪和山腳森林是沿著山形長出的不規則殼；湖是程式畫的形狀；房子、五重塔、樹、天鵝船、電車都由方塊、圓柱、球拼成，靜態的小東西依材質合併以減少繪製次數。</li>
+          <li><strong>黃昏</strong>：按右上角的「黃昏」，富士山先蹲一下，光環從山腳往外擴散，掃到哪裡，窗戶、門燈和路燈就亮到哪裡，地上留下暖色的光圈。</li>
+        </ul>
+
+        <h2>可以怎麼玩</h2>
+        <ul>
+          <li>拖曳旋轉，滾輪或雙指縮放（會朝游標的位置拉近），放手幾秒後鏡頭會慢慢回到自動運鏡。</li>
+          <li>點富士山：山會壓扁再彈回，笠雲鼓起來。點五重塔或櫻花樹：櫻花瓣噴一陣。點湖面：漣漪和一條跳出來的魚。點房子：窗戶亮燈，再點一次關掉。</li>
+        </ul>
+      </div>
+    </div>
+
+    <div id="caption">
+      <svg class="marks" width="58" height="14" viewBox="-29 -7 58 14" aria-hidden="true">
+        <circle cx="-19" cy="0" r="5" fill="#FFC93C" />
+        <path d="M-5.5 4.5 L0 -5.5 L5.5 4.5 Z" fill="#FF7FAA" />
+        <path d="M11 0 L15 -3.5 L19.5 3.5 L24 0" fill="none" stroke="#2E5BE6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <p class="l1">富士山・河口湖<span class="sep"></span>Mt. Fuji &amp; Lake Kawaguchi</p>
+      <p class="l2"><span>春・湖畔櫻花開了，山頂還留著雪</span><span class="sep"></span><span>Spring · cherry blossoms by the lake, snow still on the summit</span></p>
+      <p class="l3">35.3606° N<span class="sep"></span>138.7274° E</p>
+    </div>
+
+    <script type="module" src="../../site/work-nav.js"></script>
+    <script type="module" src="./src/info.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

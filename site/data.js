@@ -50,6 +50,14 @@ export const STYLES = [
     recipe: ['程式產生幾何', 'InstancedMesh', 'CanvasTexture', 'Web Audio 合成音效'],
   },
   {
+    id: 'memphis',
+    name: '孟菲斯微縮',
+    en: 'Memphis Diorama',
+    color: '#FF7EB3',
+    desc: '暖白紙上長出一圈毛邊外框，裡面是孟菲斯配色的小世界：平塗色塊、深靛描邊、紫色硬陰影裡印著網點，到處都有小東西在動。',
+    recipe: ['平塗三階 ShaderMaterial', '法線＋深度描邊', '網點陰影', '毛邊外框'],
+  },
+  {
     id: 'watercolor',
     name: '水彩暈染',
     en: 'Watercolor',
@@ -70,6 +78,18 @@ export const STYLES = [
 ];
 
 export const WORKS = [
+  {
+    id: 'memphis-fuji',
+    title: 'Fuji',
+    subtitle: '孟菲斯微縮富士山',
+    en: 'Memphis Diorama · Mt. Fuji',
+    href: './works/memphis-fuji/',
+    cover: './site/covers/memphis-fuji.jpg',
+    styles: ['memphis', 'diorama'],
+    date: '2026.11.03',
+    desc: '四月的河口湖北岸，山頂還留著雪，湖畔櫻花開了。天鵝船繞湖、魚跳出水面、富士急行進站又開走；按下黃昏，光環從富士山腳擴散，小鎮的燈一盞一盞亮起來。',
+    tech: ['frame(i) 決定論動畫', 'Normal / Depth 描邊', 'Halftone 陰影', 'Raycaster'],
+  },
   {
     id: 'dog-pool',
     title: 'Dog Pool',

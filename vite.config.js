@@ -16,6 +16,7 @@ export default defineConfig({
         'toon-greenhouse-cafe': resolve(root, 'works/toon-greenhouse-cafe/index.html'),
         'toon-dusk-flower-shop': resolve(root, 'works/toon-dusk-flower-shop/index.html'),
         'dog-pool': resolve(root, 'works/dog-pool/index.html'),
+        'memphis-fuji': resolve(root, 'works/memphis-fuji/index.html'),
       },
     },
   },
