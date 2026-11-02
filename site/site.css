@@ -144,15 +144,17 @@ button.chip:focus-visible, .btn:focus-visible, .nav a:focus-visible, .work-card:
 .lead { margin: 26px 0 34px; max-width: 34em; font-size: 17px; color: #3a3a3a; }
 .hero-stage {
   position: relative; aspect-ratio: 1; width: 100%; max-width: 580px; justify-self: center;
-  border-radius: 36px;
-  background: radial-gradient(circle at 50% 42%, #fff 0, #f5f1e8 62%, #efe9dd 100%);
-  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.03);
 }
 .hero-stage canvas { width: 100%; height: 100%; display: block; cursor: grab; touch-action: pan-y; }
 .hero-stage canvas:active { cursor: grabbing; }
 .hero-tag {
-  position: absolute; left: 22px; bottom: 18px; font: 12px var(--mono); color: var(--muted);
-  letter-spacing: 0.08em;
+  position: absolute; left: 50%; bottom: 6px; transform: translateX(-50%); white-space: nowrap;
+  font: 12px var(--mono); color: var(--muted); letter-spacing: 0.08em; pointer-events: none;
+}
+.hero-tag .tag-touch { display: none; }
+@media (hover: none) {
+  .hero-tag .tag-mouse { display: none; }
+  .hero-tag .tag-touch { display: inline; }
 }
 .scroll-hint {
   position: absolute; left: 50%; bottom: 18px; transform: translateX(-50%);
