@@ -71,13 +71,24 @@ export const STYLES = [
     name: '黏土',
     en: 'Claymation',
     color: '#c88a6a',
-    soon: true,
-    desc: '圓潤的捏塑形狀、指紋般的表面凹凸和逐格感的動作。收集中，之後加入。',
-    recipe: ['Subsurface 近似', 'Noise normal', 'Stepped animation'],
+    desc: '圓潤的捏塑形狀，表面有大拇指按痕和指紋細紋，邊緣微微透光；所有黏土共用一張細節貼圖，用三向投影貼上去。',
+    recipe: ['三向投影細節貼圖', '螢幕空間凹凸', 'MeshPhysicalMaterial sheen', '透光邊緣'],
   },
 ];
 
 export const WORKS = [
+  {
+    id: 'clay-figures',
+    title: 'Clay Figures',
+    subtitle: '黏土公仔工作室',
+    en: 'Claymation Figure Studio',
+    href: './works/clay-figures/',
+    cover: './site/covers/clay-figures.jpg',
+    styles: ['clay'],
+    date: '2026.11.03',
+    desc: '春男、粉紅兔、天使和惡魔捏成了黏土公仔。在轉台上戳出指印、揉到發亮、把耳朵捏長，換幾種燈光拍張拍立得，再一鍵恢復原狀。',
+    tech: ['onBeforeCompile', '三向投影', '測地線筆刷', 'Web Audio'],
+  },
   {
     id: 'memphis-fuji',
     title: 'Fuji',
