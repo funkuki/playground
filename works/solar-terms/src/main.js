@@ -177,12 +177,12 @@ function renderText(i) {
        <p>這一頁的插畫和故事還在畫。目前畫好的是冬天的六頁（立冬到大寒），其他節氣會一季一季補上。</p></section>`;
   page.innerHTML = `
     <div class="kicker"><span class="no">${pad(i + 1)}</span><span>/ 24</span><span class="sea">${S.zh} ${S.en}</span><span class="when">${when}</span></div>
-    <h1><span class="zh">${T.zh}</span><span class="en">${esc(T.en)}</span></h1>
+    <h1><span class="zh">${T.zh}</span><span class="en">${esc(T.en)}</span>${iro}</h1>
     <dl class="period">
       <dt>期間</dt><dd>${D.start.getFullYear()}.${md(D.start)} – ${md(D.end)}<small>約 ${days} 天</small></dd>
       <dt>黃經</dt><dd>${T.lon}°<small>太陽在黃道上的位置，每 15° 一個節氣</small></dd>
     </dl>
-    <section class="hou"><h2>三候<small>日本七十二候</small>${iro}</h2><ol>${hou}</ol>${T.tw ? `<p class="tw"><b>在台灣</b>${esc(T.tw)}</p>` : ''}</section>
+    <section class="hou"><h2>三候<small>日本七十二候</small></h2><ol>${hou}</ol>${T.tw ? `<p class="tw"><b>在台灣</b>${esc(T.tw)}</p>` : ''}</section>
     ${story}
     <p class="credit">日期由公式推算，可能差一天。</p>`;
   sheet.scrollTop = 0;
