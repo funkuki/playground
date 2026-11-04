@@ -18,6 +18,7 @@ export default defineConfig({
         'dog-pool': resolve(root, 'works/dog-pool/index.html'),
         'memphis-fuji': resolve(root, 'works/memphis-fuji/index.html'),
         'clay-figures': resolve(root, 'works/clay-figures/index.html'),
+        'toy-expo-pass': resolve(root, 'works/toy-expo-pass/index.html'),
       },
     },
   },

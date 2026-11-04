@@ -74,9 +74,29 @@ export const STYLES = [
     desc: '圓潤的捏塑形狀，表面有大拇指按痕和指紋細紋，邊緣微微透光；所有黏土共用一張細節貼圖，用三向投影貼上去。',
     recipe: ['三向投影細節貼圖', '螢幕空間凹凸', 'MeshPhysicalMaterial sheen', '透光邊緣'],
   },
+  {
+    id: 'holo',
+    name: '雷射',
+    en: 'Holographic',
+    color: '#9B7FE0',
+    desc: '換個角度看就會流動的彩虹反光。漸層跟著滑鼠或手機陀螺儀移動，只從星星網點裡透出來，像閃卡和防偽貼紙。',
+    recipe: ['CSS 3D transform', 'mix-blend-mode', 'mask-image 星星網點', 'DeviceOrientation'],
+  },
 ];
 
 export const WORKS = [
+  {
+    id: 'toy-expo-pass',
+    title: 'Toy Transit',
+    subtitle: '玩具展雷射乘車證',
+    en: 'Holographic Expo Pass',
+    href: './works/toy-expo-pass/',
+    cover: './site/covers/toy-expo-pass.jpg',
+    styles: ['holo'],
+    date: '2026.11.04',
+    desc: '虛構玩具展「玩具轉運站」的邀請制乘車證。撕開封蠟，票從信封裡飛出來，轉動看雷射光流動、翻到背面看火車進站的首班車月台；鐵皮兔站長扣扣會幫你剪票，展後再蓋上「已抵達」郵戳。',
+    tech: ['CSS 3D', 'mix-blend-mode', 'GLTFLoader', 'DeviceOrientation'],
+  },
   {
     id: 'clay-figures',
     title: 'Clay Figures',
