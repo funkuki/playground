@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Toy Transit 玩具展雷射乘車證 · sui's playground</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;800&family=Inter+Tight:wght@500;600&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./src/style.css" />
+    <link rel="icon" href="../../favicon.ico" sizes="any" />
+    <link rel="icon" href="../../site/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png" />
+    <link rel="manifest" href="../../site.webmanifest" />
+    <meta name="theme-color" content="#ece2cf" />
+    <link rel="stylesheet" href="../../site/back.css" />
+  </head>
+  <body>
+    <a class="lab-back" href="../../#works" aria-label="回到 sui's playground 範例列表">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      <img src="../../site/logo.svg" width="20" height="20" alt="" /><b>sui's playground</b>
+    </a>
+
+    <!-- 信封、票（DOM＋CSS 3D）；扣扣（three.js）和碎紙（2D canvas）疊在上面 -->
+    <main id="stage">
+      <div id="env-back" class="env-part" aria-hidden="true"></div>
+      <div id="env-flap" class="env-part" aria-hidden="true"><div class="flap-shadow"><i></i></div><div class="flap"></div></div>
+      <div id="shadow" aria-hidden="true"></div>
+      <article id="card" class="card" aria-label="玩具轉運站乘車證">
+        <div class="face front"></div>
+        <div class="face back"></div>
+      </article>
+      <div id="env-front" class="env-part" aria-hidden="true"></div>
+      <button id="seal" class="env-part" type="button" aria-label="撕開封蠟，打開信封"></button>
+    </main>
+    <canvas id="koko" aria-hidden="true"></canvas>
+    <!-- 疊在扣扣上面的影子票：跟著真票一起動，只露出郵票上的汐見港郵戳 -->
+    <div id="over" aria-hidden="true"><div class="card ghost"><div class="face front"></div></div></div>
+    <canvas id="confetti" aria-hidden="true"></canvas>
+
+    <div id="hint" class="pill" aria-live="polite"></div>
+
+    <button id="open" class="pill big" type="button">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2" /><path d="M3 8l9 6 9-6" /></svg>
+      開封
+    </button>
+
+    <div id="dock" aria-label="乘車證操作">
+      <button id="flip" class="pill" type="button">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3" /><path d="M18 3v4h-4M6 21v-4h4" /></svg>
+        <span>翻面</span> <kbd>F</kbd>
+      </button>
+      <div class="seg" id="states" role="radiogroup" aria-label="票的狀態">
+        <button type="button" role="radio" data-state="1" aria-checked="true">待出發 <kbd>1</kbd></button>
+        <button type="button" role="radio" data-state="2" aria-checked="false">已上車 <kbd>2</kbd></button>
+        <button type="button" role="radio" data-state="3" aria-checked="false">已抵達 <kbd>3</kbd></button>
+      </div>
+      <div class="seg" id="personas" role="radiogroup" aria-label="票的來源">
+        <button type="button" role="radio" data-persona="invited" aria-checked="true">被邀請</button>
+        <button type="button" role="radio" data-persona="self" aria-checked="false">自己買</button>
+      </div>
+      <button id="reseal" class="pill icon" type="button" aria-label="重新開封（R）" title="重新開封（R）">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7L3 8" /><path d="M3 3v5h5" /></svg>
+      </button>
+    </div>
+
+    <button id="info-btn" type="button" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r="0.6" fill="currentColor" />
+      </svg>
+    </button>
+    <div id="info" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+      <div id="info-panel">
+        <button id="info-close" type="button" aria-label="關閉說明">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <h1 id="info-title">Toy Transit — 玩具展雷射乘車證</h1>
+        <p class="sub">Holographic Expo Pass · CSS 3D · Three.js</p>
+        <p>
+          「玩具轉運站」是一個虛構的玩具展：被收進抽屜的老玩具在這裡轉車，有的被修好，有的遇到新主人。這張是寄給你的首班車乘車證。撕開封蠟，票會從信封裡飛出來；轉動它看雷射光流動，翻到背面是展覽主視覺「首班車月台」。鐵皮兔站長扣扣會幫你剪票，展後再蓋上「已抵達」郵戳。
+        </p>
+
+        <h2>靈感來源</h2>
+        <ul>
+          <li>靈感來自東京 AI 影像創作者 KANA 的 <a href="https://x.com/KanaWorks_AI/status/2117430343934599675" target="_blank" rel="noopener">「HAPPINESS PASS しあわせパス」</a>（<a href="https://pass.tokyoaivisuals.club" target="_blank" rel="noopener">pass.tokyoaivisuals.club</a>）：一個免費、不用註冊的動態邀請卡產生器。這張乘車證借用了登機證式電子票、閃卡雷射材質和拆信儀式這種形式；角色、文案、配色和版面都是為這個虛構展覽重新設計的。</li>
+        </ul>
+
+        <h2>作法簡介</h2>
+        <ul>
+          <li><strong>票和信封</strong>：用 CSS 3D 做，正反兩面靠 <code>backface-visibility</code> 切換。票上的字都是真的文字，不是圖片，放大也清楚。</li>
+          <li><strong>雷射材質</strong>：四層疊在一起。最底下是紙紋雜訊；上面一條彩虹漸層，跟著傾斜角度移動 <code>background-position</code>；漸層只從星星網點的 <code>mask-image</code> 裡透出來；最上面一個白色光點，往傾斜的反方向移動，像被燈照到。</li>
+          <li><strong>傾斜</strong>：電腦看滑鼠位置，手機看陀螺儀（iOS 在按「開封」時請求權限），沒有陀螺儀時改成用手指拖曳。數值都經過平滑處理，轉起來不會抖。</li>
+          <li><strong>站長扣扣</strong>：舊舊的鐵皮玩具，在Tripo將2D設計轉成3D模型，再做減面和壓縮貼圖。模型沒有骨架，跳躍、剪票、蓋章都是整隻身體的位移、旋轉和擠壓伸展。扣扣住在郵票裡時，用 WebGL 的 scissor 把畫面裁成郵票的範圍；郵票上的郵戳另外疊一張跟著票一起轉的「影子票」，才能壓在扣扣上面。</li>
+          <li><strong>背面「首班車月台」</strong>：月台、火車和兩位貓乘客也是做舊的復古玩具風格，在Tripo將2D設計轉成3D模型，再做減面和壓縮貼圖。鏡頭跟著票的傾斜繞動，前景動得比遠景多。火車一直循環進站、停靠、出站。</li>
+          <li><strong>開封儀式</strong>：封蠟彈起、信封蓋翻開、票滑出來飛到眼前，到位時一陣閃光和碎紙。碎紙是一張 2D canvas，紙片有重力和空氣阻力。</li>
+        </ul>
+
+        <h2>可以怎麼玩</h2>
+        <ul>
+          <li>點封蠟或按「開封」（鍵盤 <code>O</code>）。</li>
+          <li>移動滑鼠或轉動手機，看雷射光在票面上流動。</li>
+          <li>按「翻面」（<code>F</code>）看背面的月台主視覺。</li>
+          <li>切換「待出發／已上車／已抵達」（<code>1</code>–<code>3</code>）：扣扣會跳出郵票剪票，或像印章一樣蓋上郵戳。</li>
+          <li>切換「被邀請／自己買」，看邀請人欄位和背面行李吊牌上的訊息怎麼變。</li>
+          <li>按右下的重新開封（<code>R</code>），把票收回信封再拆一次。</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module" src="../../site/work-nav.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>
