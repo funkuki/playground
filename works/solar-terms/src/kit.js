@@ -421,6 +421,30 @@ export function snowfall(W, R, n, area, LOOP = 30) {
     im.instanceMatrix.needsUpdate = true;
   };
 }
+// 雨：一條條斜斜的細線落下，落到地面就從頂上重來（不描邊）
+export function rain(W, R, n, area, LOOP = 30) {
+  const [x0, x1, z0, z1, top] = area;
+  const im = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.035, 0.035, 1.2, 3), new THREE.MeshBasicMaterial({ color: '#9FB3D6', transparent: true, opacity: 0.8 }), n);
+  im.userData.noOutline = true; im.frustumCulled = false; im.castShadow = false; W.add(im);
+  const S = Array.from({ length: n }, () => ({ x: lerp(x0, x1, R()), z: lerp(z0, z1, R()), ph: R(), sp: 6 + Math.floor(R() * 4) }));
+  const m4 = new THREE.Matrix4(), q = new THREE.Quaternion().setFromAxisAngle(V3(0, 0, 1), 0.18), sc = new THREE.Vector3(1, 1, 1), pos = new THREE.Vector3();
+  return (t, yFloor = () => 0, k = 1) => {
+    for (let i = 0; i < n; i++) {
+      const s = S[i], f = fr(t * s.sp / LOOP + s.ph), fl = yFloor(s.x, s.z);
+      pos.set(s.x - f * 3, lerp(top, fl, f), s.z); im.setMatrixAt(i, m4.compose(pos, q, sc.setScalar(i / n < k ? 1 : 0.0001)));
+    }
+    im.instanceMatrix.needsUpdate = true;
+  };
+}
+// 小人的配件：雨傘（舉在頭上）、斗笠（尖尖的竹帽）
+export function umbrella(p, col) {
+  const u = new THREE.Group(); u.position.set(0.15, 2.5, 0.25); p.g.add(u);
+  mesh(new THREE.ConeGeometry(0.85, 0.42, 10).translate(0, 0.21, 0), stripes(col, 0.25, lt(col, 0.35), 4), 0, 0, 0, u);
+  mesh(new THREE.CylinderGeometry(0.025, 0.025, 1.0, 4).translate(0, -0.45, 0), M(PAL.plum), 0, 0, 0, u);
+  p.arms[1].rotation.z = -2.4;
+  return u;
+}
+export function straw(p, col = '#E6C68A') { return mesh(new THREE.ConeGeometry(0.52, 0.32, 14).translate(0, 0.16, 0), stripes(col, 0.15, '#D4B176', 4), 0, 0.12, 0, p.head); }
 // 蒸氣：從幾個點冒出來、變大、變淡的白球
 export function steam(W, R, spots, perSpot = 5, period = 3.2) {
   const n = spots.length * perSpot;

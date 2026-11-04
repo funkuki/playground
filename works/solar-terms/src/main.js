@@ -9,6 +9,12 @@ import { wa } from './wairo.js';
 const FPS = 60, LOOP = 30;
 const TAU = Math.PI * 2, D2R = THREE.MathUtils.degToRad;
 const SCENES = {
+  lichun: () => import('./scenes/lichun.js'),
+  yushui: () => import('./scenes/yushui.js'),
+  jingzhe: () => import('./scenes/jingzhe.js'),
+  chunfen: () => import('./scenes/chunfen.js'),
+  qingming: () => import('./scenes/qingming.js'),
+  guyu: () => import('./scenes/guyu.js'),
   lixia: () => import('./scenes/lixia.js'),
   xiaoman: () => import('./scenes/xiaoman.js'),
   mangzhong: () => import('./scenes/mangzhong.js'),
@@ -186,7 +192,7 @@ function renderText(i) {
     ? `<section class="story"><h2>${esc(T.place)}<small class="place-en">${esc(T.placeEn)}</small></h2>${T.story.map((p) => `<p>${esc(p)}</p>`).join('')}</section>
        <aside class="card"><h3>${esc(T.card.title)}</h3><p>${esc(T.card.body)}</p></aside>`
     : `<section class="story sketch"><h2>${esc(T.place)}<small class="place-en">${esc(T.placeEn)}</small></h2><p>${esc(T.teaser)}</p>
-       <p>這一頁的插畫和故事還在畫。目前畫好的是夏天、秋天和冬天的十八頁（立夏到大寒），春天的六頁之後補上。</p></section>`;
+       <p>這一頁的插畫和故事還在畫。</p></section>`;
   page.innerHTML = `
     <div class="kicker"><span class="no">${pad(i + 1)}</span><span>/ 24</span><span class="sea">${S.zh} ${S.en}</span><span class="when">${when}</span></div>
     <h1><span class="zh">${T.zh}</span><span class="en">${esc(T.en)}</span>${iro}</h1>
