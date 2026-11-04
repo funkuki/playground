@@ -5,13 +5,15 @@
 // - 直接畫到 WebGL canvas，不經過 2D canvas；下方三行字改用 DOM（見 main.js）
 // - 外框的雜訊用「設計單位」計算，手機和桌機的毛邊粗細看起來一致
 // - 新增 noEdge(obj)：不畫描邊、但仍會遮住後面物件描邊的東西（雲）
+// - 材質顏色先經過 wa()（./wairo.js）換成和色；陰影改成淡的藤鼠色、描邊改成鳩羽紫，配柔和的顏色（節氣圖鑑）
 // - 新增 flat(hex, { snowY })：高於 snowY（加一點起伏）的地方畫成白色積雪，逐像素計算，雪線邊緣是圓滑的（節氣圖鑑的合歡山）
 // Memphis Diorama: 3D engine
 // Flat materials (no lighting model: fixed face tones + hard-edged deep-indigo shadows + world-space patterns + facade windows),
 // normal/depth outlines, grainy spray-paint frame, three lines of type at the bottom. Everything is a deterministic function of t.
 import * as THREE from 'three';
+import { wa } from './wairo.js';
 
-export const INK = '#25214A', PAPER = '#FFFCF6';
+export const INK = '#4A4262', PAPER = '#FFFCF6';
 export const SUN = new THREE.Vector3(-0.42, 0.78, 0.46).normalize();
 
 // ---------- Random ----------
@@ -139,13 +141,13 @@ void main() {
   float tone = top ? 1.0 : 0.95;
   vec3 c = col * (uLit > 0.5 ? 1.0 : tone);
   if (uShadow > 0.5 && !emit) {
-    vec3 shc = mix(vec3(1.0), vec3(0.70, 0.58, 0.90), sh);
+    vec3 shc = mix(vec3(1.0), vec3(0.80, 0.74, 0.90), sh);
     // halftone: light dots printed in the shadows, like print (world space, moves with the object)
     if (uHT > 0.5 && sh > 0.5) {
       vec2 wq = (abs(n.y) > 0.5 ? vWP.xz : vec2(abs(n.x) > abs(n.z) ? vWP.z : vWP.x, vWP.y)) / 0.38;
       wq.x += 0.5 * mod(floor(wq.y), 2.0);
       float dd = 1.0 - aaStep(0.2, length(fract(wq) - 0.5));
-      shc = mix(shc, mix(vec3(1.0), vec3(0.70, 0.58, 0.90), sh * 0.45), dd);
+      shc = mix(shc, mix(vec3(1.0), vec3(0.80, 0.74, 0.90), sh * 0.45), dd);
     }
     c *= shc;
   }
@@ -174,18 +176,19 @@ void main() {
 }`;
 
 const linear = (hex) => new THREE.Color(hex);
+const tone = (hex) => new THREE.Color(wa(hex));
 const LAMPS = Array.from({ length: 48 }, () => new THREE.Vector4(0, 0, 0, 0));
 const GLOBAL = { uNight: { value: 0 }, uSun: { value: SUN.clone() }, uLamps: { value: LAMPS }, uWave: { value: 1e5 }, uWaveC: { value: new THREE.Vector2() }, uZone: { value: new THREE.Vector4() }, uZoneLit: { value: 1 }, uFlash: { value: 0 }, uDusk: { value: 0 }, uSeas: { value: new THREE.Vector3(0, 0, -1) }, uHT: { value: 0 } };
 
 export function flat(hex, o = {}) {
   const u = THREE.UniformsUtils.merge([THREE.UniformsLib.lights, {
-    uCol: { value: linear(hex) }, uPatCol: { value: linear(o.patCol || '#FFFFFF') },
-    uCol2: { value: linear(o.col2 || hex) }, uPatCol2: { value: linear(o.patCol2 || o.patCol || '#FFFFFF') }, uHasC2: { value: o.col2 ? 1 : 0 },
-    uInk: { value: linear(INK) }, uWinDay: { value: linear('#BFE4FF') }, uWinLit: { value: linear('#FFD36E') }, uWinDark: { value: linear('#2C2752') },
-    uWarm: { value: linear('#FFE3A3') },
+    uCol: { value: tone(hex) }, uPatCol: { value: tone(o.patCol || '#FFFFFF') },
+    uCol2: { value: tone(o.col2 || hex) }, uPatCol2: { value: tone(o.patCol2 || o.patCol || '#FFFFFF') }, uHasC2: { value: o.col2 ? 1 : 0 },
+    uInk: { value: linear(INK) }, uWinDay: { value: linear('#BFE4FF') }, uWinLit: { value: tone('#FFD36E') }, uWinDark: { value: linear('#2C2752') },
+    uWarm: { value: tone('#FFE3A3') },
     uPat: { value: o.pat || 0 }, uPatScale: { value: o.patScale || 1 }, uWin: { value: o.win ? 1 : 0 },
     uY0: { value: o.y0 || 0 }, uY1: { value: o.y1 || 0 }, uSeed: { value: o.seed || 0 },
-    uEmit: { value: o.emit ? 1 : 0 }, uNC: { value: linear(o.nightCol || '#000000') }, uHasNC: { value: o.nightCol ? 1 : 0 }, uZA: { value: o.zoneAware ? 1 : 0 }, uShadow: { value: o.shadow === false ? 0 : 1 }, uLit: { value: o.lit ? 1 : 0 }, uSnowY: { value: o.snowY ?? -1e5 },
+    uEmit: { value: o.emit ? 1 : 0 }, uNC: { value: tone(o.nightCol || '#000000') }, uHasNC: { value: o.nightCol ? 1 : 0 }, uZA: { value: o.zoneAware ? 1 : 0 }, uShadow: { value: o.shadow === false ? 0 : 1 }, uLit: { value: o.lit ? 1 : 0 }, uSnowY: { value: o.snowY ?? -1e5 },
   }]);
   Object.assign(u, GLOBAL);
   return new THREE.ShaderMaterial({ uniforms: u, vertexShader: FLAT_VS, fragmentShader: FLAT_FS, lights: true });

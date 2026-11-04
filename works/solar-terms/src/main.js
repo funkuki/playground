@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { Diorama, setHalftone, setNight, setDusk, setLamps, setWave, setSeason, clamp01, ease } from './memphis.js';
 import { TERMS, SEASONS, schedule } from './terms.js';
+import { wa } from './wairo.js';
 
 const FPS = 60, LOOP = 30;
 const TAU = Math.PI * 2, D2R = THREE.MathUtils.degToRad;
@@ -98,7 +99,7 @@ let active = null, nowT = 0;
 function activate(s) {
   if (active) dio.scene.remove(active.W);
   active = s; dio.scene.add(s.W);
-  dio.scene.background = new THREE.Color(s.bg || '#A5EBAA');
+  dio.scene.background = new THREE.Color(wa(s.bg || '#A5EBAA'));
   setNight(s.night || 0); setDusk(s.dusk || 0); setLamps(s.lamps || []); setWave(1e5); setSeason(0, 0, -1);
   s.enterT = nowT;
 }
@@ -157,7 +158,8 @@ function setPage(i) {
 const pad = (n) => String(n).padStart(2, '0');
 const md = (d) => `${pad(d.getMonth() + 1)}.${pad(d.getDate())}`;
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-const ACCENT = { spring: ['#0E9F7A', '#DDF8EE'], summer: ['#B87A00', '#FFF3C4'], autumn: ['#E0602F', '#FFE6D9'], winter: ['#2E5BE6', '#E3EDFF'] };
+// 季節色（和色）：春 常磐色、夏 山吹色、秋 茜色、冬 露草色；tint 是同色系的淡色
+const ACCENT = { spring: ['#3F8C6B', '#E3F1E8'], summer: ['#B58A2E', '#FBF0D6'], autumn: ['#C7594E', '#FBE7E2'], winter: ['#4F6FB5', '#E6ECF7'] };
 function renderText(i) {
   const T = TERMS[i], S = SEASONS[T.season], D = DATES[i];
   const days = Math.round((D.end - D.start) / 86400000) + 1;
@@ -195,7 +197,7 @@ function renderCaption(i) {
 
 // ---------- 目錄的點 ----------
 const dotsBox = index.querySelector('.dots');
-const SEA_COL = { spring: '#2FCB7A', summer: '#FFC21A', autumn: '#FF8A50', winter: '#4F7BFF' };
+const SEA_COL = { spring: '#68BE8D', summer: '#F2C26B', autumn: '#EE836F', winter: '#7F9BD6' };   // 若竹、山吹、珊瑚朱、露草（淡）
 const dotEls = TERMS.map((T, i) => {
   const b = document.createElement('button');
   b.type = 'button'; b.className = `dot${T.scene ? ' has' : ''}${i % 6 === 0 && i ? ' gap' : ''}`;

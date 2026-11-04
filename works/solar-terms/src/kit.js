@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import { flat, mesh, box, rng, lerp, clamp01, ease, noEdge, setWave, setLamps } from './memphis.js';
 import { person, walk } from './people.js';
+import { WA, wa } from './wairo.js';
 
 export { THREE, flat, mesh, box, lerp, clamp01, ease, noEdge, person, walk, setWave, setLamps };
 export const TAU = Math.PI * 2;
@@ -37,11 +38,11 @@ export const lt = (hex, k) => '#' + new THREE.Color(hex).lerp(new THREE.Color(k 
 export const dots = (hex, s = 1, pc) => M(hex, { pat: 1, patCol: pc || lt(hex, -0.1), patScale: s });
 export const stripes = (hex, s = 1, pc, pat = 6) => M(hex, { pat, patCol: pc || lt(hex, -0.1), patScale: s });
 
-// 調色盤（STYLE.md §3 的例子）：每頁從這裡挑 5～7 個飽和色 + 2～3 個粉彩，依區域集中
+// 調色盤：沿用 Memphis 的名字，顏色換成和色（./wairo.js）。每頁挑 5～7 個主色 + 2～3 個粉彩，依區域集中
 export const PAL = {
-  yellow: '#FFD234', pink: '#FF7EB3', sky: '#5CC8FF', mint: '#5EDFB0', lilac: '#B9A0FF', peach: '#FF9C6B',
-  cobalt: '#2F5BFF', coral: '#FF5A5F', green: '#2FCB7A', teal: '#14B8A0', plum: '#4A4468', white: '#FFFFFF',
-  trunk: '#A8705A', base: '#DCD4EE', warm: '#FFD36E',
+  yellow: WA.tamago, pink: WA.toki, sky: WA.sora, mint: WA.byakuroku, lilac: WA.fuji, peach: WA.anzu,
+  cobalt: WA.tsuyukusa, coral: WA.sango, green: WA.wakatake, teal: WA.seiji, plum: WA.hatoba, white: WA.hakuji,
+  trunk: WA.kurumi, base: WA.shirafuji, warm: '#F9D58E',
 };
 
 // ---------- 合併幾何：靜態的小東西依材質合併成一個 mesh，省 draw call ----------
@@ -106,9 +107,9 @@ export function ribbon(pts, w, yAt = () => 0.05, seg = 200) {
 // ---------- 樹：樹幹 + 一根枝 + 一團 lobes，向陽面加亮的 lobes（STYLE.md §9：至少五種樹冠形狀）----------
 export const CS = (main, dot, bloom) => ({ main: dots(main, 0.75, dot), hi: dots(lt(main, 0.3), 0.6, lt(dot, 0.28)), bloom });
 export const CROWN = {
-  green: CS('#3CBE7E', '#2FA866'), lime: CS('#9BE15D', '#7FCC45'), teal: CS('#62E0C8', '#3FC7AE'), pine: CS('#1FA862', '#17905A'),
-  maple: CS('#FF7A59', '#F25C3C'), gold: CS('#FFC93C', '#F5B21C'),
-  lilac: CS('#C9B8FF', '#FFFFFF'), ice: CS('#BFE9FF', '#FFFFFF'), mint: CS('#A8F0D2', '#FFFFFF'),
+  green: CS(WA.wakatake, '#57AC7C'), lime: CS(WA.wakaba, '#A1C473'), teal: CS(WA.seiji, '#6AAD99'), pine: CS(WA.tokiwa, '#438A6A'),   // 若竹、若葉、青磁、常磐
+  maple: CS(WA.sango, '#DF715E'), gold: CS(WA.yamabuki, '#E6B158'),                                                                  // 珊瑚朱、山吹
+  lilac: CS(WA.fuji, '#FFFFFF'), ice: CS(WA.sora, '#FFFFFF'), mint: CS(WA.byakuroku, '#FFFFFF'),                                       // 藤、空、白緑
 };
 const TRUNK = () => M(PAL.trunk);
 export function tree(parent, R, x, z, kind, cs, s = 1, y = 0) {
@@ -430,7 +431,7 @@ export function steam(W, R, spots, perSpot = 5, period = 3.2) {
 // 一陣噴出來的小碎片（點擊的回饋：花瓣、紙屑、雪花），各自拋物線落下
 export function bursts(W, cols, n = 40) {
   const geo = new THREE.BoxGeometry(0.28, 0.06, 0.2);
-  const mats = cols.map((c) => new THREE.MeshBasicMaterial({ color: c }));
+  const mats = cols.map((c) => new THREE.MeshBasicMaterial({ color: wa(c) }));
   const ims = mats.map((m) => { const im = new THREE.InstancedMesh(geo, m, n); im.userData.noOutline = true; im.frustumCulled = false; im.count = 0; W.add(im); return im; });
   const ev = [];
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler(), sc = new THREE.Vector3(1, 1, 1), pos = new THREE.Vector3();
