@@ -230,7 +230,7 @@ const dotEls = TERMS.map((T, i) => {
 });
 for (const [id, f] of [['#prev', prev], ['#next', next], ['#prev2', prev], ['#next2', next]]) $(id).addEventListener('click', f);
 addEventListener('keydown', (e) => {
-  if ($('#info').classList.contains('open')) return;
+  if (document.querySelector('#info.open, #grid.open, #card.open')) return;
   if (e.key === 'ArrowRight') next();
   if (e.key === 'ArrowLeft') prev();
 });
@@ -278,14 +278,16 @@ function frame(i) {
     dio.fitShadow(_sc.set(v.target[0], 0, v.target[2]), v.shadowR || v.span * 1.6);
   }
   dio.render(t, i, { grow });
+  if (snapWanted) { snapWanted = false; makeCard(grabFrame()); }
 }
 
 const t0 = performance.now();
 let prevNow = t0;
+let paused = false;      // 格狀總覽打開時，主畫面不用畫
 function loop(now) {
   now = now ?? performance.now();
   relax(now - prevNow); prevNow = now;
-  frame(Math.floor((now - t0) / 1000 * FPS));
+  if (!paused) frame(Math.floor((now - t0) / 1000 * FPS));
   requestAnimationFrame(loop);
 }
 
@@ -359,6 +361,147 @@ infoBtn.addEventListener('click', () => setOpen(true));
 closeBtn.addEventListener('click', () => setOpen(false));
 dialog.addEventListener('click', (e) => { if (e.target === dialog) setOpen(false); });
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && dialog.classList.contains('open')) setOpen(false); });
+
+// ---------- 從畫面上剪下插畫那一塊（含毛邊外框），要在 render 之後馬上剪 ----------
+function grabFrame(w = 1200) {
+  const k = canvas.width / L.cw, m = 14;
+  const sx = (L.cx - L.hw - m) * k, sy = (L.cy - L.hh - m) * k, sw = (L.hw + m) * 2 * k, sh = (L.hh + m) * 2 * k;
+  const c = document.createElement('canvas'); c.width = w; c.height = Math.round(w * sh / sw);
+  const x = c.getContext('2d'); x.fillStyle = '#FFFCF6'; x.fillRect(0, 0, c.width, c.height);
+  x.drawImage(canvas, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  return c;
+}
+
+// ---------- 格狀總覽：二十四格縮圖，一格一格用主畫面畫出來再剪下 ----------
+const gridEl = $('#grid'), gridBox = gridEl.querySelector('.seasons'), thumbs = new Map();
+const cards = [];
+for (const sea of ['spring', 'summer', 'autumn', 'winter']) {
+  const S = SEASONS[sea], ol = document.createElement('ol');
+  const h = document.createElement('h3'); h.textContent = `${S.zh} ${S.en}`; h.style.setProperty('--c', ACCENT[sea][0]);
+  gridBox.append(h, ol);
+  TERMS.forEach((T, i) => {
+    if (T.season !== sea) return;
+    const li = document.createElement('li');
+    li.innerHTML = `<button type="button" aria-label="${pad(i + 1)} ${T.zh} ${esc(T.en)}，${esc(T.place)}"><div class="thumb" style="--t:${ACCENT[sea][1]}"><img alt="" /></div>
+      <div class="meta"><i>${pad(i + 1)}</i><b>${T.zh}</b><span>${esc(T.en)}</span></div><p class="place">${esc(T.place)}</p></button>`;
+    li.querySelector('button').addEventListener('click', () => { setGrid(false); if (i !== cur) go(i, i > cur ? 1 : -1); });
+    ol.append(li); cards[i] = li;
+  });
+}
+let gridJob = 0;
+async function fillThumbs() {
+  const job = ++gridJob, order = [...Array(24).keys()].map((k) => (cur + k) % 24);
+  for (const i of order) {
+    if (!gridEl.classList.contains('open') || job !== gridJob) return;
+    if (thumbs.has(i)) continue;
+    const owned = built.has(i), s = await sceneFor(i);
+    if (!gridEl.classList.contains('open') || job !== gridJob) return;
+    thumbs.set(i, snapScene(s).toDataURL('image/jpeg', 0.85));
+    const img = cards[i].querySelector('img'); img.src = thumbs.get(i); img.onload = () => img.classList.add('ready');
+    if (!owned) { built.delete(i); if (s !== active) dispose(s); }
+    await new Promise((r) => setTimeout(r, 30));
+  }
+}
+function snapScene(s) {
+  const keep = active, z = view.zoom, T = 8;
+  activate(s); view.zoom = 1;
+  s.update(T, T); camera(T, s.view);
+  dio.fitShadow(_sc.set(s.view.target[0], 0, s.view.target[2]), s.view.shadowR || s.view.span * 1.6);
+  dio.render(T, T * FPS, { grow: 1e9 });
+  const c = grabFrame(520);
+  view.zoom = z; if (keep && keep !== s) activate(keep); else if (keep) dio.scene.add(keep.W);
+  return c;
+}
+function setGrid(open) {
+  gridEl.classList.toggle('open', open); gridEl.setAttribute('aria-hidden', String(!open)); paused = open;
+  if (open) {
+    gridEl.style.setProperty('--ar', String(L.hw / L.hh));
+    cards.forEach((li, i) => li.setAttribute('aria-current', String(i === cur)));
+    cards[cur]?.scrollIntoView({ block: 'center' });
+    $('#grid-close').focus(); fillThumbs();
+  } else { gridJob++; if (active) { activate(active); } $('#grid-btn').focus(); }
+}
+$('#grid-btn').addEventListener('click', () => setGrid(true));
+$('#grid-close').addEventListener('click', () => setGrid(false));
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && gridEl.classList.contains('open')) setGrid(false); });
+
+// ---------- 拍照：把現在這一格畫面和這一頁的資料排成一張節氣卡片 ----------
+let snapWanted = false, cardURL = '';
+const cardEl = $('#card'), cardImg = cardEl.querySelector('img');
+$('#shot-btn').addEventListener('click', () => {
+  if (flip.mode !== 'idle') return;
+  snapWanted = true;
+  const f = $('#flash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+});
+function roundRect(x, X, Y, w, h, r) { x.beginPath(); x.roundRect(X, Y, w, h, r); }
+async function makeCard(shot) {
+  await document.fonts.ready;
+  const T = TERMS[cur], D = DATES[cur], S = SEASONS[T.season], [acc, tint] = ACCENT[T.season], [iName, iKana, iHex] = IRO[T.id];
+  const W = 1080, P = 72, iw = W - P * 2, ih = Math.round(iw * shot.height / shot.width);
+  const H = P + ih + 640;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const SANS = '"Noto Sans TC", "PingFang TC", sans-serif', EN = '"Inter Tight", "Noto Sans TC", sans-serif', MONO = '"IBM Plex Mono", ui-monospace, monospace';
+  x.fillStyle = '#FFFCF6'; x.fillRect(0, 0, W, H);
+  x.drawImage(shot, P, P, iw, ih);
+  let y = P + ih + 70;
+  // 01 / 24 和季節的小膠囊
+  x.textBaseline = 'alphabetic';
+  x.font = `500 30px ${MONO}`; x.fillStyle = '#3A3550'; x.fillText(pad(cur + 1), P, y);
+  let cx = P + x.measureText(pad(cur + 1)).width + 12;
+  x.font = `400 24px ${MONO}`; x.fillStyle = '#8D8AA0'; x.fillText('/ 24', cx, y); cx += x.measureText('/ 24').width + 22;
+  x.font = `600 24px ${EN}`; const sea = `${S.zh} ${S.en}`, sw = x.measureText(sea).width + 32;
+  x.fillStyle = tint; roundRect(x, cx, y - 30, sw, 42, 21); x.fill(); x.fillStyle = acc; x.fillText(sea, cx + 16, y);
+  // 節氣名
+  y += 118;
+  x.font = `600 112px ${SANS}`; x.fillStyle = '#3E3756'; x.fillText(T.zh, P - 4, y);
+  const zw = x.measureText(T.zh).width;
+  x.font = `400 38px ${EN}`; x.fillStyle = '#8D8AA0'; x.fillText(T.en, P + zw + 24, y);
+  // 代表色
+  y += 64;
+  x.font = `600 28px "Noto Sans JP", "Hiragino Sans", ${SANS}`; const nw = x.measureText(iName).width;
+  x.font = `400 22px "Noto Sans JP", "Hiragino Sans", ${SANS}`; const kw = x.measureText(iKana).width;
+  x.font = `500 24px ${MONO}`; const hw = x.measureText(iHex).width;
+  const pw = 12 + 44 + 16 + nw + 12 + kw + 18 + hw + 22;
+  x.fillStyle = '#FFFFFF'; x.strokeStyle = '#ECE7F0'; x.lineWidth = 2; roundRect(x, P, y - 8, pw, 62, 31); x.fill(); x.stroke();
+  x.fillStyle = iHex; x.beginPath(); x.arc(P + 12 + 22, y + 23, 22, 0, TAU); x.fill(); x.strokeStyle = 'rgba(62,55,86,.15)'; x.stroke();
+  let ix = P + 12 + 44 + 16;
+  x.fillStyle = '#3A3550'; x.font = `600 28px "Noto Sans JP", "Hiragino Sans", ${SANS}`; x.fillText(iName, ix, y + 33); ix += nw + 12;
+  x.fillStyle = '#8D8AA0'; x.font = `400 22px "Noto Sans JP", "Hiragino Sans", ${SANS}`; x.fillText(iKana, ix, y + 32); ix += kw + 18;
+  x.font = `500 24px ${MONO}`; x.fillText(iHex, ix, y + 32);
+  // 期間、三候、地點
+  y += 118;
+  x.font = `500 28px ${MONO}`; x.fillStyle = '#3A3550'; x.fillText(`${D.start.getFullYear()}.${md(D.start)} – ${md(D.end)}`, P, y);
+  x.font = `600 30px "Noto Sans JP", "Hiragino Sans", ${SANS}`; x.fillStyle = acc; x.fillText(T.hou.join('・'), P, y + 56);
+  y += 128;
+  x.font = `600 32px ${SANS}`; x.fillStyle = '#3E3756'; x.fillText(T.place, P, y);
+  const plw = x.measureText(T.place).width;
+  x.font = `400 24px ${EN}`; x.fillStyle = '#8D8AA0'; x.fillText(T.placeEn, P + plw + 18, y);
+  x.font = `400 26px ${SANS}`; x.fillStyle = '#6E6A86'; x.fillText(T.line || '', P, y + 48);
+  // 底部：三個孟菲斯小符號和署名
+  const fy = H - 56;
+  x.fillStyle = '#F2C26B'; x.beginPath(); x.arc(P + 10, fy - 8, 10, 0, TAU); x.fill();
+  x.fillStyle = '#F4B3C2'; x.beginPath(); x.moveTo(P + 32, fy + 2); x.lineTo(P + 43, fy - 18); x.lineTo(P + 54, fy + 2); x.fill();
+  x.strokeStyle = '#5B7FC7'; x.lineWidth = 4; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); x.moveTo(P + 66, fy - 8); x.lineTo(P + 74, fy - 15); x.lineTo(P + 83, fy - 1); x.lineTo(P + 92, fy - 8); x.stroke();
+  x.font = `400 22px ${MONO}`; x.fillStyle = '#B7B4C6'; x.textAlign = 'right'; x.fillText("節氣圖鑑 · sui's playground", W - P, fy); x.textAlign = 'left';
+  cardURL = c.toDataURL('image/png');
+  cardImg.src = cardURL;
+  cardEl.classList.add('open'); cardEl.setAttribute('aria-hidden', 'false'); $('#card-save').focus();
+}
+const cardName = () => `節氣圖鑑-${pad(cur + 1)}-${TERMS[cur].zh}.png`;
+function closeCard() { cardEl.classList.remove('open'); cardEl.setAttribute('aria-hidden', 'true'); $('#shot-btn').focus(); }
+$('#card-save').addEventListener('click', () => { const a = document.createElement('a'); a.href = cardURL; a.download = cardName(); a.click(); });
+$('#card-close').addEventListener('click', closeCard);
+cardEl.addEventListener('click', (e) => { if (e.target === cardEl) closeCard(); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && cardEl.classList.contains('open')) closeCard(); });
+// 手機上可以直接分享到相簿或其他 app
+if (navigator.canShare && navigator.canShare({ files: [new File([''], 'a.png', { type: 'image/png' })] })) {
+  const sh = $('#card-share'); sh.hidden = false;
+  sh.addEventListener('click', async () => {
+    const blob = await (await fetch(cardURL)).blob();
+    try { await navigator.share({ files: [new File([blob], cardName(), { type: 'image/png' })], title: `${TERMS[cur].zh} · 節氣圖鑑` }); } catch { /* 使用者取消分享 */ }
+  });
+}
 
 // ---------- 第一頁：網址指定的，否則是今天的節氣；今天這頁還沒畫好，就往後找第一個畫好的 ----------
 let first = TERMS.findIndex((T) => `#${T.id}` === location.hash);

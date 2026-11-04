@@ -116,7 +116,58 @@
       #info-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; color: #5A5670; background: transparent; border: 0; border-radius: 50%; cursor: pointer; }
       #info-close:hover { background: rgba(0, 0, 0, .06); }
 
-      .shot #info-btn, .shot .lab-back, .shot .lab-bar, .shot #hint, .shot .side, .shot #index, .shot #sheet, .shot #caption { display: none !important; }
+
+      /* ---------- 右上角的工具按鈕：格狀總覽、拍照（樣式同 info）---------- */
+      .tool { position: fixed; top: 14px; z-index: 10; width: 36px; height: 36px; padding: 0; display: grid; place-items: center; color: var(--ink); cursor: pointer;
+        background: rgba(255, 255, 255, .88); border: 0; border-radius: 50%; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        box-shadow: 0 2px 14px rgba(37, 33, 74, .12); transition: background .15s, transform .15s; }
+      .tool:hover { background: #fff; transform: scale(1.06); }
+      .tool:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      #grid-btn { right: 102px; } #shot-btn { right: 58px; }
+
+      /* ---------- 格狀總覽：二十四格一次看 ---------- */
+      #grid { position: fixed; inset: 0; z-index: 15; overflow-y: auto; overscroll-behavior: contain; background: var(--paper); opacity: 0; pointer-events: none; transition: opacity .25s; }
+      #grid.open { opacity: 1; pointer-events: auto; }
+      #grid header { position: sticky; top: 0; z-index: 1; display: flex; align-items: center; gap: 12px; padding: 14px 64px 12px 20px; background: linear-gradient(var(--paper) 75%, rgba(255, 252, 246, 0)); }
+      #grid header h2 { margin: 0; font-size: 18px; letter-spacing: .08em; color: var(--ink); }
+      #grid header h2::before { display: none; }
+      #grid header small { font-size: 12px; color: var(--grey); }
+      #grid-close { position: fixed; top: 14px; right: 14px; }
+      #grid .seasons { padding: 4px 20px 40px; max-width: 1400px; margin: 0 auto; }
+      #grid h3 { display: flex; align-items: center; gap: 8px; margin: 18px 0 10px; font-size: 13px; letter-spacing: .1em; color: var(--c); }
+      #grid h3::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+      #grid ol { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 18px 14px; }
+      #grid li button { display: block; width: 100%; padding: 0; border: 0; background: none; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+      #grid .thumb { position: relative; aspect-ratio: var(--ar, 1); border-radius: 12px; overflow: hidden; background: var(--t);
+        background-image: radial-gradient(rgba(255, 255, 255, .7) 1.4px, transparent 1.6px); background-size: 12px 12px; transition: transform .25s cubic-bezier(.22, 1, .36, 1), box-shadow .25s; }
+      #grid .thumb img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .4s; }
+      #grid .thumb img.ready { opacity: 1; }
+      #grid li button:hover .thumb { transform: translateY(-3px); box-shadow: 0 8px 22px rgba(37, 33, 74, .16); }
+      #grid li button:focus-visible .thumb { outline: 2px solid var(--ink); outline-offset: 2px; }
+      #grid li[aria-current="true"] .thumb { box-shadow: 0 0 0 2.5px var(--paper), 0 0 0 4.5px var(--ink); }
+      #grid .meta { display: flex; align-items: baseline; gap: 8px; margin-top: 8px; }
+      #grid .meta i { font: normal 11px "IBM Plex Mono", monospace; color: var(--light); }
+      #grid .meta { min-width: 0; }
+      #grid .meta b { white-space: nowrap; font-size: 17px; font-weight: 600; color: var(--ink); letter-spacing: .04em; }
+      #grid .meta span { font-size: 12px; color: var(--grey); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #grid .place { margin: 1px 0 0; font-size: 12px; color: var(--grey); }
+      .narrow #grid ol { grid-template-columns: repeat(2, 1fr); gap: 14px 10px; }
+      .narrow #grid .seasons { padding: 0 12px 32px; }
+
+      /* ---------- 拍照：節氣卡片的預覽 ---------- */
+      #card { position: fixed; inset: 0; z-index: 25; display: grid; place-items: center; padding: 16px; background: rgba(37, 33, 74, .3); opacity: 0; pointer-events: none; transition: opacity .2s; }
+      #card.open { opacity: 1; pointer-events: auto; }
+      #card-panel { display: flex; flex-direction: column; align-items: center; gap: 14px; max-height: calc(100vh - 32px); }
+      #card-panel img { display: block; max-width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 110px); border-radius: 10px; box-shadow: 0 14px 44px rgba(37, 33, 74, .35); background: var(--paper); }
+      #card-panel .row { display: flex; gap: 10px; }
+      #card-panel .row button { height: 40px; padding: 0 18px; border: 0; border-radius: 999px; font: 600 14px "Inter Tight", "Noto Sans TC", sans-serif; cursor: pointer; color: var(--ink); background: rgba(255, 255, 255, .92); box-shadow: 0 2px 14px rgba(37, 33, 74, .14); }
+      #card-panel .row button.primary { color: #fff; background: var(--accent); }
+      #card-panel .row button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+      #flash { position: fixed; inset: 0; z-index: 24; background: #fff; opacity: 0; pointer-events: none; }
+      #flash.on { animation: flash .45s ease-out; }
+      @keyframes flash { from { opacity: .85; } to { opacity: 0; } }
+
+      .shot .tool, .shot #info-btn, .shot .lab-back, .shot .lab-bar, .shot #hint, .shot .side, .shot #index, .shot #sheet, .shot #caption { display: none !important; }
 
       /* ---------- 手機：插畫在上、文字頁在下（可以上下捲）---------- */
       .narrow h1 .zh { font-size: 40px; }
@@ -173,6 +224,29 @@
 
     <div id="hint"><span></span></div>
 
+    <button class="tool" id="grid-btn" type="button" aria-label="二十四節氣總覽" aria-haspopup="dialog" aria-controls="grid">
+      <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" /><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" /><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" /></svg>
+    </button>
+    <button class="tool" id="shot-btn" type="button" aria-label="拍下這一頁，存成節氣卡片">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z" /><circle cx="12" cy="13" r="3.6" /></svg>
+    </button>
+
+    <div id="grid" role="dialog" aria-modal="true" aria-label="二十四節氣總覽" aria-hidden="true">
+      <header><h2>二十四節氣</h2><small>點一格翻到那一頁</small></header>
+      <button class="tool" id="grid-close" type="button" aria-label="關閉總覽">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+      </button>
+      <div class="seasons"></div>
+    </div>
+
+    <div id="card" role="dialog" aria-modal="true" aria-label="節氣卡片" aria-hidden="true">
+      <div id="card-panel">
+        <img alt="這一頁的節氣卡片" />
+        <div class="row"><button type="button" class="primary" id="card-save">儲存圖片</button><button type="button" id="card-share" hidden>分享</button><button type="button" id="card-close">關閉</button></div>
+      </div>
+    </div>
+    <div id="flash"></div>
+
     <button id="info-btn" type="button" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
         <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r="0.6" fill="currentColor" />
@@ -188,13 +262,12 @@
         <p class="sub">Memphis Diorama · 24 Solar Terms of Taiwan · Three.js</p>
         <p>
           一本會動的節氣圖鑑，一頁一個節氣。每一頁的插畫是台灣一個「最有那個節氣味道」的地方，做成桌上的微縮模型；旁邊介紹節氣的期間、日本的七十二候、在台灣看得到的物候，以及那個地方這時候的故事。
-          二十四個節氣都畫好了，畫裡的人、動物和東西大多可以點，點了會有反應。
         </p>
 
         <h2>靈感與畫風來源</h2>
         <ul>
           <li>Eian（<a href="https://x.com/EianLu/status/2114650892934975667" target="_blank" rel="noopener">@EianLu</a>）用 Claude 寫程式做的「會動的微縮地圖」。</li>
-          <li>畫風依照 Eian 開源的 <a href="https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles/memphis-diorama/STYLE.md" target="_blank" rel="noopener">Memphis Diorama STYLE.md</a>（LemoLab，MIT 授權）；STYLE 裡的第 3 種用途正好是「節氣系列」。描邊、平塗材質和毛邊外框沿用它的 <code>memphis.js</code>。</li>
+          <li>畫風依照 Eian 開源的 <a href="https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles/memphis-diorama/STYLE.md" target="_blank" rel="noopener">Memphis Diorama STYLE.md</a>（LemoLab，MIT 授權）。</li>
         </ul>
 
         <h2>作法簡介</h2>
@@ -211,7 +284,6 @@
         <ul>
           <li>拖曳插畫或左右滑動翻頁；也可以用鍵盤 ← →、兩側的箭頭，或點下面的節氣點。</li>
           <li>點畫裡的東西會有反應：收割機、漁船、燈塔、大草莓、天后宮、雪人、帝雉、燈籠⋯⋯</li>
-          <li>網址後面的 <code>#lidong</code> 這類錨點可以直接分享某一頁。</li>
         </ul>
       </div>
     </div>

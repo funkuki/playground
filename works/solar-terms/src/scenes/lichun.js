@@ -74,8 +74,6 @@ export default function build(W, { LOOP }) {
   // ---------- 白鷺：跟在插秧機後面走，點一下就飛起來 ----------
   const egrets = Array.from({ length: 5 }, (_, i) => {
     const e = bird(W, '#FFFFFF', 1.1);
-    for (const sd of [-0.12, 0.12]) mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.9, 4).translate(0, -0.45, 0), M('#4A4468'), 0, -0.1, sd, e.g);
-    mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.6, 6).translate(0, 0.3, 0), M('#FFFFFF', { shadow: false }), 0.45, 0.05, 0, e.g).rotation.z = -0.5;
     tag(e.g, 'egret', i, clickables);
     return { e, i, ph: R() * 6 };
   });
@@ -115,11 +113,10 @@ export default function build(W, { LOOP }) {
       const fly = t - ev.egrets < 4 ? Math.sin(Math.PI * (t - ev.egrets) / 4) : 0;
       for (const g of egrets) {
         const bx = px - dir * (3 + g.i * 1.3) + Math.sin(t * 0.5 + g.ph) * 0.6, bz = pz + (g.i % 2 ? 1.5 : -1.5) + Math.cos(t * 0.4 + g.ph) * 0.5;
-        const peck = Math.max(0, Math.sin(t * 2 + g.ph)) > 0.7 ? 0.4 : 0;
-        g.e.g.position.set(bx + fly * Math.cos(t + g.i) * 6, 1.0 + fly * (6 + g.i), bz + fly * Math.sin(t + g.i) * 6);
-        g.e.g.rotation.set(0, dir > 0 ? Math.PI * 0.1 : Math.PI * 1.1, fly > 0.05 ? 0 : -peck);
-        for (const w of g.e.wings) w.scale.z = lerp(0.3, 1, fly);
-        flap(g.e, t * 9 + g.ph, fly * 0.8);
+        const hop = Math.max(0, Math.sin(t * 2.8 + g.ph * 3)) * (g.i === 2 ? 1.6 : 0.2);   // 跟立冬一樣：偶爾跳一下
+        g.e.g.position.set(bx + fly * Math.cos(t + g.i) * 6, 0.65 + hop + fly * (6 + g.i), bz + fly * Math.sin(t + g.i) * 6);
+        g.e.g.rotation.y = dir > 0 ? 0 : Math.PI;
+        flap(g.e, t * 9 + g.ph, fly > 0.05 || hop > 0.4 ? 0.9 : 0.12);
       }
       const tu = fr(t / (LOOP * 0.5) + 0.2);
       train.position.set(lerp(-130, 150, tu), 1.6 + (t - ev.train < 3 ? Math.abs(Math.sin(t * 20)) * 0.08 : 0), -33); train.scale.setScalar(fadeEnds(tu, 10));
