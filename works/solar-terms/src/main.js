@@ -3,7 +3,7 @@
 // 翻頁：拖曳時外框跟著手指收起來，放手超過門檻就翻過去，下一頁的外框從中間長開（STYLE.md §6 的轉場）。
 import * as THREE from 'three';
 import { Diorama, setHalftone, setNight, setDusk, setLamps, setWave, setSeason, clamp01, ease } from './memphis.js';
-import { TERMS, SEASONS, schedule } from './terms.js';
+import { TERMS, SEASONS, IRO, schedule } from './terms.js';
 import { wa } from './wairo.js';
 
 const FPS = 60, LOOP = 30;
@@ -167,6 +167,8 @@ function renderText(i) {
   const when = i === NOW ? '就是現在' : until > 0 && until < 60 ? `還有 ${until} 天` : '';
   const root = document.documentElement.style;
   root.setProperty('--accent', ACCENT[T.season][0]); root.setProperty('--tint', ACCENT[T.season][1]);
+  const [iName, iKana, iHex, iWhy] = IRO[T.id];
+  const iro = `<span class="iro" title="${esc(iWhy)}"><i style="background:${iHex}"></i><b lang="ja">${esc(iName)}<small>${esc(iKana)}</small></b><code>${iHex}</code></span>`;
   const hou = T.hou.map((h, k) => `<li><i>${k + 1}</i><b lang="ja">${esc(h)}<small>${esc(T.ja[k])}</small></b><span>${esc(T.houNote[k])}</span></li>`).join('');
   const story = T.story
     ? `<section class="story"><h2>${esc(T.place)}<small class="place-en">${esc(T.placeEn)}</small></h2>${T.story.map((p) => `<p>${esc(p)}</p>`).join('')}</section>
@@ -180,7 +182,7 @@ function renderText(i) {
       <dt>期間</dt><dd>${D.start.getFullYear()}.${md(D.start)} – ${md(D.end)}<small>約 ${days} 天</small></dd>
       <dt>黃經</dt><dd>${T.lon}°<small>太陽在黃道上的位置，每 15° 一個節氣</small></dd>
     </dl>
-    <section class="hou"><h2>三候<small>日本七十二候</small></h2><ol>${hou}</ol>${T.tw ? `<p class="tw"><b>在台灣</b>${esc(T.tw)}</p>` : ''}</section>
+    <section class="hou"><h2>三候<small>日本七十二候</small>${iro}</h2><ol>${hou}</ol>${T.tw ? `<p class="tw"><b>在台灣</b>${esc(T.tw)}</p>` : ''}</section>
     ${story}
     <p class="credit">日期由公式推算，可能差一天。</p>`;
   sheet.scrollTop = 0;
