@@ -59,14 +59,21 @@ export default function build(W, { LOOP }) {
   tag(deck, 'deck', null, clickables);
 
   // ---------- 灰面鵟鷹：寬翅膀的鷹，一群繞著兩根「鷹柱」盤旋，最後滑進樹林 ----------
+  // 翅膀的平面形狀（x 往前、v 往翼尖）：寬寬的內翼、圓弧的前緣，翼尖散開五根「手指」（初級飛羽）
+  const WING = [[0.42, 0], [0.5, 0.45], [0.42, 1.05], [0.26, 1.5], [0.2, 1.82], [0.1, 1.62], [0.03, 1.95], [-0.06, 1.66], [-0.12, 1.9], [-0.2, 1.62], [-0.26, 1.78], [-0.34, 1.52], [-0.42, 1.58], [-0.5, 1.25], [-0.58, 0.8], [-0.52, 0.35], [-0.42, 0]];
+  const TAIL = [[0, 0.12], [-0.5, 0.3], [-0.68, 0.16], [-0.72, 0], [-0.68, -0.16], [-0.5, -0.3], [0, -0.12]];   // 張開的扇形尾巴
+  const flatShape = (pts, sd = 1) => {
+    const sh = new THREE.Shape(pts.map(([u, v]) => new THREE.Vector2(u, v * sd)));
+    return new THREE.ExtrudeGeometry(sh, { depth: 0.04, bevelEnabled: false, curveSegments: 4 }).rotateX(Math.PI / 2);   // shape 的 v 變成 +z（往翼尖）
+  };
   const hawk = () => {
     const g = new THREE.Group(); W.add(g);
     const m = M(HAWK, { shadow: false, pat: 6, patCol: '#F3E3CF', patScale: 0.12 });
-    mesh(new THREE.CapsuleGeometry(0.22, 0.8, 4, 10).rotateZ(Math.PI / 2), m, 0, 0, 0, g);
-    mesh(new THREE.SphereGeometry(0.2, 10, 8), M('#F3E3CF', { shadow: false }), 0.55, 0.08, 0, g);
-    mesh(new THREE.ConeGeometry(0.06, 0.2, 6).rotateZ(-Math.PI / 2), M(PAL.yellow, { shadow: false }), 0.75, 0.05, 0, g);
-    mesh(box(0.5, 0.05, 0.6).translate(-0.25, 0, 0), m, -0.45, 0, 0, g);
-    const wings = [-1, 1].map((sd) => { const w = new THREE.Group(); w.position.set(0, 0.05, sd * 0.15); g.add(w); mesh(box(0.7, 0.05, 1.6).translate(0, 0, sd * 0.8), m, 0, 0, 0, w); w.userData.sd = sd; return w; });
+    mesh(new THREE.CapsuleGeometry(0.2, 0.7, 4, 10).rotateZ(Math.PI / 2), m, 0, 0, 0, g);
+    mesh(new THREE.SphereGeometry(0.18, 10, 8), M('#F3E3CF', { shadow: false }), 0.5, 0.06, 0, g);
+    mesh(new THREE.ConeGeometry(0.05, 0.18, 6).rotateZ(-Math.PI / 2), M(PAL.yellow, { shadow: false }), 0.7, 0.03, 0, g);
+    mesh(flatShape(TAIL), m, -0.35, 0.02, 0, g);
+    const wings = [-1, 1].map((sd) => { const w = new THREE.Group(); w.position.set(0.05, 0.06, sd * 0.12); g.add(w); mesh(flatShape(WING, sd), m, 0, 0, 0, w); w.userData.sd = sd; return w; });
     return { g, wings };
   };
   const COLS = [V3(-14, 0, -18), V3(18, 0, -26)];
@@ -100,7 +107,7 @@ export default function build(W, { LOOP }) {
         const s = 1.05 * enter * (1 - ease(clamp01((u - k.land - 0.08) / 0.04)));
         k.h.g.scale.setScalar(Math.max(0.001, s));
         const beat = glide > 0 ? 0.15 : 0.08 + scatter * 0.6;
-        for (const w of k.h.wings) w.rotation.x = w.userData.sd * (Math.sin(t * (3 + scatter * 9) + k.ph) * beat + (glide > 0 ? 0.25 : -0.05));
+        for (const w of k.h.wings) w.rotation.x = w.userData.sd * (Math.sin(t * (3 + scatter * 9) + k.ph) * beat + (glide > 0 ? 0.12 : -0.16));   // 盤旋時翼尖上揚成淺 V 字
       }
       for (const w of watchers) {
         const look = Math.sin(t * 0.4 + w.i);
