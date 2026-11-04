@@ -95,13 +95,13 @@ export default function build(W, { LOOP }) {
 
   // ---------- 燕子：一群小黑鳥往南飛 ----------
   const swallows = Array.from({ length: 12 }, (_, i) => ({ b: bird(W, PAL.plum, 0.55), dx: rr(-6, 6), dy: rr(-1.5, 1.5), dz: rr(-5, 5), ph: R() * 6 }));
-  const drift = clouds(W, R, [[-30, 26, -40, 1.3], [40, 30, -30, 1.1]], LOOP);
+  const drift = clouds(W, R, [[-30, 16, 3, 1.04], [40, 27, 5, 0.88]], LOOP);
 
   return {
     bg: '#E4F0D8', clickables,
     view: { target: [13, 2, 1], span: 31, el: 30, az: 24, swing: 6, shadowR: 80 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, 13);
       for (const o of orchard) { const T = ev.trees.get(orchard.indexOf(o)) ?? -9; sway(o.tr, t, 1, Math.exp(-Math.max(0, t - T) * 3) * Math.sin((t - T) * 14) * 0.12 * (t > T ? 1 : 0)); }
       for (const p of pickers) {
         const s = Math.max(0, Math.sin(t * 1.4 + p.ph));

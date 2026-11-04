@@ -92,13 +92,13 @@ export default function build(W, { LOOP }) {
     for (const m of cb.build(g)) { m.castShadow = false; m.receiveShadow = false; }
     noEdge(g); return { g, x: rr(-90, 90), z: rr(40, 70), ph: R() };
   });
-  const drift = clouds(W, R, [[-40, 32, -50, 1.4], [50, 34, -40, 1.2]], LOOP);
+  const drift = clouds(W, R, [[-40, 22, -2, 1.12], [15, 36, 0, 0.96]], LOOP);
 
   return {
     bg: '#E9F1E4', clickables,
     view: { target: [-6, 8, -4], span: 36, el: 34, az: 22, swing: 7, shadowR: 90 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, -6);
       for (const f of fog) { const u = fr(t / (LOOP * 1.5) + f.ph); f.g.position.set(((f.x + t * 1.4 + 100) % 200) - 100, 2 + u * 5, f.z - u * 8); f.g.scale.setScalar(fadeEnds(u, 4)); }
       cars.forEach((c) => { const u = fr(t / (LOOP * 1.2) + c.ph); driveAlong(c.g, RC, 0.02 + 0.96 * u, t); c.g.scale.setScalar(0.9 * fadeEnds(u, 14)); });
       for (const p of pickers) {

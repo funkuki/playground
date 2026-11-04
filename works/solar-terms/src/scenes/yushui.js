@@ -76,13 +76,14 @@ export default function build(W, { LOOP }) {
     fb.build(g);
     return { g, x0: rr(-40, 40), ph: R(), sp: rr(0.6, 1.0) };
   });
-  const drift = clouds(W, R, [[-40, 18, -30, 1.6], [10, 22, -40, 1.8], [50, 16, -20, 1.4], [-10, 14, -6, 1.1]], LOOP);
+  // 雨水：貼著山坡的灰色雨雲
+  const drift = clouds(W, R, [[-40, 21, 2, 1.28], [10, 32, 4, 1.44], [50, 36, 6, 1.12], [-10, 31, 3, 0.88]], LOOP, { col: '#E4DCE8', shape: 'flat', speed: 0.7 });
 
   return {
     bg: '#F3EEF4', night: 0.08, clickables,
     view: { target: [0, 5, 0], span: 40, el: 30, az: 18, swing: 6, shadowR: 90 },
     update(t) {
-      drift(t, 160); drizzle(t, H);
+      drift(t, 110, 0); drizzle(t, H);
       for (let i = 0; i < FN; i++) {
         const s = PS[i], f = fr(t / 7 + s.ph), y = lerp(s.y0, H(s.x, s.z) + 0.1, Math.min(1, f * 1.3));
         pos.set(s.x + Math.sin(t * 1.3 + s.w) * 0.8 - f * 2, y, s.z + Math.cos(t + s.w) * 0.6);

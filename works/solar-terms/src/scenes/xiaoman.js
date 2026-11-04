@@ -104,14 +104,15 @@ export default function build(W, { LOOP }) {
   const incense = steam(W, R, [[shrine.burner.x, shrine.burner.y + 0.8, shrine.burner.z, 0.7]], 5, 3.4);
   const homes = [[-12, -36, 0], [-2, -38, 2], [10, -36, 4], [22, -38, 1], [34, -36, 3], [46, -38, 5]].map(([x, z, i]) => house(W, x, z, { i, w: 6.5, d: 5.5, y: 1.0 }));
   const trees = [[-20, -30], [40, -28], [52, -18], [-50, -22]].map(([x, z], i) => tree(W, R, x, z, ['round', 'cloud', 'egg', 'cloud'][i], i % 2 ? CROWN.teal : CROWN.green, 1.3, 1.0));
-  const drift = clouds(W, R, [[-30, 26, -20, 1.4], [30, 30, 10, 1.2], [60, 28, -30, 1.3]], LOOP);
+  // 小滿：梅雨季，厚厚的灰色層雲蓋滿天
+  const drift = clouds(W, R, [[-30, 17, -6, 1.28], [30, 30, -4, 1.12], [60, 34, -2, 1.2], [-60, 18, -5, 1.2], [0, 25, -3, 1.44]], LOOP, { col: '#D9D3E6', shape: 'flat', speed: 0.6 });
   const sellers = Array.from({ length: 6 }, (_, i) => ({ p: walker(W, { col: pick([PAL.pink, PAL.sky, PAL.white, PAL.yellow]), hat: R() < 0.5 ? '#F8D97A' : null }), u: R(), dir: i % 2 ? 1 : -1 }));
 
   return {
     bg: '#E6ECF4', clickables,
     view: { target: [2, 3, -8], span: 34, el: 33, az: 20, swing: 6, shadowR: 80 },
     update(t) {
-      drift(t, 220); waves(t); incense(t);
+      drift(t, 110, 2); waves(t); incense(t);
       // 漁船：從外海開進來、靠岸停一下、再開出去
       for (const bt of boats) {
         const u = fr(t / LOOP + bt.ph);

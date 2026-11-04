@@ -78,13 +78,14 @@ export default function build(W, { LOOP }) {
     const m = mesh(new THREE.SphereGeometry(1, 16, 10), M('#FFFFFF', { lit: true, shadow: false }), 0, 0, 0, W); noEdge(m); m.castShadow = false;
     return { m, x: rr(-50, 50), ph: i / FOG, s: rr(5, 9) };
   });
-  const drift = clouds(W, R, [[-20, 34, -50, 1.5], [40, 38, -40, 1.3]], LOOP);
+  // 春分：陽明山常起霧，天上是一層層薄薄的層雲
+  const drift = clouds(W, R, [[-20, 23, -4, 1.28], [40, 34, -2, 1.12], [0, 28, 0, 1.44]], LOOP, { col: '#F4F1F6', shape: 'flat', speed: 0.7 });
 
   return {
     bg: '#EEF3F0', clickables,
     view: { target: [0, 4, -6], span: 40, el: 30, az: 16, swing: 6, shadowR: 90 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, 0);
       flowers.forEach((g, k) => { g.scale.y = squash(t - (ev.plots.get(k) ?? -9)); });
       for (const pk of pickers) {
         const x = pk.p.x + pk.dx + Math.sin(t * 0.3 + pk.ph) * 1.5, z = pk.p.z + pk.dz;

@@ -77,13 +77,14 @@ export default function build(W, { LOOP }) {
   trb.add(new THREE.CapsuleGeometry(1.3, 0.6, 4, 10).rotateX(Math.PI / 2).scale(0.8, 1.1, 1), M('#5B7FC7'), 4.6, 2.4, 0);
   trb.build(train);
   tag(train, 'train', null, clickables);
-  const drift = clouds(W, R, [[-40, 30, -40, 1.4], [40, 34, -20, 1.2]], LOOP);
+  // 夏至：午後對流旺盛，遠方堆起高高的積雨雲
+  const drift = clouds(W, R, [[-40, 17, 2, 1.28], [20, 30, 4, 1.04]], LOOP, { shape: 'tall', speed: 0.4 });
 
   return {
     bg: '#EEF2F8', clickables,
     view: { target: [0, 3, 0], span: 34, el: 34, az: 22, swing: 6, shadowR: 85 },
     update(t) {
-      drift(t, 220);
+      drift(t, 110, 0);
       // 時間：一個 loop 從上午到下午，中間是正午；影子朝北（-z）伸長再縮回
       const u = fr(t / LOOP), noon = Math.abs(u - 0.5) * 2, dir = u < 0.5 ? 1 : -1;
       for (const s of standers) {

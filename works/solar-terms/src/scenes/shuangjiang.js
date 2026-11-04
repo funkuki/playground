@@ -75,13 +75,14 @@ export default function build(W, { LOOP }) {
     const f = mesh(box(1.8, 0.9, 0.05).translate(-0.9, 0, 0), M(col, { pat: 4, patCol: '#FFFFFF', patScale: 0.3 }), x, 4.4, z, W);
     flags.push(f);
   }
-  const drift = clouds(W, R, [[-30, 28, -40, 1.3], [40, 32, -30, 1.1]], LOOP);
+  // 霜降：九降風很強，扁扁的雲被吹得飛快
+  const drift = clouds(W, R, [[-30, 16, 2, 1.04], [40, 29, 4, 0.88], [0, 23, 6, 1.12]], LOOP, { shape: 'flat', speed: 2.5 });
 
   return {
     bg: '#E6EFF6', clickables,
     view: { target: [0, 2, 0], span: 32, el: 34, az: 16, swing: 6, shadowR: 80 },
     update(t) {
-      drift(t, 220); wind(t);
+      drift(t, 110, 0); wind(t);
       const gust = 1 + Math.exp(-Math.max(0, t - ev.gust) * 1.2) * (t > ev.gust ? 2.5 : 0) + Math.max(0, Math.sin(t * 0.8)) * 0.6;
       for (const f of flags) { f.rotation.y = Math.PI + Math.sin(t * 5 * gust + f.position.x) * 0.25 * gust; f.rotation.z = -0.05 * gust; }
       for (const tr of trees) sway(tr, t, 1, -0.03 * gust);

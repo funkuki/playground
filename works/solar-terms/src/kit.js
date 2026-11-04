@@ -390,18 +390,31 @@ export function bird(W, col = '#FFFFFF', s = 1) {
 }
 export function flap(bd, ph, amp = 0.7) { for (const w of bd.wings) w.rotation.x = w.userData.sd * Math.sin(ph) * amp; }
 
-// ---------- 雲：幾顆不描邊的白球，在地上投下紫色的雲影 ----------
-export function clouds(W, R, list, LOOP = 30) {
-  const m = M('#FFFFFF', { lit: true, shadow: false });
+// ---------- 雲：幾顆不描邊的球，在地上投下紫色的雲影 ----------
+// o.col 雲的顏色（雨雲偏灰紫、夕陽偏橘粉、夜裡偏深）；o.shape：puffy 積雲、flat 層雲（扁長）、tall 積雨雲（往上堆高）；o.speed 飄的速度
+const PUFF = [[0, 0, 0, 3], [3, -0.6, 0.5, 2.2], [-3.1, -0.8, 0, 2.3], [1, 1.5, -0.6, 2.2], [-1.4, 0.9, 0.8, 1.9]];
+const FLAT = [[0, 0, 0, 3], [3.6, -0.3, 0.6, 2.4], [-3.8, -0.2, -0.3, 2.6], [7, -0.6, 0, 1.9], [-7.2, -0.5, 0.4, 1.8], [1.4, 0.8, -0.8, 2.0]];
+const TALL = [[0, 0, 0, 3.2], [3, -0.8, 0.6, 2.4], [-3, -0.8, 0, 2.5], [0.6, 3.2, 0, 2.8], [-0.8, 5.8, 0.3, 2.4], [0.5, 8.0, -0.2, 2.0], [2.2, 5.0, 0.6, 1.8], [0.2, 9.8, 0, 2.9]];
+export function clouds(W, R, list, LOOP = 30, o = {}) {
+  const { col = '#FFFFFF', shape = 'puffy', speed = 1 } = o;
+  const m = M(col, { lit: true, shadow: false });
+  const parts = shape === 'flat' ? FLAT : shape === 'tall' ? TALL : PUFF;
   const out = list.map(([x, y, z, s]) => {
     const g = new THREE.Group(); W.add(g);
     const b = new Batch();
-    for (const [dx, dy, dz, r] of [[0, 0, 0, 3], [3, -0.6, 0.5, 2.2], [-3.1, -0.8, 0, 2.3], [1, 1.5, -0.6, 2.2], [-1.4, 0.9, 0.8, 1.9]]) b.add(new THREE.SphereGeometry(r, 16, 10), m, dx, dy, dz);
+    for (const [dx, dy, dz, r] of parts) b.add(new THREE.SphereGeometry(r, 16, 10), m, dx, dy, dz);
     const ms = b.build(g); for (const mm of ms) mm.receiveShadow = false;
-    g.scale.set(s, s * 0.7, s * 0.8); noEdge(g);
-    return { g, x, y, z, ph: R() };
+    if (shape === 'flat') g.scale.set(s * 1.2, s * 0.42, s * 0.9); else if (shape === 'tall') g.scale.set(s, s * 0.95, s * 0.85); else g.scale.set(s, s * 0.7, s * 0.8);
+    // 雲也描邊：淡色的雲疊在淡色的田或雪地上，沒有線會整朵看不見
+    return { g, x, y, z, s: g.scale.clone(), ph: R() };   // ph 沒在用，但留著讓亂數序列和之前一樣，場景其他東西的位置才不會變
   });
-  return (t, span = 160) => { for (const c of out) c.g.position.set(c.x + (fr(t / (LOOP * 2) + c.ph) - 0.5) * span, c.y, c.z); };
+  // 雲在 cx ± span/2 之間循環飄（cx 對準鏡頭的 target），飄到兩端時縮小消失、再從另一頭長出來；t = 0 時就在寫好的 x 上
+  return (t, span = 110, cx = 0) => {
+    for (const c of out) {
+      const f = fr((c.x - cx) / span + 0.5 + t * speed / (LOOP * 2));
+      c.g.position.set(cx + (f - 0.5) * span, c.y, c.z); c.g.scale.copy(c.s).multiplyScalar(fadeEnds(f, 6));
+    }
+  };
 }
 
 // ---------- 粒子：雪、蒸氣（都不描邊，STYLE.md §2）----------

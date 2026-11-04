@@ -72,13 +72,14 @@ export default function build(W, { LOOP }) {
   const homes = [[30, 21, 0], [38, 23, 2], [46, 21, 3]].map(([x, z, i]) => house(W, x, z, { i, w: 6, d: 5, y: H(x, z) - 0.2 }));
   const fronts = [[-40, 22, 'round'], [22, 26, 'cloud']].map(([x, z, k]) => tree(W, R, x, z, k, CROWN.green, 1.3, H(x, z) - 0.2));
   const drizzle = rain(W, R, 280, [-55, 55, -40, 30, 28], LOOP);
-  const mist = clouds(W, R, [[-30, 12, -24, 1.5], [20, 14, -30, 1.8], [50, 10, -14, 1.3], [-10, 18, -40, 1.6]], LOOP);
+  // 穀雨：細雨裡，霧和雲貼著山腰
+  const mist = clouds(W, R, [[-30, 12, -24, 1.5], [20, 14, -30, 1.8], [50, 10, -14, 1.3], [-10, 18, -40, 1.6]], LOOP, { col: '#E4DCE8', shape: 'flat', speed: 0.6 });
 
   return {
     bg: '#EDF2EE', clickables,
     view: { target: [2, 5, 0], span: 42, el: 28, az: 14, swing: 6, shadowR: 90 },
     update(t) {
-      mist(t, 120); drizzle(t, H);
+      mist(t, 110, 2); drizzle(t, H);
       const busy = t - ev.tea < 3;
       for (const pk of pickers) {
         const pickA = Math.max(0, Math.sin(t * (busy ? 6 : 2.2) + pk.ph));

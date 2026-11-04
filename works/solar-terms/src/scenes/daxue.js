@@ -68,7 +68,7 @@ export default function build(W, { LOOP }) {
     const m = mesh(new THREE.CapsuleGeometry(3, 30, 6, 16).rotateZ(Math.PI / 2).scale(1, 0.45, 0.7), M('#FFFFFF', { lit: true, shadow: false }), 0, 0, 0, W);
     m.castShadow = false; m.receiveShadow = false; noEdge(m); return { m, y: 14 + i * 5, z: -66 - i * 6, ph: i * 0.27 };
   });
-  const drift = clouds(W, R, [[-30, 36, -30, 1.4], [40, 40, 0, 1.6]], LOOP);
+  const drift = clouds(W, R, [[-30, 23, 4, 1.12], [40, 35, 6, 1.28]], LOOP);
 
   // ---------- 路口的大草莓 ----------
   const big = new THREE.Group(); big.position.set(-20, 0, 24.5); W.add(big);
@@ -102,7 +102,7 @@ export default function build(W, { LOOP }) {
     bg: '#A5EBAA', clickables,
     view: { target: [-2, 4, 2], span: 42, el: 30, az: 14, swing: 7, shadowR: 90 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, -2);
       fog.forEach((f, i) => f.m.position.set((fr(t / (LOOP * 2) + f.ph) - 0.5) * 220, f.y, f.z));
       for (const tr of trees) sway(tr, t, 1.2);
       // 大草莓：點了蹲下再彈起來，噴一陣紅色紙花

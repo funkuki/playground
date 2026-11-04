@@ -91,13 +91,14 @@ export default function build(W, { LOOP }) {
   ['#EE836F', '#F7B977', '#F8D97A', '#A8D8B9', '#A0D8EF', '#7F9BD6', '#BBBCDE'].forEach((c, k) => { const m = mesh(new THREE.TorusGeometry(36 - k * 1.1, 0.55, 4, 64, Math.PI), M(c, { lit: true, shadow: false }), 0, 0, 0, rainbow); noEdge(m); m.castShadow = false; });
   tag(rainbow, 'rainbow', null, clickables);
   const swallows = Array.from({ length: 6 }, (_, i) => ({ b: bird(W, '#4A4468', 0.6), i, ph: R() * TAU }));
-  const drift = clouds(W, R, [[-30, 30, -40, 1.5], [30, 34, -30, 1.3], [0, 28, -10, 1.0]], LOOP);
+  // 清明：雨剛停，雲還帶一點灰
+  const drift = clouds(W, R, [[-30, 24, -8, 1.2], [30, 33, -6, 1.04], [0, 29, -4, 0.8]], LOOP, { col: '#ECE7F0' });
 
   return {
     bg: '#F2F2EC', clickables,
     view: { target: [0, 7, -10], span: 38, el: 26, az: 14, swing: 6, shadowR: 90 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, 0);
       // 一個 loop：前四成下著細雨，雨停之後彩虹慢慢浮現
       const u = fr(t / LOOP), wet = u < 0.4 ? 1 : 0;
       shower(t, H, wet ? 1 - clamp01((u - 0.3) / 0.1) : 0);

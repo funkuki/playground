@@ -1,6 +1,6 @@
 // 冬至・彰化鹿港老街：一年最長的夜。紅磚老街彎彎的，兩邊是窄長的街屋，街尾是天后宮。
 // 一開場，光從天后宮擴散出去，窗戶、燈籠和地上的燈光一盞一盞亮起來；湯圓攤的鍋子冒著白煙，人在街上慢慢走。
-import { THREE, M, dots, stripes, lt, Batch, mesh, box, ribbon, tree, sway, shophouse, temple, house, walker, walkAlong, steam, bursts, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, setWave, setLamps } from '../kit.js';
+import { THREE, M, dots, stripes, lt, Batch, mesh, box, ribbon, tree, sway, shophouse, temple, house, walker, walkAlong, steam, bursts, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, setWave, setLamps, clouds } from '../kit.js';
 
 export default function build(W, { LOOP }) {
   const { R, rr, pick } = rand(1222);
@@ -82,10 +82,13 @@ export default function build(W, { LOOP }) {
   // ---------- 街上散步的人 ----------
   const people = Array.from({ length: 9 }, (_, k) => ({ p: walker(W, { col: pick([PAL.cobalt, PAL.pink, PAL.teal, PAL.yellow, '#FFFFFF', PAL.lilac]), hat: R() < 0.4 ? pick([PAL.coral, PAL.yellow]) : null }), u: k / 9 + rr(0, 0.05), dir: k % 2 ? 1 : -1, off: rr(-1.8, 1.8), sp: rr(0.7, 1.0) }));
 
+  // 冬至：東北季風吹來低低的灰雲，一層一層往南推
+  const drift = clouds(W, R, [[-24, 17, 3, 1.12], [26, 27, 5, 1.04], [0, 21, 7, 1.36], [44, 31, 4, 0.88]], LOOP, { col: '#E6E1F5', shape: 'flat', speed: 1.4 });
   return {
     bg: '#C9C0E8', night: 1, dusk: 0.42, lamps: [], clickables,
     view: { target: [6, 3, 1], span: 29, el: 33, az: 26, swing: 6, shadowR: 70 },
     update(t, lt) {
+      drift(t, 110, 6);
       // 光從天后宮往外擴散：一開場一次，點天后宮再一次
       const dw = lt - ev.wave;
       const r = dw < 0 ? 0 : dw * 26;

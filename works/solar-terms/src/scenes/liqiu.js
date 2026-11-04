@@ -1,6 +1,6 @@
 // 立秋・台南七股鹽田：傍晚。一格一格的瓦盤鹽田映著夕陽，鹽工拿木耙把鹽推成一小堆；田埂上推車把鹽運走。
 // 後面是白色的七股鹽山，有人沿著步道爬上去看夕陽；西邊是海，太陽快落下去了，白鷺成群飛回去。
-import { THREE, M, dots, stripes, lt, Batch, mesh, box, slab, tree, sway, walker, walk, bird, flap, squiggles, ripples, bursts, noEdge, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, TAU } from '../kit.js';
+import { THREE, M, dots, stripes, lt, Batch, mesh, box, slab, tree, sway, walker, walk, bird, flap, squiggles, ripples, bursts, noEdge, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, TAU, clouds } from '../kit.js';
 
 export default function build(W, { LOOP }) {
   const { R, rr, pick } = rand(815);
@@ -101,10 +101,13 @@ export default function build(W, { LOOP }) {
   // ---------- 白鷺：成群往西飛 ----------
   const egrets = Array.from({ length: 7 }, (_, i) => ({ b: bird(W, '#FFFFFF', 1.1), dx: (i % 4) * 2.4 + rr(-0.5, 0.5), dz: Math.floor(i / 4) * 2.6 + (i % 2) * 1.2, ph: R() * 6 }));
 
+  // 立秋的黃昏：貼著地平線的扁雲被夕陽染成桃橘色
+  const drift = clouds(W, R, [[-30, 16, -4, 1.28], [20, 28, -2, 1.52], [56, 32, 0, 1.12]], LOOP, { col: '#F29A9A', shape: 'flat', speed: 0.5 });
   return {
     bg: '#FBE0D2', night: 0.2, dusk: 1, clickables,
     view: { target: [2, 2, -6], span: 36, el: 30, az: 22, swing: 6, shadowR: 90 },
     update(t) {
+      drift(t, 110, 2);
       waves(t);
       // 鹽工：拉耙子推鹽，一個 loop 裡鹽堆慢慢長大
       const grow = fr(t / LOOP);

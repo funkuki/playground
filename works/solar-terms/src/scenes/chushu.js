@@ -1,6 +1,6 @@
 // 處暑・基隆望海巷：農曆七月十四的夜裡放水燈。海灣的沙灘上擠滿了人，岸邊立著掛燈的燈篙；
 // 房子形狀的水燈頭一盞一盞被推進海裡，亮著光漂出去，漂到遠處燒成一團火。兩邊是黑黑的岬角，山坡上是八斗子的房子。
-import { THREE, M, dots, stripes, lt, Batch, mesh, box, slab, tree, sway, house, walker, ridge, squiggles, ripples, bursts, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, setLamps, TAU } from '../kit.js';
+import { THREE, M, dots, stripes, lt, Batch, mesh, box, slab, tree, sway, house, walker, ridge, squiggles, ripples, bursts, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, setLamps, TAU, clouds } from '../kit.js';
 
 export default function build(W, { LOOP }) {
   const { R, rr, pick } = rand(714);
@@ -68,10 +68,13 @@ export default function build(W, { LOOP }) {
   });
   const bearers = lanterns.slice(0, 4).map((L, i) => ({ p: walker(W, { col: PAL.white, hat: PAL.coral, s: 0.9 }), L }));
 
+  // 處暑的夜：白天的熱氣散了，夜空裡飄著幾朵染成深紫的雲
+  const drift = clouds(W, R, [[-20, 15, 14, 1.04], [24, 26, 16, 0.88], [0, 20, 18, 1.2]], LOOP, { col: '#A99CCB', speed: 0.6 });
   return {
     bg: '#5E5577', night: 1, dusk: 0.25, lamps: [], clickables,
     view: { target: [2, 1, 12], span: 30, el: 32, az: 28, swing: 7, shadowR: 80 },
     update(t) {
+      drift(t, 110, 2);
       waves(t);
       const lamps = LAMP.slice();
       for (const L of lanterns) {

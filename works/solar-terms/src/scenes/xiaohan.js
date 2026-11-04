@@ -1,6 +1,6 @@
 // 小寒・南投合歡山：寒流來了，山上下雪。箭竹草坡上積了雪，冷杉的樹梢是粉紫、冰藍、薄荷色加白點（STYLE.md：冬天不是全白）；
 // 台 14 甲線彎彎地翻過鞍部，車子慢慢開；山屋前有人堆雪人，帝雉在路邊散步，山下的谷裡是一片雲海。
-import { THREE, M, dots, stripes, lt, Batch, mesh, box, ribbon, pine, tree, sway, house, walker, car, driveAlong, snowfall, bursts, ridge, noEdge, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, TAU } from '../kit.js';
+import { THREE, M, dots, stripes, lt, Batch, mesh, box, ribbon, pine, tree, sway, house, walker, car, driveAlong, snowfall, bursts, ridge, noEdge, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, TAU, clouds } from '../kit.js';
 
 // 地形：一道東西向的主稜，兩座山頭，中間一個鞍部；前面（南邊）低下去是雲海
 function H(x, z) {
@@ -89,10 +89,14 @@ export default function build(W, { LOOP }) {
   });
   const flakes = snowfall(W, R, 520, [-80, 80, -50, 50, 46], LOOP);
 
+  // 小寒的合歡山：山前（南邊）低下去的谷裡是一整片白色雲海，慢慢流；山頂上空只有幾朵
+  const drift = clouds(W, R, [[-50, 3, 28, 2.2], [-30, 3.5, 32, 2.4], [-10, 3, 28, 2.6], [10, 3.5, 32, 2.4], [30, 3, 28, 2.4]], LOOP, { shape: 'flat', speed: 0.3 });
+  const sky = clouds(W, R, [[10, 34, -6, 1.1], [-40, 30, -10, 1.0]], LOOP);
   return {
     bg: '#DCE6FF', clickables,
     view: { target: [-2, 9, -3], span: 40, el: 30, az: 8, swing: 7, shadowR: 95 },
     update(t) {
+      drift(t, 110, -2); sky(t, 110, -2);
       flakes(t, (x, z) => H(x, z));
       for (const c of sea) c.g.position.set(((c.x + t * 1.2 + 100) % 200) - 100, c.y, c.z);
       cars.forEach((c, i) => {

@@ -84,7 +84,7 @@ export default function build(W, { LOOP }) {
   const runner = boat(W, PAL.pink, 1.1);
   const route = new THREE.CatmullRomCurve3([V3(22, 0, -6), V3(0, 0, -2), V3(-20, 0, 4), V3(-26, 0, 18), V3(-40, 0, 40), V3(-70, 0, 60), V3(-46, 0, 62), V3(-20, 0, 36), V3(-14, 0, 14), V3(4, 0, 2), V3(30, 0, 0)], true);
   const gulls = Array.from({ length: 5 }, (_, i) => ({ b: bird(W, '#FFFFFF', 1.1), i }));
-  const drift = clouds(W, R, [[-40, 30, -40, 1.5], [30, 34, -10, 1.8], [80, 30, 30, 1.3]], LOOP);
+  const drift = clouds(W, R, [[-40, 21, -4, 1.2], [30, 35, -2, 1.44], [80, 39, 0, 1.04]], LOOP);
   const waves = squiggles(W, R, 60, () => { for (;;) { const x = rr(-90, 90), z = rr(-12, 70); if (z > 14 || (x > -44 && x < 60)) return V3(x, 0, z); } }, [-0.7, 0.7], 2, LOOP);
   const mullet = Array.from({ length: 3 }, () => { const g = new THREE.Group(); W.add(g); mesh(new THREE.SphereGeometry(0.5, 12, 8).scale(1.6, 0.6, 0.6), dots('#7F8FD6', 0.2, '#A9B6F0'), 0, 0, 0, g); mesh(new THREE.ConeGeometry(0.4, 0.6, 4).rotateZ(Math.PI / 2), M('#7F8FD6'), -0.95, 0, 0, g); g.visible = false; return g; });
   // 每隔一陣子就有一條烏魚跳出水面
@@ -94,7 +94,7 @@ export default function build(W, { LOOP }) {
     bg: '#5CC8FF', clickables,
     view: { target: [-10, 0, -6], span: 44, el: 35, az: 14, swing: 7, shadowR: 95 },
     update(t) {
-      drift(t, 200); waves(t);
+      drift(t, 110, -10); waves(t);
       // 停著的船輕輕晃，旗子被東北季風吹得一直飄
       for (const bt of moored) { bt.g.position.y = Math.sin(t * 1.4 + bt.ph) * 0.12; bt.g.rotation.z = Math.sin(t * 1.1 + bt.ph) * 0.03; bt.flag.rotation.y = 0.5 + Math.sin(t * 9 + bt.ph) * 0.25; }
       const u = fr(t / LOOP), uu = u + 0.035 * Math.sin(u * TAU * 2);

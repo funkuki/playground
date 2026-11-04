@@ -86,13 +86,14 @@ export default function build(W, { LOOP }) {
 
   // ---------- 散步的人 ----------
   const hikers = Array.from({ length: 7 }, (_, i) => ({ p: walker(W, { col: pick([PAL.pink, PAL.yellow, PAL.sky, PAL.mint, PAL.white, PAL.lilac]), hat: R() < 0.4 ? pick([PAL.coral, '#F8D97A']) : null }), u: i / 7, dir: i % 2 ? 1 : -1, off: rr(-0.7, 0.7) }));
-  const drift = clouds(W, R, [[-30, 30, -50, 1.3], [40, 34, -40, 1.1]], LOOP);
+  // 立夏：晴天的白色積雲
+  const drift = clouds(W, R, [[-30, 24, -4, 1.04], [40, 36, -2, 0.88], [5, 31, 0, 1.2]], LOOP);
 
   return {
     bg: '#EEF4E6', clickables,
     view: { target: [-2, 6, -6], span: 40, el: 30, az: 14, swing: 7, shadowR: 90 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, -2);
       for (let i = 0; i < FN; i++) {
         const s = FS[i], f = fr(t * s.sp / LOOP * 3 + s.ph), y = lerp(s.y0, H(s.x, s.z) + 0.1, f);
         pos.set(s.x + Math.sin(t * 0.9 + s.w) * 1.3 + f * 3, y, s.z + Math.cos(t * 0.7 + s.w) * 0.8);

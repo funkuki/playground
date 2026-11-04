@@ -78,13 +78,13 @@ export default function build(W, { LOOP }) {
   // ---------- 夕陽 ----------
   const sun = mesh(new THREE.CircleGeometry(8, 40), M('#F9D58E', { emit: true, shadow: false }), 130, 16, -90, W);
   sun.lookAt(V3(-20, 30, 80)); noEdge(sun);
-  const drift = clouds(W, R, [[-40, 40, -60, 1.6], [50, 46, -50, 1.3], [0, 44, -80, 1.8]], LOOP);
+  const drift = clouds(W, R, [[-40, 34, 0, 1.28], [50, 34, 2, 1.04], [0, 34, 4, 1.44]], LOOP);
 
   return {
     bg: '#F6D3C4', night: 0.5, dusk: 1, clickables,
     view: { target: [-4, 12, -2], span: 40, el: 22, az: -12, swing: 6, shadowR: 90 },
     update(t) {
-      drift(t, 220);
+      drift(t, 110, -4);
       // 一個 loop：前段盤旋往上，後段一隻一隻滑進樹林；最後幾秒新的一群從北邊飛進來
       const u = fr(t / LOOP), scatter = Math.exp(-Math.max(0, t - ev.flock) * 1.2) * (t > ev.flock ? 1 : 0);
       for (const k of hawks) {

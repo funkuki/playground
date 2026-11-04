@@ -96,13 +96,14 @@ export default function build(W, { LOOP }) {
   });
   const crowdHit = new THREE.Mesh(new THREE.BoxGeometry(34, 3, 6), new THREE.MeshBasicMaterial({ visible: false })); crowdHit.position.set(-14, 9.5, 12); W.add(crowdHit); tag(crowdHit, 'crowd', null, clickables);
   const sun = mesh(new THREE.CircleGeometry(6, 40), M('#F9D58E', { emit: true, shadow: false }), 140, 20, -40, W); sun.lookAt(V3(-20, 20, 40)); noEdge(sun);
-  const drift = clouds(W, R, [[20, 40, -60, 1.4], [70, 44, -20, 1.2]], LOOP);
+  const drift = clouds(W, R, [[20, 38, 0, 1.12], [70, 49, 2, 0.96]], LOOP);
+  const tower = clouds(W, R, [[70, 45, 0, 1.36]], LOOP, { shape: 'tall', speed: 0.3 });   // 大暑：海岸山脈上空慢慢長高的積雨雲
 
   return {
     bg: '#FBE8D8', night: 0.12, dusk: 0.7, clickables,
     view: { target: [4, 14, -2], span: 42, el: 24, az: 30, swing: 6, shadowR: 90 },
     update(t) {
-      drift(t, 220);
+      drift(t, 110, 4); tower(t, 60, 70);
       for (const [k, bl] of balloons.entries()) {
         // 0～0.15 鼓起來；0.15～0.9 升空往縱谷飄；0.9～1 縮回去、換下一顆
         const T = ev.balloons.get(k) ?? -9, boost = Math.exp(-Math.max(0, t - T) * 1.0) * (t > T ? 1 : 0);

@@ -68,13 +68,14 @@ export default function build(W, { LOOP }) {
     return { p, x, z, ph: R() * 6 };
   });
   const gulls = Array.from({ length: 4 }, (_, i) => ({ b: bird(W, '#FFFFFF', 1.25), a: i / 4 * TAU, r: rr(14, 22), y: rr(10, 16) }));
-  const drift = clouds(W, R, [[-40, 30, 10, 1.4], [40, 34, -10, 1.2]], LOOP);
+  // 小暑：澎湖晴朗，只有幾朵小小的積雲
+  const drift = clouds(W, R, [[-40, 24, 6, 0.8], [40, 29, 8, 0.72], [0, 29, 10, 0.64]], LOOP);
 
   return {
     bg: '#E2F2F6', clickables,
     view: { target: [0, 2, 4], span: 34, el: 46, az: 0, swing: 8, shadowR: 90 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, 0);
       // 潮汐：一個 loop 退一次、漲一次（中間最低）
       const u = fr(t / LOOP), tide = 0.5 + 0.5 * Math.cos(u * TAU);       // 1 = 滿潮
       sea.position.y = lerp(-0.5, 0.75, tide);

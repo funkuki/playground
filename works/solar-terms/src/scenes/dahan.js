@@ -79,13 +79,13 @@ export default function build(W, { LOOP }) {
   // ---------- 人擠人 ----------
   const COLS = [PAL.cobalt, PAL.pink, PAL.teal, PAL.yellow, '#FFFFFF', PAL.lilac, PAL.coral, PAL.peach];
   const people = Array.from({ length: 26 }, (_, k) => ({ p: walker(W, { col: pick(COLS), hat: R() < 0.35 ? pick([PAL.coral, PAL.yellow, PAL.cobalt]) : null, s: 0.95 }), u: R(), dir: k % 2 ? 1 : -1, z: rr(-2.6, 2.6), sp: rr(0.55, 0.9), stop: R() }));
-  const drift = clouds(W, R, [[-20, 26, -30, 1.2], [40, 30, -10, 1.4]], LOOP);
+  const drift = clouds(W, R, [[-20, 18, 0, 0.96], [40, 28, 2, 1.12]], LOOP);
 
   return {
     bg: '#F2EDF8', clickables,
     view: { target: [6, 3.5, -2], span: 28, el: 32, az: 22, swing: 6, shadowR: 70 },
     update(t) {
-      drift(t, 200); flow(t); incense(t);
+      drift(t, 110, 6); flow(t); incense(t);
       const fu = fr(t / LOOP + 0.1);
       ferry.g.position.set(-70, Math.sin(t * 1.5) * 0.15, lerp(70, -70, fu)); ferry.g.rotation.y = Math.PI / 2; ferry.g.scale.setScalar(1.3 * fadeEnds(fu, 10));
       ferry.flag.rotation.y = 0.4 + Math.sin(t * 7) * 0.2;

@@ -84,13 +84,14 @@ export default function build(W, { LOOP }) {
   const catchFish = mesh(new THREE.SphereGeometry(0.25, 8, 6).scale(1.5, 0.6, 0.6), M('#BBBCDE'), 3.8, 0.4, 0, rod);
   tag(angler.g, 'angler', null, clickables);
   const egrets = Array.from({ length: 3 }, (_, i) => ({ b: bird(W, '#FFFFFF', 1.0), i }));
-  const drift = clouds(W, R, [[20, 26, -40, 1.4], [50, 30, -10, 1.2]], LOOP);
+  // 驚蟄：春雷前後，雲偏灰
+  const drift = clouds(W, R, [[20, 28, 4, 1.12], [50, 38, 6, 0.96], [-40, 20, 8, 1.04]], LOOP, { col: '#E4DCE8' });
 
   return {
     bg: '#EFEFF4', clickables,
     view: { target: [-2, 2, 2], span: 40, el: 34, az: 22, swing: 6, shadowR: 90 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, -2);
       // 春雷：每 10 秒閃一次，點雲也會打雷；打雷之後青蛙一起叫
       const auto = fr(t / 10), flash = t - ev.thunder < 0.5 ? t - ev.thunder : auto < 0.05 ? auto * 10 : -1;
       bolt.visible = flash >= 0 && (flash < 0.12 || (flash > 0.22 && flash < 0.32));

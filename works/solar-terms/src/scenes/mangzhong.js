@@ -92,13 +92,14 @@ export default function build(W, { LOOP }) {
   for (let i = 0; i < 70; i++) { const x = rr(-60, 60), z = R() < 0.5 ? rr(22, 26) : rr(8, 10); reeds.add(new THREE.ConeGeometry(0.25, rr(1.2, 2.2), 5).translate(0, 0.8, 0), dots('#93C9A6', 0.2, '#68BE8D'), x, 0, z); }
   reeds.build(W);
   const m4 = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), pos = new THREE.Vector3();
-  const drift = clouds(W, R, [[-30, 28, -50, 1.4], [40, 32, -40, 1.2]], LOOP);
+  // 芒種：梅雨尾聲的傍晚，雲染上一點暮色
+  const drift = clouds(W, R, [[-30, 18, -2, 1.12], [40, 30, 0, 0.96], [0, 24, 2, 1.28]], LOOP, { col: '#F3E3E8' });
 
   return {
     bg: '#F8E6D8', night: 0.22, dusk: 0.9, clickables,
     view: { target: [4, 2, -4], span: 36, el: 32, az: 14, swing: 6, shadowR: 85 },
     update(t) {
-      drift(t, 200);
+      drift(t, 110, 4);
       orchard.forEach((tr, k) => { const T = ev.trees.get(k) ?? -9; sway(tr, t, 1, Math.exp(-Math.max(0, t - T) * 3) * Math.sin((t - T) * 14) * 0.1 * (t > T ? 1 : 0)); });
       for (const p of pickers) { const s = Math.max(0, Math.sin(t * 1.5 + p.ph)); p.p.arms[0].rotation.z = -1.4 - s * 1.2; p.p.arms[1].rotation.z = -0.5 - s; }
       const tu = fr(t / LOOP * 1.3 + 0.2); driveAlong(truck, roadC, 0.02 + 0.96 * tu, t); truck.scale.setScalar(fadeEnds(tu, 14));

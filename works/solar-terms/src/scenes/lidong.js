@@ -63,7 +63,7 @@ export default function build(W, { LOOP }) {
   const tb = new Batch();
   for (let i = 0; i < 60; i++) { const x = rr(-110, 110), z = rr(-62, -50); tb.add(new THREE.SphereGeometry(rr(2, 3.6), 10, 8).scale(1, 0.8, 1), CROWN.green.main, x, 1.2, z); }
   tb.build(W);
-  const drift = clouds(W, R, [[-60, 30, -66, 1.6], [20, 34, -70, 1.9], [70, 28, -64, 1.4], [-20, 40, -20, 1.5], [40, 44, 10, 1.2]], LOOP);
+  const drift = clouds(W, R, [[-60, 23, 7, 1.28], [20, 33, 9, 1.52], [70, 34, 11, 1.12], [-20, 33, 8, 1.2], [40, 34, 10, 0.96]], LOOP);
 
   // ---------- 茄苳樹 ----------
   const bigTree = tree(W, R, -11, -13, 'cloud', CROWN.green, 2.5);
@@ -133,7 +133,7 @@ export default function build(W, { LOOP }) {
     bg: '#B8F0AE', clickables,
     view: { target: [4, 0, 5], span: 50, el: 31, az: 8, swing: 7, shadowR: 100 },
     update(t) {
-      drift(t, 220);
+      drift(t, 110, 4);
       flow(t);
       // 收割機和稻子
       const c = combineAt(t);
