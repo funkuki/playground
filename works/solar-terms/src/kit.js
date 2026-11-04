@@ -405,7 +405,7 @@ export function clouds(W, R, list, LOOP = 30, o = {}) {
     for (const [dx, dy, dz, r] of parts) b.add(new THREE.SphereGeometry(r, 16, 10), m, dx, dy, dz);
     const ms = b.build(g); for (const mm of ms) mm.receiveShadow = false;
     if (shape === 'flat') g.scale.set(s * 1.2, s * 0.42, s * 0.9); else if (shape === 'tall') g.scale.set(s, s * 0.95, s * 0.85); else g.scale.set(s, s * 0.7, s * 0.8);
-    // 雲也描邊：淡色的雲疊在淡色的田或雪地上，沒有線會整朵看不見
+    noEdge(g);
     return { g, x, y, z, s: g.scale.clone(), ph: R() };   // ph 沒在用，但留著讓亂數序列和之前一樣，場景其他東西的位置才不會變
   });
   // 雲在 cx ± span/2 之間循環飄（cx 對準鏡頭的 target），飄到兩端時縮小消失、再從另一頭長出來；t = 0 時就在寫好的 x 上

@@ -77,7 +77,7 @@ export default function build(W, { LOOP }) {
     return { g, x0: rr(-40, 40), ph: R(), sp: rr(0.6, 1.0) };
   });
   // 雨水：貼著山坡的灰色雨雲
-  const drift = clouds(W, R, [[-40, 21, 2, 1.28], [10, 32, 4, 1.44], [50, 36, 6, 1.12], [-10, 31, 3, 0.88]], LOOP, { col: '#E4DCE8', shape: 'flat', speed: 0.7 });
+  const drift = clouds(W, R, [[-40, 21, 2, 1.28], [10, 32, 4, 1.44], [50, 36, 6, 1.12], [-10, 31, 3, 0.88]], LOOP, { col: '#CBC2DA', shape: 'flat', speed: 0.7 });
 
   return {
     bg: '#F3EEF4', night: 0.08, clickables,

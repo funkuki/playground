@@ -93,7 +93,7 @@ export default function build(W, { LOOP }) {
   const water = new THREE.Mesh(new THREE.PlaneGeometry(160, 90).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ visible: false }));
   water.position.set(0, 0.15, 0); W.add(water); tag(water, 'water', null, clickables);
   // 立春的宜蘭：東北季風帶來低低的層雲，清晨染成淡粉紅
-  const drift = clouds(W, R, [[-40, 16, 4, 1.28], [10, 30, 6, 1.44], [50, 36, 8, 1.2], [-10, 28, 5, 0.8]], LOOP, { col: '#FBE3E8', shape: 'flat', speed: 0.6 });
+  const drift = clouds(W, R, [[-40, 16, 4, 1.28], [10, 30, 6, 1.44], [50, 36, 8, 1.2], [-10, 28, 5, 0.8]], LOOP, { col: '#F2BFD0', shape: 'flat', speed: 0.6 });
 
   return {
     bg: '#FBE8EA', night: 0.15, dusk: 0.8, clickables,

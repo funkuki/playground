@@ -91,7 +91,7 @@ export default function build(W, { LOOP }) {
 
   // 小寒的合歡山：山前（南邊）低下去的谷裡是一整片白色雲海，慢慢流；山頂上空只有幾朵
   const drift = clouds(W, R, [[-50, 3, 28, 2.2], [-30, 3.5, 32, 2.4], [-10, 3, 28, 2.6], [10, 3.5, 32, 2.4], [30, 3, 28, 2.4]], LOOP, { shape: 'flat', speed: 0.3 });
-  const sky = clouds(W, R, [[10, 34, -6, 1.1], [-40, 30, -10, 1.0]], LOOP);
+  const sky = clouds(W, R, [[10, 34, -6, 1.1], [-40, 30, -10, 1.0]], LOOP, { col: '#D9D4F5' });   // 白雲疊在雪地上會看不見，帶一點薰衣草色
   return {
     bg: '#DCE6FF', clickables,
     view: { target: [-2, 9, -3], span: 40, el: 30, az: 8, swing: 7, shadowR: 95 },
