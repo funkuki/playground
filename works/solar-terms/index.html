@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>節氣圖鑑 Solar Terms · sui's playground</title>
+    <meta name="description" content="一本會動的節氣圖鑑：一頁一個節氣，孟菲斯微縮插畫畫出台灣一個最有那個節氣味道的地方，介紹節氣、期間、三候和地方的故事。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono&family=Inter+Tight:wght@400;600&family=Noto+Sans+TC:wght@400;500;600&display=swap" rel="stylesheet" />
+    <style>
+      :root { --paper: #FFFCF6; --ink: #25214A; --text: #2B2840; --grey: #8D8AA0; --light: #B7B4C6; --accent: #2E5BE6; --tint: #E3EDFF; }
+      html, body { margin: 0; height: 100%; background: var(--paper); overflow: hidden; }
+      body { color: var(--text); font-family: "Inter Tight", "Noto Sans TC", "PingFang TC", system-ui, sans-serif; -webkit-tap-highlight-color: transparent; }
+      canvas { display: block; position: fixed; left: 0; top: 0; touch-action: none; background: var(--paper); }
+
+      /* ---------- 插畫下方：三個 Memphis 小符號 + 地名 + 小字資料（STYLE.md §4）---------- */
+      #caption { position: fixed; text-align: center; pointer-events: none; padding: 0 12px; box-sizing: border-box; }
+      #caption .marks { display: block; margin: 0 auto 5px; }
+      #caption p { margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      #caption .l1 { font-weight: 600; font-size: 17px; line-height: 25px; color: var(--text); }
+      #caption .l2 { font-size: 13px; line-height: 20px; color: var(--grey); }
+      #caption .l3 { font: 400 11.5px/20px "IBM Plex Mono", ui-monospace, monospace; color: var(--light); }
+      #caption .sep { display: inline-block; width: .7em; }
+
+      /* ---------- 文字頁 ---------- */
+      #sheet { position: fixed; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; -webkit-overflow-scrolling: touch; }
+      #page { max-width: 500px; will-change: transform, opacity; }
+      .kicker { display: flex; align-items: center; gap: 10px; font: 12px/1 "IBM Plex Mono", ui-monospace, monospace; color: var(--grey); }
+      .kicker .no { font-size: 15px; color: var(--text); }
+      .kicker .sea { display: inline-flex; align-items: center; gap: 6px; height: 22px; padding: 0 9px; border-radius: 999px; background: var(--tint); color: var(--accent); font-family: "Inter Tight", "Noto Sans TC", sans-serif; font-weight: 600; }
+      .kicker .when { margin-left: auto; color: var(--accent); }
+      h1 { margin: 18px 0 0; display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 14px; }
+      h1 .zh { font: 600 56px/1.05 "Noto Sans TC", "PingFang TC", sans-serif; letter-spacing: .06em; color: var(--ink); }
+      h1 .en { font: 400 19px/1.2 "Inter Tight", sans-serif; color: var(--grey); }
+      .period { margin: 18px 0 0; display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: baseline; font-size: 14px; }
+      .period dt { font-size: 12px; color: var(--grey); letter-spacing: .08em; }
+      .period dd { margin: 0; font: 500 15px/1.5 "IBM Plex Mono", ui-monospace, monospace; color: var(--text); }
+      .period dd small { font: 12px "Inter Tight", "Noto Sans TC", sans-serif; color: var(--grey); margin-left: 6px; }
+      h2 { margin: 30px 0 10px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; letter-spacing: .1em; color: var(--accent); }
+      h2::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+      h2 small { font-weight: 400; letter-spacing: 0; color: var(--grey); }
+      .hou ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+      .hou li { display: grid; grid-template-columns: 1.6em max-content 1fr; column-gap: 16px; align-items: baseline; font-size: 14px; line-height: 1.6; }
+      .hou li i { font: normal 11px "IBM Plex Mono", monospace; color: var(--light); }
+      .hou li b { font-weight: 600; color: var(--ink); letter-spacing: .04em; }
+      .hou li span { color: var(--grey); }
+      .tw { margin: 12px 0 0; padding: 10px 14px; font-size: 14px; line-height: 1.75; background: rgba(37, 33, 74, .04); border-radius: 10px; }
+      .tw b { color: var(--accent); margin-right: 6px; }
+      .story p { margin: 0 0 12px; font-size: 15px; line-height: 1.95; text-align: justify; }
+      .story .place-en { font: 400 12px "Inter Tight", sans-serif; color: var(--grey); letter-spacing: 0; }
+      .story.sketch p { color: var(--grey); }
+      .card { position: relative; margin: 22px 0 8px; padding: 16px 18px 14px; border-radius: 14px; background: var(--tint);
+        background-image: radial-gradient(rgba(255,255,255,.75) 1.4px, transparent 1.6px); background-size: 12px 12px; }
+      .card h3 { margin: 0 0 6px; font-size: 15px; color: var(--ink); }
+      .card p { margin: 0; font-size: 14px; line-height: 1.8; }
+      .card::after { content: ""; position: absolute; right: 14px; top: -8px; width: 34px; height: 12px;
+        background: linear-gradient(135deg, transparent 33%, var(--accent) 33% 50%, transparent 50% 83%, var(--accent) 83%) 0 0 / 12px 12px; opacity: .8; }
+      .credit { margin: 26px 0 0; font-size: 12px; color: var(--light); }
+
+      /* ---------- 目錄：24 個點，四季四種顏色；有插畫的是實心點 ---------- */
+      #index { position: fixed; display: flex; align-items: center; justify-content: center; gap: 2px; z-index: 6; }
+      #index .dots { display: flex; align-items: center; }
+      #index .dot { position: relative; width: 17px; height: 26px; padding: 0; border: 0; background: none; cursor: pointer; }
+      #index .dot::before { content: ""; position: absolute; left: 50%; top: 50%; width: 8px; height: 8px; margin: -4px 0 0 -4px; border-radius: 50%;
+        box-sizing: border-box; border: 2px solid var(--c); background: transparent; transition: transform .25s cubic-bezier(.3, 1.6, .5, 1); }
+      #index .dot.has::before { background: var(--c); }
+      #index .dot.gap { margin-left: 7px; }
+      #index .dot[aria-current="true"]::before { transform: scale(1.65); box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink); }
+      #index .dot:hover::before { transform: scale(1.4); }
+      #index .dot:focus-visible { outline: 2px solid var(--ink); outline-offset: -2px; border-radius: 6px; }
+      #index .dot .tip { position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); padding: 3px 7px; border-radius: 6px; font-size: 11px; white-space: nowrap;
+        color: #fff; background: var(--ink); opacity: 0; pointer-events: none; transition: opacity .15s; }
+      #index .dot:hover .tip { opacity: 1; }
+      .arrow { display: grid; place-items: center; width: 30px; height: 30px; padding: 0; border: 0; border-radius: 50%; color: var(--ink); background: transparent; cursor: pointer; }
+      .arrow:hover { background: rgba(37, 33, 74, .07); }
+      .arrow:focus-visible { outline: 2px solid var(--ink); outline-offset: 1px; }
+      /* 桌機：插畫兩側的大箭頭 */
+      .side { position: fixed; z-index: 6; width: 44px; height: 44px; margin-top: -22px; background: rgba(255, 255, 255, .9); box-shadow: 0 2px 14px rgba(37, 33, 74, .14);
+        transition: transform .25s cubic-bezier(.22, 1, .36, 1), background .2s; }
+      .side:hover { background: #fff; transform: scale(1.08); }
+
+      #hint { position: fixed; z-index: 5; pointer-events: none; white-space: nowrap; font: 500 12px/1 Inter, "Noto Sans TC", system-ui, sans-serif; color: #6E6A86;
+        display: inline-flex; align-items: center; height: 32px; padding: 0 14px; border-radius: 999px; background: rgba(255, 255, 255, .88);
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 2px 14px rgba(37, 33, 74, .12); transform: translateX(-50%); transition: opacity .6s, transform .6s; }
+      #hint.gone { opacity: 0; transform: translate(-50%, -6px); }
+
+      /* ---------- 右上角 info 圖示和說明視窗（同 memphis-fuji）---------- */
+      #info-btn { position: fixed; top: 14px; right: 14px; z-index: 10; width: 36px; height: 36px; padding: 0; display: grid; place-items: center; color: var(--ink); cursor: pointer;
+        background: rgba(255, 255, 255, .88); border: 0; border-radius: 50%; -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        box-shadow: 0 2px 14px rgba(37, 33, 74, .12); transition: background .15s, transform .15s; }
+      #info-btn:hover { background: #fff; transform: scale(1.06); }
+      #info-btn:focus-visible, #info-close:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+      #info { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(37, 33, 74, .22); opacity: 0; pointer-events: none; transition: opacity .2s; }
+      #info.open { opacity: 1; pointer-events: auto; }
+      #info-panel { position: relative; box-sizing: border-box; width: min(560px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; padding: 28px 28px 24px;
+        color: var(--text); font: 14px/1.75 "PingFang TC", "Noto Sans TC", system-ui, sans-serif; background: rgba(255, 252, 246, .82);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1); border: 1px solid rgba(255, 255, 255, .6); border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(37, 33, 74, .28); transform: translateY(8px) scale(.98); transition: transform .2s; }
+      #info.open #info-panel { transform: none; }
+      #info-panel h1 { display: block; margin: 0 0 2px; font-size: 20px; letter-spacing: .02em; }
+      #info-panel .sub { margin: 0 0 18px; color: var(--grey); font-size: 13px; }
+      #info-panel h2 { margin: 20px 0 6px; font-size: 13px; letter-spacing: .08em; }
+      #info-panel h2::before { display: none; }
+      #info-panel p { margin: 0 0 8px; }
+      #info-panel ul { margin: 0; padding-left: 1.2em; }
+      #info-panel li { margin: 2px 0; }
+      #info-panel a { color: var(--accent); }
+      #info-panel code { font: 12px ui-monospace, Menlo, monospace; padding: 1px 5px; background: rgba(185, 160, 255, .2); border-radius: 4px; }
+      #info-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; color: #5A5670; background: transparent; border: 0; border-radius: 50%; cursor: pointer; }
+      #info-close:hover { background: rgba(0, 0, 0, .06); }
+
+      .shot #info-btn, .shot .lab-back, .shot .lab-bar, .shot #hint, .shot .side, .shot #index, .shot #sheet, .shot #caption { display: none !important; }
+
+      /* ---------- 手機：插畫在上、文字頁在下（可以上下捲）---------- */
+      .narrow h1 .zh { font-size: 40px; }
+      .narrow h1 { margin-top: 12px; }
+      .narrow .story p { font-size: 14.5px; line-height: 1.9; }
+      .narrow h2 { margin-top: 24px; }
+      .narrow .side { display: none; }
+      .narrow #caption .l1 { font-size: 15px; line-height: 22px; }
+      .narrow #caption .marks { margin-bottom: 2px; }
+      .narrow #index { background: linear-gradient(var(--paper) 70%, rgba(255, 252, 246, 0)); }
+      .narrow .hou li { grid-template-columns: 1.6em 1fr; font-size: 13.5px; }
+      .narrow .hou li span { grid-column: 2; }
+      .wide #index .arrow { display: none; }
+      .narrow #index .dot { width: 11px; }
+      .narrow #index .dot.gap { margin-left: 5px; }
+      .narrow #index .dot::before { width: 7px; height: 7px; margin: -3.5px 0 0 -3.5px; }
+      .narrow #index .arrow { width: 28px; }
+    </style>
+    <link rel="icon" href="../../favicon.ico" sizes="any" />
+    <link rel="icon" href="../../site/logo.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../../apple-touch-icon.png" />
+    <link rel="manifest" href="../../site.webmanifest" />
+    <meta name="theme-color" content="#FFFCF6" />
+    <link rel="stylesheet" href="../../site/back.css" />
+  </head>
+  <body>
+    <a class="lab-back" href="../../#works" aria-label="回到 sui's playground 範例列表">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      <img src="../../site/logo.svg" width="20" height="20" alt="" /><b>sui's playground</b>
+    </a>
+    <canvas id="gl" aria-label="節氣插畫"></canvas>
+
+    <div id="caption" aria-hidden="true">
+      <svg class="marks" width="58" height="14" viewBox="-29 -7 58 14">
+        <circle cx="-19" cy="0" r="5" fill="#FFC93C" />
+        <path d="M-5.5 4.5 L0 -5.5 L5.5 4.5 Z" fill="#FF7FAA" />
+        <path d="M11 0 L15 -3.5 L19.5 3.5 L24 0" fill="none" stroke="#2E5BE6" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" />
+      </svg>
+      <p class="l1"></p>
+      <p class="l2"></p>
+      <p class="l3"></p>
+    </div>
+
+    <button class="arrow side" id="prev" type="button" aria-label="上一個節氣"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
+    <button class="arrow side" id="next" type="button" aria-label="下一個節氣"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
+
+    <div id="sheet"><article id="page" aria-live="polite"></article></div>
+
+    <nav id="index" aria-label="節氣目錄">
+      <button class="arrow" id="prev2" type="button" aria-label="上一個節氣"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg></button>
+      <div class="dots"></div>
+      <button class="arrow" id="next2" type="button" aria-label="下一個節氣"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7" /></svg></button>
+    </nav>
+
+    <div id="hint"><span></span></div>
+
+    <button id="info-btn" type="button" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r="0.6" fill="currentColor" />
+      </svg>
+    </button>
+
+    <div id="info" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+      <div id="info-panel">
+        <button id="info-close" type="button" aria-label="關閉說明">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <h1 id="info-title">節氣圖鑑 — Solar Terms</h1>
+        <p class="sub">Memphis Diorama · 24 Solar Terms of Taiwan · Three.js</p>
+        <p>
+          一本會動的節氣圖鑑，一頁一個節氣。每一頁的插畫是台灣一個「最有那個節氣味道」的地方，做成桌上的微縮模型；旁邊介紹節氣的期間、傳統的三候、在台灣看得到的物候，以及那個地方這時候的故事。
+          目前畫好冬天的六頁（立冬到大寒），其他節氣先放素描卡，之後一季一季補上。
+        </p>
+
+        <h2>靈感與畫風來源</h2>
+        <ul>
+          <li>Eian（<a href="https://x.com/EianLu/status/2114650892934975667" target="_blank" rel="noopener">@EianLu</a>）用 Claude 寫程式做的「會動的微縮地圖」。</li>
+          <li>畫風依照 Eian 開源的 <a href="https://github.com/lemomo-ai/lemo-opuscar/blob/main/styles/memphis-diorama/STYLE.md" target="_blank" rel="noopener">Memphis Diorama STYLE.md</a>（LemoLab，MIT 授權）；STYLE 裡的第 3 種用途正好是「節氣系列」。描邊、平塗材質和毛邊外框沿用它的 <code>memphis.js</code>。</li>
+        </ul>
+
+        <h2>作法簡介</h2>
+        <ul>
+          <li><strong>翻頁</strong>：左右拖的時候，插畫的毛邊外框跟著手指收起來；放手超過一點或甩得夠快就翻頁，下一個節氣的外框從中間長開（STYLE 允許的轉場「外框收起再長開」）。</li>
+          <li><strong>一頁一個場景</strong>：整頁只有一個 WebGL canvas；每個節氣是一個獨立的場景模組，翻到才建立，前後兩頁會先在空檔建好，離開太遠就清掉。</li>
+          <li><strong>共用零件</strong>：房子、街屋、樹、小人、腳踏車、車、船、鳥、雲、雪、蒸氣都在一份零件庫裡，每頁只負責擺放和自己特有的小動靜。全部用程式產生，靜態的小東西依材質合併以減少繪製次數。</li>
+          <li><strong>決定論的 <code>frame(i)</code></strong>：畫面只跟格數有關，同一份程式也能離線逐格輸出成影片。</li>
+          <li><strong>日期</strong>：用「壽星公式」算出今年每個節氣的日期（誤差約一天），打開時停在最接近今天、已經畫好的那一頁。</li>
+        </ul>
+
+        <h2>可以怎麼玩</h2>
+        <ul>
+          <li>拖曳插畫或左右滑動翻頁；也可以用鍵盤 ← →、兩側的箭頭，或點下面的節氣點。</li>
+          <li>點畫裡的東西會有反應：收割機、漁船、燈塔、大草莓、天后宮、雪人、帝雉、燈籠⋯⋯</li>
+          <li>網址後面的 <code>#lidong</code> 這類錨點可以直接分享某一頁。</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module" src="../../site/work-nav.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

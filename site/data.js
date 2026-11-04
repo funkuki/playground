@@ -86,6 +86,18 @@ export const STYLES = [
 
 export const WORKS = [
   {
+    id: 'solar-terms',
+    title: 'Solar Terms',
+    subtitle: '節氣圖鑑',
+    en: 'Memphis Diorama · 24 Solar Terms of Taiwan',
+    href: './works/solar-terms/',
+    cover: './site/covers/solar-terms.jpg',
+    styles: ['memphis', 'diorama'],
+    date: '2026.11.05',
+    desc: '一本會動的節氣圖鑑，一頁一個節氣，左右拖曳翻頁。每頁是台灣一個最有那個節氣味道的地方：池上收割、東石曬烏魚子、大湖採草莓、鹿港冬至夜、合歡山下雪、迪化街年貨大街，旁邊寫著期間、三候和地方的故事。',
+    tech: ['frame(i) 決定論動畫', '外框收起再長開的翻頁', '場景模組按需載入', '壽星公式算節氣日期'],
+  },
+  {
     id: 'toy-expo-pass',
     title: 'Toy Transit',
     subtitle: '玩具展雷射乘車證',
