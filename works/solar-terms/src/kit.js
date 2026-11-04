@@ -369,13 +369,22 @@ export function ripples(W, n = 8) {
 }
 
 // ---------- 鳥：白鷺、海鷗（身體 + 兩片會拍的翅膀，不描邊太細的部分）----------
+// 平面形狀擠成薄片（x 往前、v 往翼尖），sd 決定左右
+export const flatShape = (pts, sd = 1) => {
+  const sh = new THREE.Shape(pts.map(([u, v]) => new THREE.Vector2(u, v * sd)));
+  return new THREE.ExtrudeGeometry(sh, { depth: 0.04, bevelEnabled: false, curveSegments: 4 }).rotateX(Math.PI / 2);
+};
+// 細長的翅膀：前緣在腕部往前凸，翼尖尖尖地往後掠（海鷗、燕子、白鷺都適用）；尾巴是小小的楔形
+const BIRD_WING = [[0.2, 0], [0.3, 0.32], [0.27, 0.55], [0.12, 0.82], [-0.08, 1.05], [-0.22, 1.25], [-0.14, 0.98], [-0.14, 0.7], [-0.2, 0.42], [-0.22, 0.18], [-0.2, 0]];
+const BIRD_TAIL = [[0, 0.1], [-0.38, 0.17], [-0.46, 0.06], [-0.42, 0], [-0.46, -0.06], [-0.38, -0.17], [0, -0.1]];
 export function bird(W, col = '#FFFFFF', s = 1) {
   const g = new THREE.Group(); W.add(g);
   const m = M(col, { shadow: false });
   mesh(new THREE.CapsuleGeometry(0.2, 0.7, 4, 10).rotateZ(Math.PI / 2), m, 0, 0, 0, g);
   mesh(new THREE.SphereGeometry(0.17, 10, 8), m, 0.5, 0.12, 0, g);
   mesh(new THREE.ConeGeometry(0.06, 0.35, 6).rotateZ(-Math.PI / 2), M(PAL.yellow, { shadow: false }), 0.75, 0.1, 0, g);
-  const wings = [-1, 1].map((sd) => { const w = new THREE.Group(); w.position.set(0, 0.08, sd * 0.12); g.add(w); mesh(box(0.55, 0.06, 1.0).translate(0, 0, sd * 0.5), m, 0, 0, 0, w); w.userData.sd = sd; return w; });
+  mesh(flatShape(BIRD_TAIL), m, -0.38, 0.04, 0, g);
+  const wings = [-1, 1].map((sd) => { const w = new THREE.Group(); w.position.set(0.02, 0.08, sd * 0.12); g.add(w); mesh(flatShape(BIRD_WING, sd), m, 0, 0, 0, w); w.userData.sd = sd; return w; });
   g.scale.setScalar(s);
   return { g, wings };
 }

@@ -7,7 +7,7 @@ const TUNA = '#4E5A8C', BELLY = '#D9DCEB';
 export default function build(W, { LOOP }) {
   const { R, rr, pick } = rand(521);
   const clickables = [];
-  const ev = { tuna: new Map(), auction: -9, gate: -9 };
+  const ev = { tuna: new Map(), auction: -9, gate: -9, statue: -9 };
   const rings = ripples(W, 10);
   const pop = bursts(W, ['#FFFFFF', '#F8D97A', '#A0D8EF']);
 
@@ -30,14 +30,22 @@ export default function build(W, { LOOP }) {
   mb.add(new THREE.BoxGeometry(35, 0.3, 15), M('#A0D8EF', { pat: 4, patCol: '#FFFFFF', patScale: 0.9 }), 0, 6.1, 0);
   mb.add(box(10, 1.6, 0.25), M(PAL.coral), 0, 6.4, 7.4);
   mb.build(mk);
+  // 黑鮪魚：紡錘形的身體（背深藍、肚子銀白），尖嘴、月牙形的尾巴，背上兩片鰭，尾柄上下一排黃色小鰭
+  const PROF = [[0.0, -1.95], [0.1, -1.8], [0.2, -1.5], [0.36, -1.1], [0.52, -0.5], [0.6, 0.1], [0.56, 0.6], [0.44, 1.05], [0.26, 1.42], [0.08, 1.62], [0.0, 1.66]].map(([r, y]) => new THREE.Vector2(r, y));
+  const fin = (pts) => new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.06, bevelEnabled: false, curveSegments: 3 }).translate(0, 0, -0.03);
+  const TB = dots(TUNA, 0.2, '#5E6BA0'), TS = M(BELLY), TF = M(TUNA), TY = M('#F8D97A'), TE = M('#FFFFFF'), TP = M('#2E2A40');
   const tunaMesh = () => {
     const g = new THREE.Group();
     const tb = new Batch();
-    tb.add(new THREE.SphereGeometry(1, 16, 10).scale(1.6, 0.55, 0.55), dots(TUNA, 0.2, '#5E6BA0'), 0, 0.5, 0);
-    tb.add(new THREE.SphereGeometry(1, 16, 10).scale(1.5, 0.3, 0.5), M(BELLY), 0, 0.3, 0);
-    tb.add(new THREE.ConeGeometry(0.5, 0.9, 4).rotateZ(Math.PI / 2).scale(1, 1, 0.15), M(TUNA), -1.9, 0.5, 0);
-    tb.add(new THREE.ConeGeometry(0.5, 0.6, 3).scale(1, 1, 0.2), M('#F8D97A'), -0.3, 1.0, 0);
-    tb.add(new THREE.SphereGeometry(0.1, 8, 6), M('#FFFFFF'), 1.15, 0.6, 0.38);
+    tb.add(new THREE.LatheGeometry(PROF, 18).rotateZ(-Math.PI / 2), TS, 0, 0.6, 0, 0, 0, 0, 1, 1, 0.85);
+    tb.add(new THREE.LatheGeometry(PROF, 18, Math.PI, Math.PI).rotateZ(-Math.PI / 2), TB, 0, 0.6, 0, 0, 0, 0, 1.01, 1.03, 0.88);   // 背上那一半
+    tb.add(fin([[0, 0], [-0.25, 0.5], [-0.75, 1.15], [-0.5, 0.55], [-0.48, 0], [-0.5, -0.55], [-0.75, -1.15], [-0.25, -0.5]]), TF, -1.82, 0.6, 0);   // 月牙尾
+    tb.add(fin([[0.35, 0], [-0.1, 0.6], [-0.35, 0]]), TF, 0.2, 1.1, 0);                     // 第一背鰭
+    tb.add(fin([[0.2, 0], [-0.15, 0.5], [-0.2, 0]]), TY, -0.6, 1.08, 0);                    // 第二背鰭
+    tb.add(fin([[0.2, 0], [-0.15, -0.45], [-0.2, 0]]), TY, -0.6, 0.15, 0);                  // 臀鰭
+    for (let k = 0; k < 5; k++) { const x = -0.95 - k * 0.17, r = 0.36 - k * 0.05; for (const sd of [1, -1]) tb.add(fin([[0.06, 0], [-0.04, sd * 0.16], [-0.06, 0]]), TY, x, 0.6 + sd * r, 0); }   // 小鰭
+    for (const sd of [-1, 1]) tb.add(fin([[0.15, 0], [-0.9, -0.1], [-0.1, -0.12]]).rotateX(sd * 1.2), TF, 0.7, 0.5, sd * 0.45);   // 胸鰭貼著身體往後
+    for (const sd of [-1, 1]) { tb.add(new THREE.SphereGeometry(0.11, 10, 8), TE, 1.12, 0.68, sd * 0.33); tb.add(new THREE.SphereGeometry(0.06, 8, 6), TP, 1.17, 0.69, sd * 0.4); }
     tb.build(g);
     return g;
   };
@@ -73,6 +81,15 @@ export default function build(W, { LOOP }) {
   const hook = new THREE.Group(); arm.add(hook);
   const rope = mesh(new THREE.CylinderGeometry(0.03, 0.03, 1, 4).translate(0, -0.5, 0), M(PAL.plum), 0, 0, 0, hook);
   const hung = tunaMesh(); hook.add(hung); hung.scale.setScalar(0.75); hung.rotation.z = Math.PI / 2;
+
+  // ---------- 港口的大黑鮪魚雕像：從浪花裡往上躍起 ----------
+  const statue = new THREE.Group(); statue.position.set(24, 1.0, -16); W.add(statue);
+  const sb = new Batch();
+  sb.add(new THREE.CylinderGeometry(3.2, 3.6, 1.2, 24), stripes('#EDE6F0', 0.3, '#DED5E3', 4), 0, 0.6, 0);
+  for (const [dx, dz, r] of [[0, 0, 1.8], [1.4, 0.6, 1.2], [-1.3, -0.4, 1.3], [0.4, -1.3, 1.0], [-0.6, 1.3, 1.0]]) sb.add(new THREE.SphereGeometry(r, 14, 10).scale(1, 0.7, 1), dots('#A0D8EF', 0.4, '#FFFFFF'), dx, 1.5, dz);
+  sb.build(statue);
+  const big = tunaMesh(); big.scale.setScalar(2.6); big.position.set(-0.6, 2.2, 0); big.rotation.set(0, -0.5, 0.75); statue.add(big);
+  tag(statue, 'statue', null, clickables);
 
   // ---------- 東隆宮的金色牌樓、港邊的房子 ----------
   const gate = new THREE.Group(); gate.position.set(-36, 1.0, -30); W.add(gate);
@@ -120,12 +137,15 @@ export default function build(W, { LOOP }) {
       tunas.forEach((g, k) => { g.scale.y = squash(t - (ev.tuna.get(k) ?? -9)); });
       for (const s of sellers) { const u = fr(s.u + s.dir * t / LOOP * 0.4); walk(s.p, lerp(-60, 60, u), -26 + s.dir * 0.8, s.dir > 0 ? 0 : Math.PI, t * 6 + s.u * 9); s.p.g.position.y += 1.0; s.p.g.scale.setScalar(fadeEnds(u, 14)); }
       gate.scale.y = squash(t - ev.gate);
+      const jump = t - ev.statue < 1.2 ? Math.sin(Math.PI * (t - ev.statue) / 1.2) : 0;
+      big.position.y = 2.2 + Math.sin(t * 1.2) * 0.25 + jump * 2.5; big.rotation.z = 0.75 + Math.sin(t * 1.2) * 0.06 + jump * 0.3;
       for (const tr of trees) sway(tr, t);
       rings.update(t); pop.update(t);
     },
     poke(kind, ref, p, t) {
       if (kind === 'tuna') { ev.tuna.set(ref, t); pop.add(V3(p.x, p.y + 0.6, p.z), t, R, 0.5); }
       if (kind === 'auction') { ev.auction = t; pop.add(V3(p.x, p.y + 2, p.z), t, R, 0.9); }
+      if (kind === 'statue') { ev.statue = t; pop.add(V3(24, 8, -16), t, R, 1); }
       if (kind === 'gate') { ev.gate = t; pop.add(V3(-36, 10, -30), t, R, 1); }
       if (kind === 'water') rings.add(V3(p.x, 0, p.z), t, 0.1);
     },

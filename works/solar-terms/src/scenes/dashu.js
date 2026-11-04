@@ -35,13 +35,40 @@ export default function build(W, { LOOP }) {
   const trees = [[-24, -20, 'round'], [-4, -22, 'cloud'], [-54, 8, 'egg'], [-30, 18, 'cloud'], [4, 20, 'round']].map(([x, z, k]) => tree(W, R, x, z, k, pick([CROWN.green, CROWN.teal]), 1.3, H(x, z) - 0.1));
 
   // ---------- 熱氣球 ----------
-  const SKINS = [['#F8D97A', '#EE836F'], ['#A0D8EF', '#FFFDF8'], ['#F4B3C2', '#FFFDF8'], ['#A8D8B9', '#F8D97A'], ['#BBBCDE', '#F4B3C2'], ['#F7B977', '#5B7FC7'], ['#FFFDF8', '#68BE8D']];
+  // 球皮的輪廓（r, y）：下窄上圓的水滴形，用 lathe 一片片轉出來，每片可以換顏色
+  const ENV = new THREE.SplineCurve([[0.95, -3.4], [1.9, -2.5], [2.8, -1.2], [3.1, 0.1], [2.95, 1.4], [2.3, 2.5], [1.2, 3.25], [0, 3.45]].map(([r, y]) => new THREE.Vector2(r, y))).getSpacedPoints(24);
+  const MC = new Map(), mc = (c) => { if (!MC.has(c)) MC.set(c, M(c)); return MC.get(c); };
+  const CHECK = ['#EE836F', '#F8D97A', '#F7B977', '#5B7FC7', '#68BE8D', '#F4B3C2', '#BBBCDE', '#E95464'];
+  const piece = (eb, col, i, n, j0, j1) => eb.add(new THREE.LatheGeometry(ENV.slice(j0, j1 + 1), 3, i / n * TAU, TAU / n), mc(col));
+  const SKINS = [
+    (eb) => { for (let i = 0; i < 16; i++) for (let j = 0; j < 6; j++) piece(eb, CHECK[(i * 3 + j * 5) % CHECK.length], i, 16, j * 4, j * 4 + 4); },       // 格子拼布
+    'mushroom',
+    (eb) => { for (let i = 0; i < 12; i++) piece(eb, i % 2 ? '#A0D8EF' : '#FFFDF8', i, 12, 0, 24); },                                                      // 藍白直條
+    (eb) => { const C = ['#F4B3C2', '#F8D97A', '#A8D8B9', '#A0D8EF', '#BBBCDE', '#F7B977']; for (let i = 0; i < 12; i++) for (let j = 0; j < 6; j++) piece(eb, C[j], i, 12, j * 4, j * 4 + 4); },   // 彩虹橫條
+    (eb) => { for (let i = 0; i < 12; i++) for (let j = 0; j < 3; j++) piece(eb, (i + j) % 2 ? '#5B7FC7' : '#F8D97A', i, 12, j * 8, j * 8 + 8); },          // 藍黃菱格
+    'mushroom',
+    (eb) => { for (let i = 0; i < 16; i++) for (let j = 0; j < 6; j++) piece(eb, CHECK[(i * 5 + j * 2 + 3) % CHECK.length], i, 16, j * 4, j * 4 + 4); },
+  ];
+  // 卡通香菇：桃紅的傘蓋上有黃點點，下面奶油色的臉在笑
+  const mushroom = (env) => {
+    const eb = new Batch();
+    eb.add(new THREE.SphereGeometry(3.4, 28, 16, 0, TAU, 0, Math.PI * 0.55), mc('#E95464'), 0, -0.2, 0, 0, 0, 0, 1, 1.05, 1);
+    eb.add(new THREE.LatheGeometry(ENV.slice(0, 14), 24), mc('#F3E3CF'));
+    for (const [th, ph, r] of [[0.25, 0, 0.75], [0.75, 1.0, 0.8], [0.8, 2.6, 0.75], [0.7, 4.2, 0.85], [0.85, 5.4, 0.7], [1.15, 0.5, 0.55], [1.2, 1.9, 0.55], [1.15, 3.4, 0.6], [1.2, 4.9, 0.55]]) {
+      const n = V3(Math.sin(th) * Math.cos(ph), Math.cos(th) * 1.05, Math.sin(th) * Math.sin(ph)).normalize(), m = new THREE.Mesh(new THREE.CircleGeometry(r, 18), mc('#F8D97A'));
+      m.position.copy(n).multiplyScalar(3.5).add(V3(0, -0.2, 0)); m.lookAt(m.position.clone().add(n)); env.add(m); noEdge(m);
+    }
+    for (const f of [1, -1]) {   // 前後兩面都畫一張笑臉
+      for (const sd of [-1, 1]) eb.add(new THREE.SphereGeometry(0.32, 10, 8).scale(0.5, 1, 0.75), mc('#2E2A40'), f * 2.72, -1.35, sd * 0.7);
+      eb.add(new THREE.TorusGeometry(0.5, 0.09, 6, 16, Math.PI).rotateZ(Math.PI).rotateY(Math.PI / 2).rotateZ(-f * 0.6), mc('#2E2A40'), f * 2.5, -1.7, 0);   // 嘴巴順著球皮往內斜
+    }
+    eb.build(env);
+  };
   const balloon = (k) => {
     const g = new THREE.Group(); W.add(g);
-    const [a, c] = SKINS[k % SKINS.length];
     const env = new THREE.Group(); env.position.y = 5.2; g.add(env);
-    mesh(new THREE.SphereGeometry(3, 24, 16).scale(1, 1.15, 1), M(a, { pat: 4, patCol: c, patScale: 1.1 }), 0, 0, 0, env);
-    mesh(new THREE.CylinderGeometry(1.2, 0.7, 1.6, 16, 1, true), M(c), 0, -3.6, 0, env);
+    if (SKINS[k] === 'mushroom') mushroom(env); else { const eb = new Batch(); SKINS[k](eb); eb.build(env); }
+    mesh(new THREE.CylinderGeometry(1.0, 0.7, 0.8, 16, 1, true), mc('#6B6283'), 0, -3.7, 0, env);
     const b = new Batch();
     for (const [dx, dz] of [[-0.5, -0.5], [0.5, -0.5], [-0.5, 0.5], [0.5, 0.5]]) b.add(new THREE.CylinderGeometry(0.03, 0.03, 1.6, 4).translate(0, 0.8, 0), M(PAL.plum), dx, 0.9, dz);
     b.add(box(1.4, 0.9, 1.4), stripes('#E6C68A', 0.2, '#B08A72', 4), 0, 0, 0);

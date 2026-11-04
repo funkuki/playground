@@ -1,6 +1,6 @@
 // 寒露・屏東滿州：傍晚落鷹。灰面鵟鷹在天上繞著熱氣流一圈圈盤旋（鷹柱），太陽快下山時，一隻接一隻滑進山谷的樹林裡過夜。
 // 前面的小丘上有賞鷹台，賞鳥的人架著望遠鏡；山下是滿州的小村子、田和一條溪，遠處是海。
-import { THREE, M, dots, stripes, lt, Batch, mesh, box, slab, ribbon, tree, pine, sway, house, walker, bursts, clouds, ridge, noEdge, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, TAU } from '../kit.js';
+import { THREE, M, dots, stripes, lt, Batch, mesh, box, slab, ribbon, tree, pine, sway, house, walker, bursts, clouds, ridge, noEdge, CROWN, PAL, rand, squash, tag, V3, fr, ease, clamp01, lerp, fadeEnds, TAU, flatShape } from '../kit.js';
 
 // 地形：後面（-z）是一道長滿樹的山，中間是谷地，前面左邊一座小丘（賞鷹台）
 function H(x, z) {
@@ -62,10 +62,6 @@ export default function build(W, { LOOP }) {
   // 翅膀的平面形狀（x 往前、v 往翼尖）：寬寬的內翼、圓弧的前緣，翼尖散開五根「手指」（初級飛羽）
   const WING = [[0.42, 0], [0.5, 0.45], [0.42, 1.05], [0.26, 1.5], [0.2, 1.82], [0.1, 1.62], [0.03, 1.95], [-0.06, 1.66], [-0.12, 1.9], [-0.2, 1.62], [-0.26, 1.78], [-0.34, 1.52], [-0.42, 1.58], [-0.5, 1.25], [-0.58, 0.8], [-0.52, 0.35], [-0.42, 0]];
   const TAIL = [[0, 0.12], [-0.5, 0.3], [-0.68, 0.16], [-0.72, 0], [-0.68, -0.16], [-0.5, -0.3], [0, -0.12]];   // 張開的扇形尾巴
-  const flatShape = (pts, sd = 1) => {
-    const sh = new THREE.Shape(pts.map(([u, v]) => new THREE.Vector2(u, v * sd)));
-    return new THREE.ExtrudeGeometry(sh, { depth: 0.04, bevelEnabled: false, curveSegments: 4 }).rotateX(Math.PI / 2);   // shape 的 v 變成 +z（往翼尖）
-  };
   const hawk = () => {
     const g = new THREE.Group(); W.add(g);
     const m = M(HAWK, { shadow: false, pat: 6, patCol: '#F3E3CF', patScale: 0.12 });

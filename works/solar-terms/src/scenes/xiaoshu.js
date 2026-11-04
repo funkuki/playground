@@ -67,7 +67,7 @@ export default function build(W, { LOOP }) {
     const pail = mesh(new THREE.CylinderGeometry(0.3, 0.25, 0.5, 10), M('#A0D8EF'), 0.4, 0.9, 0.35, p.g);
     return { p, x, z, ph: R() * 6 };
   });
-  const gulls = Array.from({ length: 4 }, (_, i) => ({ b: bird(W, '#FFFFFF', 0.9), a: i / 4 * TAU, r: rr(14, 22), y: rr(10, 16) }));
+  const gulls = Array.from({ length: 4 }, (_, i) => ({ b: bird(W, '#FFFFFF', 1.25), a: i / 4 * TAU, r: rr(14, 22), y: rr(10, 16) }));
   const drift = clouds(W, R, [[-40, 30, 10, 1.4], [40, 34, -10, 1.2]], LOOP);
 
   return {

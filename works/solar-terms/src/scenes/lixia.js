@@ -52,7 +52,7 @@ export default function build(W, { LOOP }) {
   const homes = [house(W, -30, 18, { i: 0, w: 9, d: 5, two: false, wall: '#FFFDF8', roof: ['#D9665B', '#F7B977'], y: H(-30, 18) - 0.1 }), house(W, -40, 24, { i: 1, w: 6, d: 5, two: false, wall: '#FFFDF8', roof: ['#D9665B', '#F7B977'], rot: Math.PI / 2, y: H(-40, 24) - 0.1 })];
   const fields = new Batch();
   for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++) slab(fields, M(pick(['#B0CA71', '#C9DB8E', '#A8D8B9']), { pat: 6, patCol: '#9DB862', patScale: 0.5 }), -14 + i * 10, 24 + j * 9, 9, 8, 0.2, H(-14 + i * 10, 24 + j * 9) - 0.1);
-  slab(fields, dots('#A0D8EF', 0.8, '#BCE2E8'), 26, 22, 12, 8, 0.15, H(26, 22) - 0.05, 3);
+  slab(fields, dots('#A0D8EF', 0.8, '#BCE2E8'), 30, 9, 12, 8, 0.15, H(30, 9) - 0.05, 3);
   fields.build(W, { cast: false });
   // 青蛙：塘邊幾隻綠色小青蛙，隔一陣子跳一下
   const frogs = Array.from({ length: 5 }, (_, i) => {
@@ -60,10 +60,10 @@ export default function build(W, { LOOP }) {
     mesh(new THREE.SphereGeometry(0.35, 10, 8).scale(1.2, 0.7, 1), M('#68BE8D'), 0, 0.25, 0, g);
     for (const sd of [-0.18, 0.18]) mesh(new THREE.SphereGeometry(0.1, 8, 6), M('#FFFFFF'), 0.25, 0.48, sd, g);
     const a = (i / 5) * TAU;
-    return { g, x: 26 + Math.cos(a) * 6.8, z: 22 + Math.sin(a) * 4.6, ph: R(), a };
+    return { g, x: 30 + Math.cos(a) * 6.8, z: 9 + Math.sin(a) * 4.6, ph: R(), a };
   });
   const pond = new THREE.Mesh(new THREE.CircleGeometry(7, 20).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ visible: false }));
-  pond.position.set(26, H(26, 22) + 0.3, 22); W.add(pond); tag(pond, 'frogs', null, clickables);
+  pond.position.set(30, H(30, 9) + 0.3, 9); W.add(pond); tag(pond, 'frogs', null, clickables);
 
   // ---------- 竹林和竹筍 ----------
   const bamboo = new Batch();
@@ -116,7 +116,7 @@ export default function build(W, { LOOP }) {
       for (const f of frogs) {
         const T = fr(t / 2.4 + f.ph), hop = T < 0.25 ? Math.sin(Math.PI * T / 0.25) : 0, all = Math.sin(Math.PI * clamp01((t - ev.frogs) / 0.6));
         const j = Math.max(hop * 0.7, all * 1.4), a = f.a + Math.floor(t / 2.4 + f.ph) * 0.4;
-        const x = 26 + Math.cos(a) * 6.8, z = 22 + Math.sin(a) * 4.6;
+        const x = 30 + Math.cos(a) * 6.8, z = 9 + Math.sin(a) * 4.6;
         f.g.position.set(x, H(x, z) + 0.05 + j, z); f.g.rotation.y = -a - Math.PI / 2; f.g.scale.set(1, 1 + j * 0.3, 1);
       }
       petals.update(t);
