@@ -41,10 +41,11 @@
       h2::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
       h2 small { font-weight: 400; letter-spacing: 0; color: var(--grey); }
       .hou ol { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
-      .hou li { display: grid; grid-template-columns: 1.6em max-content 1fr; column-gap: 16px; align-items: baseline; font-size: 14px; line-height: 1.6; }
+      .hou li { display: grid; grid-template-columns: 1.6em max-content 1fr; column-gap: 16px; align-items: first baseline; font-size: 14px; line-height: 1.6; }
       .hou li i { font: normal 11px "IBM Plex Mono", monospace; color: var(--light); }
       .hou li b { font-weight: 600; color: var(--ink); letter-spacing: .04em; }
       .hou li span { color: var(--grey); }
+      .hou li b small { display: block; font: 400 11px/1.5 "Noto Sans JP", "Hiragino Sans", sans-serif; letter-spacing: 0; color: var(--light); }
       .tw { margin: 12px 0 0; padding: 10px 14px; font-size: 14px; line-height: 1.75; background: rgba(37, 33, 74, .04); border-radius: 10px; }
       .tw b { color: var(--accent); margin-right: 6px; }
       .story p { margin: 0 0 12px; font-size: 15px; line-height: 1.95; text-align: justify; }
@@ -181,7 +182,7 @@
         <h1 id="info-title">節氣圖鑑 — Solar Terms</h1>
         <p class="sub">Memphis Diorama · 24 Solar Terms of Taiwan · Three.js</p>
         <p>
-          一本會動的節氣圖鑑，一頁一個節氣。每一頁的插畫是台灣一個「最有那個節氣味道」的地方，做成桌上的微縮模型；旁邊介紹節氣的期間、傳統的三候、在台灣看得到的物候，以及那個地方這時候的故事。
+          一本會動的節氣圖鑑，一頁一個節氣。每一頁的插畫是台灣一個「最有那個節氣味道」的地方，做成桌上的微縮模型；旁邊介紹節氣的期間、日本的七十二候、在台灣看得到的物候，以及那個地方這時候的故事。
           目前畫好冬天的六頁（立冬到大寒），其他節氣先放素描卡，之後一季一季補上。
         </p>
 
@@ -197,6 +198,7 @@
           <li><strong>一頁一個場景</strong>：整頁只有一個 WebGL canvas；每個節氣是一個獨立的場景模組，翻到才建立，前後兩頁會先在空檔建好，離開太遠就清掉。</li>
           <li><strong>共用零件</strong>：房子、街屋、樹、小人、腳踏車、車、船、鳥、雲、雪、蒸氣都在一份零件庫裡，每頁只負責擺放和自己特有的小動靜。全部用程式產生，靜態的小東西依材質合併以減少繪製次數。</li>
           <li><strong>決定論的 <code>frame(i)</code></strong>：畫面只跟格數有關，同一份程式也能離線逐格輸出成影片。</li>
+          <li><strong>三候</strong>：每個節氣分成三候，用的是日本的七十二候（明治七年《略本曆》的版本），比中國古書的三候更貼近花草和農事，例如立冬是「山茶始開、地始凍、金盞香」。每一候附上讀音和白話。</li>
           <li><strong>日期</strong>：用「壽星公式」算出今年每個節氣的日期（誤差約一天），打開時停在最接近今天、已經畫好的那一頁。</li>
         </ul>
 
