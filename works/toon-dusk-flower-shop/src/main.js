@@ -43,6 +43,13 @@ controls.minPolarAngle = THREE.MathUtils.degToRad(55);
 controls.maxPolarAngle = THREE.MathUtils.degToRad(90);
 controls.minDistance = 18;
 controls.maxDistance = 45;
+// ?spin：首頁預覽影片用，解除左右限制、自動轉一圈
+if (params.has('spin')) {
+  controls.minAzimuthAngle = -Infinity;
+  controls.maxAzimuthAngle = Infinity;
+  controls.autoRotate = true;
+  controls.autoRotateSpeed = Number(params.get('spin')) || 6;
+}
 controls.update();
 
 buildScene(scene);
@@ -88,7 +95,9 @@ addEventListener('keydown', (e) => {
 });
 resize();
 
+const clock = new THREE.Clock();
 renderer.setAnimationLoop(() => {
-  controls.update();
+  // 傳入經過時間，自動旋轉的速度才不會跟著螢幕更新率變
+  controls.update(clock.getDelta());
   composer.render();
 });

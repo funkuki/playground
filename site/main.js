@@ -57,6 +57,7 @@ workGrid.innerHTML = WORKS.map((w, i) => `
   <a class="work-card reveal" style="--i:${i % 2}" href="${w.href}" data-styles="${w.styles.join(' ')}">
     <div class="work-cover">
       <img src="${w.cover}" alt="${esc(w.title)} ${esc(w.subtitle)} 截圖" loading="lazy" />
+      ${w.preview ? `<video src="${w.preview}" muted loop playsinline preload="none" aria-hidden="true"></video>` : ''}
       <span class="play">進入範例 →</span>
     </div>
     <div class="work-meta">
@@ -69,6 +70,21 @@ workGrid.innerHTML = WORKS.map((w, i) => `
     <p class="work-desc">${esc(w.desc)}</p>
     <div class="work-tech">${w.tech.map((t) => `<span>${esc(t)}</span>`).join('')}<span>${w.date}</span></div>
   </a>`).join('');
+
+// 滑過卡片播放預覽短片，離開就停下並倒回開頭（只在有滑鼠的裝置）
+if (matchMedia('(hover: hover)').matches) {
+  workGrid.querySelectorAll('.work-card').forEach((card) => {
+    const video = card.querySelector('video');
+    if (!video) return;
+    video.addEventListener('playing', () => card.classList.add('previewing'));
+    card.addEventListener('mouseenter', () => { video.play().catch(() => {}); });
+    card.addEventListener('mouseleave', () => {
+      card.classList.remove('previewing');
+      video.pause();
+      video.currentTime = 0;
+    });
+  });
+}
 
 function setFilter(id) {
   filters.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-selected', String(c.dataset.filter === id)));

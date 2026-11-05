@@ -1,4 +1,5 @@
 // 網站收錄的風格與作品。新增作品：在 works/ 開資料夾、在 vite.config.js 加入口，再在 WORKS 加一筆。
+// preview 是滑過卡片時播放的循環短片（public/site/previews/，720×450、8 秒內）。
 
 export const STYLES = [
   {
@@ -92,6 +93,7 @@ export const WORKS = [
     en: 'Memphis Diorama · 24 Solar Terms of Taiwan',
     href: './works/solar-terms/',
     cover: './site/covers/solar-terms.jpg',
+    preview: './site/previews/solar-terms.mp4',
     styles: ['memphis', 'diorama'],
     date: '2026.11.05',
     desc: '一本會動的節氣圖鑑，一頁一個節氣，左右拖曳翻頁。每頁是台灣一個最有那個節氣味道的地方：池上收割、東石曬烏魚子、大湖採草莓、鹿港冬至夜、合歡山下雪、迪化街年貨大街，旁邊寫著期間、三候和地方的故事。',
@@ -104,6 +106,7 @@ export const WORKS = [
     en: 'Holographic Expo Pass',
     href: './works/toy-expo-pass/',
     cover: './site/covers/toy-expo-pass.jpg',
+    preview: './site/previews/toy-expo-pass.mp4',
     styles: ['holo'],
     date: '2026.11.04',
     desc: '虛構玩具展「玩具轉運站」的邀請制乘車證。撕開封蠟，票從信封裡飛出來，轉動看雷射光流動、翻到背面看火車進站的首班車月台；鐵皮兔站長扣扣會幫你剪票，展後再蓋上「已抵達」郵戳。',
@@ -116,6 +119,7 @@ export const WORKS = [
     en: 'Claymation Figure Studio',
     href: './works/clay-figures/',
     cover: './site/covers/clay-figures.jpg',
+    preview: './site/previews/clay-figures.mp4',
     styles: ['clay'],
     date: '2026.11.03',
     desc: '春男、粉紅兔、天使和惡魔捏成了黏土公仔。在轉台上戳出指印、揉到發亮、把耳朵捏長，換幾種燈光拍張拍立得，再一鍵恢復原狀。',
@@ -128,6 +132,7 @@ export const WORKS = [
     en: 'Memphis Diorama · Mt. Fuji',
     href: './works/memphis-fuji/',
     cover: './site/covers/memphis-fuji.jpg',
+    preview: './site/previews/memphis-fuji.mp4',
     styles: ['memphis', 'diorama'],
     date: '2026.11.03',
     desc: '四月的河口湖北岸，山頂還留著雪，湖畔櫻花開了。天鵝船繞湖、魚跳出水面、富士急行進站又開走；按下黃昏，光環從富士山腳擴散，小鎮的燈一盞一盞亮起來。',
@@ -140,6 +145,7 @@ export const WORKS = [
     en: 'Gouache-style Pool Diorama',
     href: './works/dog-pool/',
     cover: './site/covers/dog-pool.jpg',
+    preview: './site/previews/dog-pool.mp4',
     styles: ['gouache', 'cutaway', 'diorama'],
     date: '2026.11.02',
     desc: '夏天午後的泳池，俯看是一張水粉插畫：臘腸狗狗爬式划水、柯基趴在香蕉浮板上，大白熊犬一再跳水。轉到側面，池壁會切開成玻璃，看得到水下划動的腿。',
@@ -152,6 +158,7 @@ export const WORKS = [
     en: 'Pixel Isometric Flower Shop',
     href: './works/pixel-flower-shop/',
     cover: './site/covers/pixel-flower-shop.jpg',
+    preview: './site/previews/pixel-flower-shop.mp4',
     styles: ['pixel', 'iso', 'diorama'],
     date: '2026.11.02',
     desc: '日本鄉間街角的兩層老屋花店。彎腰看貓的女學生、睡在石階上的三花貓，還有停在屋脊上啄一啄的麻雀。',
@@ -164,6 +171,7 @@ export const WORKS = [
     en: 'Toon-shaded Greenhouse Café',
     href: './works/toon-greenhouse-cafe/',
     cover: './site/covers/toon-greenhouse-cafe.jpg',
+    preview: './site/previews/toon-greenhouse-cafe.mp4',
     styles: ['toon', 'diorama'],
     date: '2026.11.02',
     desc: '森林裡的鐵框玻璃溫室。花叢間有十幾隻蝴蝶，一隻英短虎斑貓追累了就回地毯上睡覺；吧台會傳來磨豆和打奶泡的聲音。',
@@ -176,6 +184,7 @@ export const WORKS = [
     en: 'Toon-shaded Dusk Flower Shop',
     href: './works/toon-dusk-flower-shop/',
     cover: './site/covers/toon-dusk-flower-shop.jpg',
+    preview: './site/previews/toon-dusk-flower-shop.mp4',
     styles: ['toon', 'diorama'],
     date: '2026.11.02',
     desc: '黃昏街角的兩層樓花店，紅色遮雨棚、垂滿陽台的橘色花藤、窗裡透出的暖光。賽璐璐花店的第一版。',
