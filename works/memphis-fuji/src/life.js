@@ -1,8 +1,8 @@
-// 會動的小東西：雲、笠雲、水紋、天鵝船、跳出水面的魚、富士急行、湖畔的車、白鷺、櫻花瓣、散步的人、樹搖、黃昏的燈。
+// 會動的小東西：雲、笠雲、水紋、天鵝船、跳出水面的魚、富士急行、湖畔的車、白鷺、櫻花瓣／落葉／雪、夏夜煙火、散步的人、樹搖、黃昏的燈、換季。
 // 每一樣都是時間 t 的函數，週期都整除 LOOP，所以整段可以無縫循環；點擊等互動是帶時間戳的事件，也在 update(t) 裡算。
 import * as THREE from 'three';
-import { flat, mesh, box, rng, lerp, clamp01, ease, INK, setNight, setDusk, setLamps, setWave } from './memphis.js';
-import { M, PAL } from './world.js';
+import { flat, mesh, box, rng, lerp, clamp01, ease, INK, setNight, setDusk, setLamps, setWave, setSeason } from './memphis.js';
+import { M, PAL, applySeason } from './world.js';
 import { person, walk } from './people.js';
 
 const TAU = Math.PI * 2;
@@ -31,7 +31,7 @@ export function buildLife(world, LOOP) {
     for (;;) { const x = rr(lake.LX0 + 10, lake.LX1 - 10), h = lake.hwz(x); if (h > 5) return V3(x, 0, lake.zc(x) + rr(-0.6, 0.6) * h); }
   };
   const foam = new THREE.MeshBasicMaterial({ color: '#FFFFFF' });
-  const ev = { pokes: new Map(), ripples: [], fish: [], bursts: [], dusk: null };
+  const ev = { pokes: new Map(), ripples: [], fish: [], bursts: [], dusk: null, season: { cur: 0, next: 0, t0: -1e9 } };
 
   // ---------- 水紋：白色小波浪往西漂 ----------
   const squigGeo = (() => { const pts = []; for (let i = 0; i <= 8; i++) pts.push(V3((i - 4) * 0.3, 0, Math.sin(i * 1.5) * 0.16)); return new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 28, 0.08, 5); })();
@@ -120,13 +120,34 @@ export function buildLife(world, LOOP) {
     return { g, wings, i, ph: rr(0, TAU) };
   });
 
-  // ---------- 櫻花瓣：從湖畔的櫻花樹飄下來 ----------
+  // ---------- 櫻花瓣（春）／落葉（秋）：從湖畔的樹飄下來；夏天只偶爾掉一片綠葉，冬天改下雪 ----------
   const sakura = world.trees.filter((t) => t.sakura);
   const petalGeo = new THREE.CircleGeometry(0.22, 6).scale(1, 0.6, 1);
   const PETAL_N = 120, BURST_N = 60;
-  const petalMats = [new THREE.MeshBasicMaterial({ color: '#FF9EC8', side: THREE.DoubleSide }), new THREE.MeshBasicMaterial({ color: '#FFFFFF', side: THREE.DoubleSide })];
-  const petals = petalMats.map((m) => { const im = new THREE.InstancedMesh(petalGeo, m, (PETAL_N + BURST_N) / 2); im.userData.noOutline = true; im.frustumCulled = false; W.add(im); return im; });
+  const petals = new THREE.InstancedMesh(petalGeo, new THREE.MeshBasicMaterial({ color: '#FFFFFF', side: THREE.DoubleSide }), PETAL_N + BURST_N);
+  petals.userData.noOutline = true; petals.frustumCulled = false; W.add(petals);
   const PET = Array.from({ length: PETAL_N }, (_, i) => ({ t: sakura[i % sakura.length], n: [4, 5, 8][i % 3], ph: R(), ox: rr(-1.5, 1.5), oz: rr(-1.5, 1.5), sp: rr(0, TAU) }));
+  // 每一季飄的東西：顏色、大小、這一片要不要出現
+  const FALL = [
+    { cols: ['#FF9EC8', '#FFFFFF'], s: 1, keep: () => true },
+    { cols: ['#2FCB7A', '#9BE15D'], s: 1.3, keep: (i) => i % 6 === 0 },
+    { cols: ['#FF5A5F', '#FF7A45', '#FFD21F'], s: 1.6, keep: () => true },
+    { cols: ['#FFFFFF'], s: 1.2, keep: () => false },
+  ].map((f) => ({ ...f, cols: f.cols.map((c) => new THREE.Color(c)) }));
+
+  // ---------- 雪：冬天整片慢慢飄下來 ----------
+  const SNOW_N = 320;
+  const snow = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.34, 0), new THREE.MeshBasicMaterial({ color: '#FFFFFF' }), SNOW_N);
+  snow.userData.noOutline = true; snow.frustumCulled = false; W.add(snow);
+  const SNO = Array.from({ length: SNOW_N }, () => ({ x: rr(-175, 175), z: rr(-120, 135), n: [2, 4, 5][Math.floor(R() * 3)], ph: R(), sw: rr(0, TAU), h: rr(55, 85) }));
+
+  // ---------- 夏夜的煙火：天黑後從湖上一朵一朵放上去 ----------
+  const FW_N = 2, FW_DOT = 64, FW_P = 5;   // 每 5 秒一發，同時最多兩朵
+  const fw = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1.1, 0), new THREE.MeshBasicMaterial({ color: '#FFFFFF' }), FW_N * FW_DOT);
+  fw.userData.noOutline = true; fw.frustumCulled = false; W.add(fw);
+  for (const im of [petals, fw]) for (let i = 0; i < im.count; i++) im.setColorAt(i, WHITE);   // 先建好 instanceColor，之後換色不用重新編譯 shader
+  const FW_COL = ['#FF4F93', '#FFD234', '#5CC8FF', '#B9A0FF', '#FF7A45', '#5EDFB0', '#FFFFFF', '#FF5A5F'].map((c) => new THREE.Color(c));
+  const FW = Array.from({ length: LOOP / FW_P }, (_, k) => { const x = lerp(lake.LX0 + 25, lake.LX1 - 25, fr(k * 0.618 + 0.2)); return { T: k * FW_P + 0.7, x, z: lake.zc(x) + rr(-4, 4), y: rr(44, 56), r: rr(14, 19), c: k % FW_COL.length }; });
 
   // ---------- 湖畔散步的人 ----------
   const WALK = [PAL.coral, '#14B8A0', '#B9A0FF', PAL.yellow, PAL.pink, PAL.cobalt].map((col, i) => ({
@@ -140,6 +161,17 @@ export function buildLife(world, LOOP) {
   function update(t) {
     const L = t / LOOP;
     const poke = (o) => (ev.pokes.has(o) ? t - ev.pokes.get(o) : 99);
+
+    // 換季：富士山先蹲一下，一圈波紋從山腳往外推，圈內是下一季（STYLE.md §8 的轉場）
+    const se = ev.season;
+    let sRing = -1;
+    if (se.next !== se.cur) {
+      const d = Math.max(0, t - se.t0 - 0.45);
+      sRing = d * 70 + d * d * 26;
+      if (sRing > 650) { se.cur = se.next; applySeason(se.cur, se.cur); sRing = -1; }
+    }
+    setSeason(FUJI.x, FUJI.z, sRing);
+    const seasonAt = (x, z) => (sRing >= 0 && Math.hypot(x - FUJI.x, z - FUJI.z) < sRing ? se.next : se.cur);
 
     // 雲：從西往東飄過去，兩端長出來／縮回去
     for (const c of world.clouds) {
@@ -245,17 +277,17 @@ export function buildLife(world, LOOP) {
       for (const w of b.wings) w.w.rotation.x = w.s * flap * 0.55;
     }
 
-    // 花瓣：從樹冠飄落，邊落邊往東飄；點樹或五重塔會噴出一陣
-    let pi = [0, 0];
-    const putPetal = (k, x, y, z, rot, s) => {
-      const im = petals[k % 2]; _m.compose(_p.set(x, y, z), _q.setFromEuler(_e.set(rot, rot * 1.7, rot * 0.6)), _s.set(s, s, s));
-      im.setMatrixAt(pi[k % 2]++, _m);
+    // 花瓣／落葉：從樹冠飄落，邊落邊往東飄；點樹或五重塔會噴出一陣（冬天噴的是雪）
+    const putPetal = (i, k, x, y, z, rot, s, keep = true) => {
+      const F = FALL[seasonAt(x, z)], sz = keep ? s * F.s : 0.0001;
+      _m.compose(_p.set(x, y, z), _q.setFromEuler(_e.set(rot, rot * 1.7, rot * 0.6)), _s.set(sz, sz, sz));
+      petals.setMatrixAt(i, _m); petals.setColorAt(i, F.cols[k % F.cols.length]);
     };
     PET.forEach((p, i) => {
       const f = fr(L * p.n + p.ph), tr = p.t, sc = tr.g.scale.x;
       const y0 = tr.wp.y + 4.2 * sc, y = lerp(y0, tr.wp.y > 1 ? tr.wp.y * 0.7 : 0.12, f);
       const x = tr.wp.x + p.ox + f * 7 + Math.sin(f * TAU * 2 + p.sp) * 0.9, z = tr.wp.z + p.oz + Math.cos(f * TAU * 1.5 + p.sp) * 0.7;
-      putPetal(i, x, y, z, f * 9 + p.sp, fadeEnds(f, 10));
+      putPetal(i, i, x, y, z, f * 9 + p.sp, fadeEnds(f, 10), FALL[seasonAt(x, z)].keep(i));
     });
     let bi = 0;
     for (const b of ev.bursts) {
@@ -264,12 +296,23 @@ export function buildLife(world, LOOP) {
         const a = k * 2.4, sp = 3 + (k % 5), u = clamp01(d / 3.2);
         const x = b.x + Math.cos(a) * sp * easeOut(u) + u * 4, z = b.z + Math.sin(a) * sp * easeOut(u);
         const y = Math.max(0.12, b.y + 3 * Math.sin(Math.min(u * 3, 1) * Math.PI / 2) - u * u * (b.y + 3));
-        putPetal(bi, x, y, z, d * 5 + k, d > 3.2 ? 0.0001 : 1 - easeIn((d - 2.4) / 0.8));
+        const s = d > 3.2 || d < 0 ? 0.0001 : 1 - easeIn((d - 2.4) / 0.8);
+        if (seasonAt(x, z) === 3) { _m.compose(_p.set(x, y, z), _q.identity(), _s.setScalar(s * 1.2)); petals.setMatrixAt(PETAL_N + bi, _m); petals.setColorAt(PETAL_N + bi, WHITE); }
+        else putPetal(PETAL_N + bi, k, x, y, z, d * 5 + k, s);
       }
     }
-    for (; bi < BURST_N; bi++) putPetal(bi, 0, -10, 0, 0, 0.0001);
-    for (const im of petals) im.instanceMatrix.needsUpdate = true;
+    for (; bi < BURST_N; bi++) putPetal(PETAL_N + bi, 0, 0, -10, 0, 0, 0.0001);
+    petals.instanceMatrix.needsUpdate = true; petals.instanceColor.needsUpdate = true;
     ev.bursts = ev.bursts.filter((b) => t - b.t0 < 3.4);
+
+    // 雪：冬天的地方才下，一片片左右飄著落下，落到地上縮掉
+    SNO.forEach((q, i) => {
+      const f = fr(L * q.n + q.ph), x = q.x + Math.sin(f * TAU * 2 + q.sw) * 2.4 + f * 6, z = q.z + Math.cos(f * TAU * 1.5 + q.sw) * 1.6;
+      const s = seasonAt(x, z) === 3 ? fadeEnds(f, 12) : 0.0001;
+      _m.compose(_p.set(x, lerp(q.h, 0.2, f), z), _q.setFromEuler(_e.set(f * 7, f * 5, 0)), _s.setScalar(s));
+      snow.setMatrixAt(i, _m);
+    });
+    snow.instanceMatrix.needsUpdate = true;
 
     // 散步的人：沿著路邊走，兩端縮回去再從另一頭長出來
     for (const w of WALK) {
@@ -302,6 +345,24 @@ export function buildLife(world, LOOP) {
       if (lit) lamps.push([l.p.x, 3.5, l.p.z, 3.4]);
     }
     setLamps(lamps);
+
+    // 夏夜煙火：天色夠暗、而且湖那一帶是夏天才放；先往外炸開，再一邊往下掉一邊縮小
+    const dark = clamp01((night - 0.25) / 0.25);
+    let wi = 0;
+    for (const w of FW) {
+      const d = fr((t - w.T) / LOOP) * LOOP;
+      if (d > 3 || wi >= FW_N * FW_DOT) continue;
+      const show = dark > 0 && seasonAt(w.x, w.z) === 1;
+      for (let k = 0; k < FW_DOT && show; k++, wi++) {
+        const a = k * 2.399963, b = Math.acos(1 - 2 * (k + 0.5) / FW_DOT), u = easeOut(d / 1.1) * w.r;
+        const x = w.x + Math.cos(a) * Math.sin(b) * u, y = w.y + Math.cos(b) * u - d * d * 1.6, z = w.z + Math.sin(a) * Math.sin(b) * u;
+        const s = dark * (d < 0.15 ? d / 0.15 : 1 - easeIn((d - 1.6) / 1.4)) * (k % 3 ? 1 : 0.7);
+        _m.compose(_p.set(x, y, z), _q.identity(), _s.setScalar(Math.max(0.0001, s)));
+        fw.setMatrixAt(wi, _m); fw.setColorAt(wi, FW_COL[(w.c + (k % 4 === 0 ? 3 : 0)) % FW_COL.length]);
+      }
+    }
+    for (; wi < FW_N * FW_DOT; wi++) { _m.makeScale(0, 0, 0); fw.setMatrixAt(wi, _m); }
+    fw.instanceMatrix.needsUpdate = true; if (fw.instanceColor) fw.instanceColor.needsUpdate = true;
   }
 
   // 互動：被點到的東西
@@ -321,5 +382,14 @@ export function buildLife(world, LOOP) {
     ev.pokes.set(world.fuji, t);
     return on;
   }
-  return { update, poke, toggleDusk };
+  // 換季：跟黃昏一樣先讓富士山蹲一下；上一圈還沒推完就直接接到新的一季
+  function changeSeason(i, t, instant = false) {
+    const se = ev.season;
+    if (instant) { se.cur = se.next = i; applySeason(i, i); return; }
+    if (i === se.next) return;
+    se.cur = se.next; se.next = i; se.t0 = t;
+    applySeason(se.cur, se.next);
+    ev.pokes.set(world.fuji, t);
+  }
+  return { update, poke, toggleDusk, changeSeason, season: () => ev.season.next };
 }

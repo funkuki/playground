@@ -135,8 +135,8 @@ export const WORKS = [
     preview: './site/previews/memphis-fuji.mp4',
     styles: ['memphis', 'diorama'],
     date: '2026.11.03',
-    desc: '四月的河口湖北岸，山頂還留著雪，湖畔櫻花開了。天鵝船繞湖、魚跳出水面、富士急行進站又開走；按下黃昏，光環從富士山腳擴散，小鎮的燈一盞一盞亮起來。',
-    tech: ['frame(i) 決定論動畫', 'Normal / Depth 描邊', 'Halftone 陰影', 'Raycaster'],
+    desc: '河口湖北岸的四季：春櫻、夏天的赤富士和薰衣草、秋楓、冬雪。按下季節，一圈波紋從富士山腳推開，圈內換成下一季；天鵝船繞湖、魚跳出水面、富士急行進站又開走，按下黃昏，小鎮的燈一盞一盞亮起來。',
+    tech: ['frame(i) 決定論動畫', 'Normal / Depth 描邊', 'Halftone 陰影', '換季波紋', 'Raycaster'],
   },
   {
     id: 'dog-pool',

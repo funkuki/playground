@@ -30,13 +30,35 @@
         -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
         box-shadow: 0 2px 14px rgba(37, 33, 74, 0.12);
       }
-      /* 右上角留給 info 圖示（36px），白天／黃昏切換放在它下面 */
-      #tools { position: fixed; top: 58px; right: 14px; z-index: 10; display: flex; gap: 8px; }
+      /* 右下角：季節、白天／黃昏、相機。圖說太寬會撞到時，main.js 會把圖說往上挪一排 */
+      #tools { position: fixed; bottom: 14px; right: 14px; z-index: 10; display: flex; gap: 8px; }
       #tools button { cursor: pointer; transition: transform .25s cubic-bezier(0.22, 1, 0.36, 1), background .2s; }
       #tools button:hover { background: #fff; transform: translateY(-1px); }
       #tools button:focus-visible { outline: 2px solid #25214A; outline-offset: 2px; }
+      /* 春夏秋冬：一顆膠囊裡四個字，目前這一季填深色 */
+      #seasons { padding: 3px; gap: 2px; }
+      #seasons button { width: 30px; height: 30px; padding: 0; border: 0; border-radius: 999px; background: transparent; color: #6E6A86; font: 500 13px/1 "Noto Sans TC", system-ui, sans-serif; }
+      #seasons button:hover { background: rgba(37, 33, 74, 0.07); transform: none; }
+      #seasons button[aria-pressed="true"] { background: #25214A; color: #fff; }
+      #caption .l2, #caption .l3 { transition: opacity .35s; }
+      #caption .swap { opacity: 0; }
       #dusk .sw { width: 14px; height: 14px; border-radius: 50%; background: #FF9E7A; box-shadow: inset -4px -3px 0 #B9A0FF; }
       #dusk[aria-pressed="true"] .sw { background: #FFD234; box-shadow: none; }
+      #snap { width: 36px; padding: 0; justify-content: center; color: #25214A; }
+      #snap:active { transform: scale(.92); }
+      /* 按下相機：畫面閃一下白 */
+      #flash { position: fixed; inset: 0; z-index: 9; background: #fff; opacity: 0; pointer-events: none; }
+      #flash.on { animation: flash .45s ease-out; }
+      @keyframes flash { from { opacity: .75; } to { opacity: 0; } }
+      /* ---------- 相機：卡片預覽（同節氣圖鑑）---------- */
+      #card { position: fixed; inset: 0; z-index: 25; display: grid; place-items: center; padding: 16px; background: rgba(37, 33, 74, .3); opacity: 0; pointer-events: none; transition: opacity .2s; }
+      #card.open { opacity: 1; pointer-events: auto; }
+      #card-panel { display: flex; flex-direction: column; align-items: center; gap: 14px; max-height: calc(100vh - 32px); }
+      #card-panel img { display: block; max-width: min(460px, calc(100vw - 32px)); max-height: calc(100vh - 110px); border-radius: 10px; box-shadow: 0 14px 44px rgba(37, 33, 74, .35); background: #FFFCF6; }
+      #card-panel .row { display: flex; gap: 10px; }
+      #card-panel .row button { height: 40px; padding: 0 18px; border: 0; border-radius: 999px; font: 600 14px "Inter Tight", "Noto Sans TC", sans-serif; cursor: pointer; color: #2B2840; background: rgba(255, 255, 255, .92); box-shadow: 0 2px 14px rgba(37, 33, 74, .14); }
+      #card-panel .row button.primary { color: #fff; background: #25214A; }
+      #card-panel .row button:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
       #hint {
         position: fixed; top: 70px; left: 50%; transform: translateX(-50%); z-index: 5; pointer-events: none;
         white-space: nowrap; color: #6E6A86; font-size: 12px; transition: opacity .6s, transform .6s;
@@ -93,7 +115,7 @@
       .shot #tools, .shot #hint, .shot #info-btn, .shot .lab-back, .shot .lab-bar, .shot #caption { display: none !important; }
 
       @media (max-width: 700px) {
-        #hint { top: auto; bottom: 14px; font-size: 11px; height: 30px; }
+        #hint { font-size: 11px; height: 30px; }
         #hint .long { display: none; }
         #hint .short { display: inline; }
         #caption .l1 { font-size: 16px; line-height: 24px; }
@@ -117,7 +139,23 @@
     </a>
     <canvas id="gl"></canvas>
     <div id="tools">
+      <div id="seasons" class="pill" role="group" aria-label="切換季節">
+        <button type="button" data-s="0" aria-pressed="true" aria-label="春天">春</button>
+        <button type="button" data-s="1" aria-pressed="false" aria-label="夏天">夏</button>
+        <button type="button" data-s="2" aria-pressed="false" aria-label="秋天">秋</button>
+        <button type="button" data-s="3" aria-pressed="false" aria-label="冬天">冬</button>
+      </div>
       <button id="dusk" class="pill" type="button" aria-pressed="false" aria-label="切換白天和黃昏"><i class="sw" aria-hidden="true"></i><span>黃昏</span></button>
+      <button id="snap" class="pill" type="button" aria-label="拍下這一格，做成卡片" title="拍照">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8.5A1.5 1.5 0 0 1 5.5 7h2.2l1.6-2.2h5.4L16.3 7h2.2A1.5 1.5 0 0 1 20 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 17.5z" /><circle cx="12" cy="12.8" r="3.4" /></svg>
+      </button>
+    </div>
+    <div id="flash" aria-hidden="true"></div>
+    <div id="card" role="dialog" aria-modal="true" aria-label="富士山卡片" aria-hidden="true">
+      <div id="card-panel">
+        <img alt="這一格畫面做成的卡片" />
+        <div class="row"><button type="button" class="primary" id="card-save">儲存圖片</button><button type="button" id="card-share" hidden>分享</button><button type="button" id="card-close">關閉</button></div>
+      </div>
     </div>
     <div id="hint" class="pill"><span class="long">拖曳旋轉・滾輪或雙指縮放・點點看富士山、五重塔、湖面、房子和櫻花</span><span class="short">拖曳旋轉・雙指縮放・點點看山、塔、湖和房子</span></div>
     <button id="info-btn" type="button" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
@@ -149,13 +187,15 @@
           <li><strong>平塗三階</strong>：自訂 <code>ShaderMaterial</code>，頂面最亮、向陽面原色、背光面變暗，沒有漸層；陰影是偏紫的硬陰影，陰影裡印著一格格網點，像孟菲斯印刷品。點點、斜紋、橫紋都用世界座標算。</li>
           <li><strong>描邊和外框</strong>：另外畫一張法線和深度圖，在差異大的地方畫深靛色的線；最後一道把外面蓋成暖白紙色，邊緣用雜訊做出噴點般的毛邊，開場時從中間長開。雲另外畫在一個圖層，不描邊但會擋住後面的線。</li>
           <li><strong>全部用程式產生</strong>：富士山是內凹的旋轉體，雪和山腳森林是沿著山形長出的不規則殼；湖是程式畫的形狀；房子、五重塔、樹、天鵝船、電車都由方塊、圓柱、球拼成，靜態的小東西依材質合併以減少繪製次數。</li>
-          <li><strong>黃昏</strong>：按右上角的「黃昏」，富士山先蹲一下，光環從山腳往外擴散，掃到哪裡，窗戶、門燈和路燈就亮到哪裡，地上留下暖色的光圈。</li>
+          <li><strong>四季</strong>：會換季的材質各記住春夏秋冬四組顏色。按「春夏秋冬」，富士山先蹲一下，一圈波紋從山腳往外推，圈內就換成下一季：雪線一季一季上下移（夏天山頂是曬紅的岩），芝櫻的花毯變成薰衣草、掃帚草、雪地，櫻花瓣換成綠葉、落葉和雪，夏天的黃昏湖上會放煙火。</li>
+          <li><strong>黃昏</strong>：按右下角的「黃昏」，富士山先蹲一下，光環從山腳往外擴散，掃到哪裡，窗戶、門燈和路燈就亮到哪裡，地上留下暖色的光圈。</li>
         </ul>
 
         <h2>可以怎麼玩</h2>
         <ul>
           <li>拖曳旋轉，滾輪或雙指縮放（會朝游標的位置拉近），放手幾秒後鏡頭會慢慢回到自動運鏡。</li>
-          <li>點富士山：山會壓扁再彈回，笠雲鼓起來。點五重塔或櫻花樹：櫻花瓣噴一陣。點湖面：漣漪和一條跳出來的魚。點房子：窗戶亮燈，再點一次關掉。</li>
+          <li>點富士山：山會壓扁再彈回，笠雲鼓起來。點五重塔或櫻花樹：噴一陣櫻花瓣（秋天是落葉，冬天是雪）。點湖面：漣漪和一條跳出來的魚。點房子：窗戶亮燈，再點一次關掉。</li>
+          <li>按右下角的相機：把這一格畫面排成一張有地名、季節和經緯度的卡片，可以儲存圖片；手機上也可以直接分享或存到相簿。</li>
         </ul>
       </div>
     </div>
@@ -168,7 +208,7 @@
       </svg>
       <p class="l1">富士山・河口湖<span class="sep"></span>Mt. Fuji &amp; Lake Kawaguchi</p>
       <p class="l2"><span>春・湖畔櫻花開了，山頂還留著雪</span><span class="sep"></span><span>Spring · cherry blossoms by the lake, snow still on the summit</span></p>
-      <p class="l3">35.3606° N<span class="sep"></span>138.7274° E</p>
+      <p class="l3"><span class="mo">APR</span><span class="sep"></span>35.3606° N<span class="sep"></span>138.7274° E</p>
     </div>
 
     <script type="module" src="../../site/work-nav.js"></script>

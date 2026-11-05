@@ -19,10 +19,17 @@ const life = buildLife(world, LOOP);
 
 // ---------- 版面：外框和下方三行字的位置（CSS 像素）----------
 const caption = document.getElementById('caption');
+const tools = document.getElementById('tools');
 const L = { cx: 0, cy: 0, hw: 0, hh: 0 };
+// 圖說最寬那一行的寬度：和右下角的按鈕撞到時，外框和圖說一起往上讓一排
+function captionWidth() {
+  const r = document.createRange();
+  return Math.max(...[...caption.querySelectorAll('p')].map((p) => { r.selectNodeContents(p); return r.getBoundingClientRect().width; }));
+}
 function layout() {
   const w = innerWidth, h = innerHeight, narrow = w < 700;
-  const top = narrow ? 64 : 72, capH = narrow ? 128 : 124, side = narrow ? 14 : Math.max(36, w * 0.055);
+  const clash = w / 2 + captionWidth() / 2 + 12 > w - 14 - tools.offsetWidth;
+  const top = narrow ? 64 : 72, capH = (narrow ? 128 : 124) + (clash ? 50 : 0), side = narrow ? 14 : Math.max(36, w * 0.055);
   const avail = h - top - capH;
   L.hw = (w - 2 * side) / 2;
   // 手機直向：外框接近正方形，放在可用空間的中間；不要拉成細長條
@@ -37,6 +44,7 @@ function layout() {
 }
 addEventListener('resize', layout);
 layout();
+document.fonts?.ready.then(layout);   // 字型載完圖說會變寬，重算一次
 
 // ---------- 使用者的視角調整：拖曳轉、滾輪／雙指縮放；放手幾秒後慢慢回到自動運鏡 ----------
 const view = { az: 0, el: 0, zoom: 1, pan: new THREE.Vector3(), last: -1e9 };
@@ -72,6 +80,7 @@ function camera(t) {
 }
 
 // ---------- 一格 ----------
+let snapWanted = false;   // 按了相機：這一格畫完就剪下來做卡片
 function frame(i) {
   const t = i / FPS;
   life.update(t);
@@ -80,6 +89,7 @@ function frame(i) {
   // 開場：外框從中間長開
   const grow = 60 + 2400 * Math.pow(clamp01(t / 1.4), 1.6);
   dio.render(t, i, { grow });
+  if (snapWanted) { snapWanted = false; makeCard(grabFrame()); }
   caption.style.opacity = String(clamp01((t - 0.8) / 0.8));
 }
 
@@ -179,6 +189,127 @@ duskBtn.addEventListener('click', () => {
   duskBtn.querySelector('span').textContent = on ? '白天' : '黃昏';
   hideHint();
 });
+
+// ---------- 相機：照節氣圖鑑的做法，把現在這一格和圖說排成一張卡片，先給人看，再存圖或分享 ----------
+const TAU = Math.PI * 2;
+const SEASON_CARD = [   // 季節名、英文、強調色、底色
+  ['春', 'Spring', '#E85D8C', '#FFE6EE'], ['夏', 'Summer', '#178F55', '#DDF5E6'],
+  ['秋', 'Autumn', '#E8612C', '#FFE6D9'], ['冬', 'Winter', '#2E5BE6', '#E3EAFA'],
+];
+let cardURL = '', cardSeason = 0, cardDusk = false;
+const $ = (q) => document.querySelector(q);
+const cardEl = $('#card'), cardImg = cardEl.querySelector('img');
+$('#snap').addEventListener('click', () => {
+  snapWanted = true;   // 下一格畫完馬上剪下來（WebGL 沒開 preserveDrawingBuffer）
+  const f = $('#flash'); f.classList.remove('on'); void f.offsetWidth; f.classList.add('on');
+  hideHint();
+});
+// 剪下外框裡的畫面
+function grabFrame(w = 1400) {
+  const k = canvas.width / innerWidth, m = 14;
+  const sx = (L.cx - L.hw - m) * k, sy = (L.cy - L.hh - m) * k, sw = (L.hw + m) * 2 * k, sh = (L.hh + m) * 2 * k;
+  const c = document.createElement('canvas'); c.width = w; c.height = Math.round(w * sh / sw);
+  const x = c.getContext('2d'); x.fillStyle = '#FFFCF6'; x.fillRect(0, 0, c.width, c.height);
+  x.drawImage(canvas, sx, sy, sw, sh, 0, 0, c.width, c.height);
+  return c;
+}
+function roundRect(x, X, Y, w, h, r) { x.beginPath(); x.roundRect(X, Y, w, h, r); }
+async function makeCard(shot) {
+  await document.fonts.ready;
+  cardSeason = life.season(); cardDusk = duskBtn.getAttribute('aria-pressed') === 'true';
+  const [zh, en, mo] = SEASON_TEXT[cardSeason], [sz, se, acc, tint] = SEASON_CARD[cardSeason];
+  const W = 1080, P = 64, iw = W - P * 2, ih = Math.round(iw * shot.height / shot.width);
+  const H = P + ih + 500;
+  const c = document.createElement('canvas'); c.width = W; c.height = H;
+  const x = c.getContext('2d');
+  const SANS = '"Noto Sans TC", "PingFang TC", sans-serif', EN = '"Inter Tight", "Noto Sans TC", sans-serif', MONO = '"IBM Plex Mono", ui-monospace, monospace';
+  x.fillStyle = '#FFFCF6'; x.fillRect(0, 0, W, H);
+  x.drawImage(shot, P, P, iw, ih);
+  let y = P + ih + 72;
+  // 季節的小膠囊、月份；黃昏時多一顆
+  x.textBaseline = 'alphabetic';
+  x.font = `600 24px ${EN}`; const pill = `${sz} ${se}`, pw = x.measureText(pill).width + 32;
+  x.fillStyle = tint; roundRect(x, P, y - 30, pw, 42, 21); x.fill(); x.fillStyle = acc; x.fillText(pill, P + 16, y);
+  let cx = P + pw + 14;
+  if (cardDusk) {
+    const dl = '黃昏 Dusk', dw = x.measureText(dl).width + 32;
+    x.fillStyle = '#FFE9DC'; roundRect(x, cx, y - 30, dw, 42, 21); x.fill(); x.fillStyle = '#D9653B'; x.fillText(dl, cx + 16, y);
+    cx += dw + 14;
+  }
+  x.font = `500 26px ${MONO}`; x.fillStyle = '#8D8AA0'; x.fillText(mo, cx + 6, y);
+  // 地名
+  y += 104;
+  x.font = `600 76px ${SANS}`; x.fillStyle = '#2B2840'; x.fillText('富士山・河口湖', P - 4, y);
+  y += 54;
+  x.font = `400 32px ${EN}`; x.fillStyle = '#8D8AA0'; x.fillText('Mt. Fuji & Lake Kawaguchi', P, y);
+  // 這一季的一句話
+  y += 72;
+  x.font = `400 30px ${SANS}`; x.fillStyle = '#5A5670'; x.fillText(zh, P, y);
+  y += 42;
+  x.font = `400 24px ${EN}`; x.fillStyle = '#8D8AA0'; x.fillText(en, P, y);
+  y += 58;
+  x.font = `400 24px ${MONO}`; x.fillStyle = '#B7B4C6'; x.fillText('35.3606° N   138.7274° E', P, y);
+  // 底部：三個孟菲斯小符號和網址
+  const fy = H - 52;
+  x.fillStyle = '#FFC93C'; x.beginPath(); x.arc(P + 10, fy - 8, 10, 0, TAU); x.fill();
+  x.fillStyle = '#FF7FAA'; x.beginPath(); x.moveTo(P + 32, fy + 2); x.lineTo(P + 43, fy - 18); x.lineTo(P + 54, fy + 2); x.fill();
+  x.strokeStyle = '#2E5BE6'; x.lineWidth = 4; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); x.moveTo(P + 66, fy - 8); x.lineTo(P + 74, fy - 15); x.lineTo(P + 83, fy - 1); x.lineTo(P + 92, fy - 8); x.stroke();
+  x.font = `400 22px ${MONO}`; x.fillStyle = '#B7B4C6'; x.textAlign = 'right'; x.fillText('sui.funkuki.com/playground', W - P, fy); x.textAlign = 'left';
+  cardURL = c.toDataURL('image/png');
+  cardImg.src = cardURL;
+  cardEl.classList.add('open'); cardEl.setAttribute('aria-hidden', 'false'); $('#card-save').focus();
+}
+const cardName = () => `富士山-${SEASON_CARD[cardSeason][0]}${cardDusk ? '-黃昏' : ''}.png`;
+function closeCard() { cardEl.classList.remove('open'); cardEl.setAttribute('aria-hidden', 'true'); $('#snap').focus(); }
+$('#card-save').addEventListener('click', () => { const a = document.createElement('a'); a.href = cardURL; a.download = cardName(); a.click(); });
+$('#card-close').addEventListener('click', closeCard);
+cardEl.addEventListener('click', (e) => { if (e.target === cardEl) closeCard(); });
+addEventListener('keydown', (e) => { if (e.key === 'Escape' && cardEl.classList.contains('open')) closeCard(); });
+// 手機上可以直接分享到相簿或其他 app
+if (navigator.canShare && navigator.canShare({ files: [new File([''], 'a.png', { type: 'image/png' })] })) {
+  const sh = $('#card-share'); sh.hidden = false;
+  sh.addEventListener('click', async () => {
+    const blob = await (await fetch(cardURL)).blob();
+    try { await navigator.share({ files: [new File([blob], cardName(), { type: 'image/png' })], title: '富士山・河口湖 · Fuji' }); } catch { /* 使用者取消分享 */ }
+  });
+}
+
+// 四季：按了就從富士山推一圈波紋換季，圖說的第二、三行淡出再換字淡入
+const SEASON_TEXT = [
+  ['春・湖畔櫻花開了，山頂還留著雪', 'Spring · cherry blossoms by the lake, snow still on the summit', 'APR'],
+  ['夏・山頂的雪化了，薰衣草開滿北岸', 'Summer · the snow is gone, lavender along the north shore', 'AUG'],
+  ['秋・楓葉轉紅，山頂下了第一場雪', 'Autumn · maples turn red under the first snow on the summit', 'NOV'],
+  ['冬・雪落在屋頂上，整座山都白了', 'Winter · snow on the roofs, the whole mountain in white', 'JAN'],
+];
+const l2 = caption.querySelector('.l2'), l3 = caption.querySelector('.l3');
+let swapTimer = 0;
+for (const b of document.querySelectorAll('#seasons button')) {
+  b.addEventListener('click', () => {
+    const i = Number(b.dataset.s);
+    life.changeSeason(i, nowT);
+    for (const o of document.querySelectorAll('#seasons button')) o.setAttribute('aria-pressed', String(o === b));
+    l2.classList.add('swap'); l3.classList.add('swap');
+    clearTimeout(swapTimer);
+    swapTimer = setTimeout(() => {
+      const [zh, en, mo] = SEASON_TEXT[i], sp = l2.querySelectorAll(':scope > span:not(.sep)');
+      sp[0].textContent = zh; sp[1].textContent = en; l3.querySelector('.mo').textContent = mo;
+      l2.classList.remove('swap'); l3.classList.remove('swap');
+    }, 380);
+    hideHint();
+  });
+}
+
+// 網址可以直接指定開場的季節和黃昏（?season=0~3、?dusk），截封面和錄預覽用
+{
+  const q = new URLSearchParams(location.search), i = Number(q.get('season'));
+  if (i >= 1 && i <= 3) {
+    life.changeSeason(i, 0, true);
+    for (const o of document.querySelectorAll('#seasons button')) o.setAttribute('aria-pressed', String(Number(o.dataset.s) === i));
+    const [zh, en, mo] = SEASON_TEXT[i], sp = l2.querySelectorAll(':scope > span:not(.sep)');
+    sp[0].textContent = zh; sp[1].textContent = en; l3.querySelector('.mo').textContent = mo;
+  }
+  if (q.has('dusk')) { life.toggleDusk(-10); duskBtn.setAttribute('aria-pressed', 'true'); duskBtn.querySelector('span').textContent = '白天'; }
+}
 
 // 操作提示：幾秒後或第一次操作就淡出
 const hint = document.getElementById('hint');

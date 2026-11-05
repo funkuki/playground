@@ -37,6 +37,30 @@ class Batch {
   }
 }
 
+// ---------- 四季：會換季的材質記住 [春, 夏, 秋, 冬] 四組顏色 ----------
+// 平常畫 uCol（這一季）；換季時 life.js 用 setSeason 推一圈波紋，圈內畫 uCol2（下一季），STYLE.md §3、§8
+export const SEASONAL = [];
+export function S(cols, o = {}) {
+  const pats = o.patCols || cols.map(() => o.patCol || '#FFFFFF');
+  const m = flat(cols[0], { ...o, patCol: pats[0], col2: cols[0], patCol2: pats[0] });
+  m.userData.cols = cols.map((c) => new THREE.Color(c)); m.userData.pats = pats.map((c) => new THREE.Color(c));
+  SEASONAL.push(m); return m;
+}
+export function applySeason(cur, next) {
+  for (const m of SEASONAL) {
+    const u = m.uniforms, d = m.userData;
+    u.uCol.value.copy(d.cols[cur]); u.uPatCol.value.copy(d.pats[cur]);
+    u.uCol2.value.copy(d.cols[next]); u.uPatCol2.value.copy(d.pats[next]);
+  }
+}
+// 冬天的屋頂、塔簷：前三季原色，冬天積雪變白
+const roofCache = new Map();
+const seasonalRoof = (rc, rp, scale = 0.55) => {
+  const k = rc + rp + scale;
+  if (!roofCache.has(k)) roofCache.set(k, S([rc, rc, rc, '#FFFFFF'], { pat: 6, patCols: [rp, rp, rp, '#E3EAFA'], patScale: scale }));
+  return roofCache.get(k);
+};
+
 // ---------- 調色盤（STYLE.md §3：5～7 個飽和色 + 2～3 個粉彩，依區域集中）----------
 export const PAL = {
   grass: '#A5EBAA', grassDot: '#86DE93',
@@ -49,26 +73,29 @@ export const PAL = {
   coral: '#FF5A5F', yellow: '#FFD234', pink: '#FF7EB3', cobalt: '#2F5BFF', teal: '#14B8A0', plum: '#4A4468',
 };
 const MAT = {
-  grass: M(PAL.grass, { pat: 1, patCol: PAL.grassDot, patScale: 2.4 }),
+  grass: S([PAL.grass, '#6FD889', '#D6E68E', '#F6F7FF'], { pat: 1, patCols: [PAL.grassDot, '#47B868', '#BCD26E', '#DCE2F7'], patScale: 2.4 }),
   fuji: M(PAL.fuji, { pat: 2, patCol: PAL.fujiStripe, patScale: 2.6 }),
-  forest: M(PAL.forest, { pat: 1, patCol: PAL.forestDot, patScale: 1.1 }),
-  snow: M(PAL.snow, { pat: 1, patCol: PAL.snowDot, patScale: 1.3 }),
-  water: M(PAL.water, { pat: 1, patCol: PAL.waterDot, patScale: 1.6 }),
-  deep: M(PAL.deep, { pat: 1, patCol: PAL.deepDot, patScale: 1.4 }),
+  forest: S([PAL.forest, '#1FA862', '#FF7A45', '#D6E4F5'], { pat: 1, patCols: [PAL.forestDot, '#178F55', '#FFC14D', '#FFFFFF'], patScale: 1.1 }),
+  water: S([PAL.water, '#72C9F3', '#7BBFE8', '#B8DDF6'], { pat: 1, patCols: [PAL.waterDot, '#9ED9F7', '#A5D2F0', '#E3F1FC'], patScale: 1.6 }),
+  deep: S([PAL.deep, '#3FA2E2', '#4C9BD6', '#8CC4EE'], { pat: 1, patCols: [PAL.deepDot, '#62B8EC', '#6FB0E0', '#B9DCF5'], patScale: 1.4 }),
   bank: M(PAL.bank, { pat: 1, patCol: PAL.bankDot, patScale: 0.5 }),
   road: M(PAL.road, { pat: 1, patCol: PAL.roadDot, patScale: 1.2 }),
   trunk: M('#A8705A'),
   white: M('#FFFFFF'),
 };
-// 樹冠：主色 + 向陽面較亮的一組 lobes（+ 櫻花的花點）
-const CS = (main, dot, bloom) => ({ main: M(main, { pat: 1, patCol: dot, patScale: 0.75 }), hi: M(lt(main, 0.3), { pat: 1, patCol: lt(dot, 0.28), patScale: 0.6 }), bloom });
+// 樹冠：主色 + 向陽面較亮的一組 lobes（冬天變白，像向陽面積了雪）+ 櫻花的花點（只有春天看得到）
+const CS = (cols, pats, bloom) => ({
+  main: S(cols, { pat: 1, patCols: pats, patScale: 0.75 }),
+  hi: S(cols.map((c, i) => (i === 3 ? '#FFFFFF' : lt(c, i === 0 ? 0.3 : 0.17))), { pat: 1, patCols: pats.map((c, i) => (i === 3 ? '#DCE6FA' : lt(c, i === 0 ? 0.28 : 0.15))), patScale: 0.6 }),
+  bloom: bloom && bloom.map((b) => S([b, cols[1], cols[2], cols[3]], { shadow: false })),
+});
 const CROWN = {
-  sakura: CS('#FFB8D9', '#FF8DB5', ['#FFFFFF', '#FF4F93']),
-  sakuraW: CS('#FFF1F7', '#FFC4DA', ['#FF8DB5', '#FFD234']),
-  green: CS('#3CBE7E', '#2FA866'),
-  lime: CS('#9BE15D', '#7FCC45'),
-  teal: CS('#62E0C8', '#3FC7AE'),
-  pine: CS('#1FA862', '#17905A'),
+  sakura: CS(['#FFB8D9', '#3CBE7E', '#FF6F61', '#E6DCFF'], ['#FF8DB5', '#2FA866', '#E8463C', '#FFFFFF'], ['#FFFFFF', '#FF4F93']),
+  sakuraW: CS(['#FFF1F7', '#2FCB7A', '#FFD21F', '#D6EAFF'], ['#FFC4DA', '#1FA862', '#F3B51A', '#FFFFFF'], ['#FF8DB5', '#FFD234']),
+  green: CS(['#3CBE7E', '#2FB57A', '#FF9C6B', '#D3F1E6'], ['#2FA866', '#1F9C64', '#FF7A45', '#FFFFFF']),
+  lime: CS(['#9BE15D', '#2FCB7A', '#FFD21F', '#E6DCFF'], ['#7FCC45', '#1FA862', '#F3B51A', '#FFFFFF']),
+  teal: CS(['#62E0C8', '#14B8A0', '#FF7A45', '#CDEFF0'], ['#3FC7AE', '#0E9A86', '#E85A2A', '#FFFFFF']),
+  pine: CS(['#1FA862', '#178F55', '#1FA862', '#5FB98C'], ['#17905A', '#127A48', '#17905A', '#FFFFFF']),
 };
 
 export function buildWorld(scene) {
@@ -80,7 +107,8 @@ export function buildWorld(scene) {
   ground.userData.kind = 'ground';
   {
     // 深淺不同的草地塊，打破大片單色
-    const pa = M('#B8F0AE', { pat: 1, patCol: '#99E59A', patScale: 2.2 }), pb = M('#93E39A', { pat: 1, patCol: '#78D888', patScale: 2.2 });
+    const pa = S(['#B8F0AE', '#74DA8E', '#E4EEA2', '#FFFFFF'], { pat: 1, patCols: ['#99E59A', '#5ACB7A', '#CCDC80', '#E3EAFA'], patScale: 2.2 });
+    const pb = S(['#93E39A', '#54C878', '#F2D27A', '#EEF1FF'], { pat: 1, patCols: ['#78D888', '#3FB868', '#E2BC5E', '#DCE2F7'], patScale: 2.2 });
     const b = new Batch();
     for (let i = 0; i < 70; i++) {
       const x = rr(-170, 170), z = rr(-150, 110);
@@ -118,9 +146,19 @@ export function buildWorld(scene) {
       const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setIndex(idx); g.computeVertexNormals();
       const m = mesh(g, mat, 0, 0, 0, fuji); m.userData.kind = 'fuji'; out.clickables.push(m); return m;
     };
-    // 四月的雪：山頂整片白，沿著山溝往下拉出一條條雪線
-    const snowLine = (th) => HT * (0.6 - 0.04 * Math.sin(th * 3 + 1) - 0.2 * Math.pow(0.5 + 0.5 * Math.sin(th * 13 + 2 * Math.sin(th * 5)), 6) - 0.06 * Math.pow(0.5 + 0.5 * Math.sin(th * 29 + 1.3), 8));
-    shell(snowLine, () => HT, 0.22, MAT.snow, 240, 16);
+    // 雪：三層殼，雪線一層比一層低。每一層在不同季節是「雪」或「山的顏色」，疊起來就是那一季的雪線：
+    //   冬：三層都白｜春：上兩層白｜秋：只有山頂（初冠雪）｜夏：雪化了，山頂是曬紅的岩（赤富士）
+    // 斜紋和山身用同一種世界座標斜紋，「沒有雪」的那一層看起來跟山身一樣，接縫看不出來
+    const ON = '#FFFFFF', ONs = '#E3EAFF', OFF = PAL.fuji, OFFs = PAL.fujiStripe;
+    const snowMat = (cols, pats) => S(cols, { pat: 2, patCols: pats, patScale: 2.6 });
+    const gully = (th, k, a) => a * Math.pow(0.5 + 0.5 * Math.sin(th * k + 2 * Math.sin(th * 5)), 6);
+    const capLine = (th) => HT * (0.8 - 0.03 * Math.sin(th * 3 + 1) - gully(th, 11, 0.09));
+    const snowLine = (th) => HT * (0.6 - 0.04 * Math.sin(th * 3 + 1) - gully(th, 13, 0.2) - 0.06 * Math.pow(0.5 + 0.5 * Math.sin(th * 29 + 1.3), 8));
+    // 最低一層從山腳開始，貼得比森林帶（0.18）更近山身：森林帶蓋在它上面，冬天森林帶以上整片白、不會露出一圈山身
+    const lowLine = () => HT * 0.04;
+    shell(lowLine, () => HT, 0.13, snowMat([OFF, OFF, OFF, ON], [OFFs, OFFs, OFFs, ONs]), 240, 18);
+    shell(snowLine, () => HT, 0.28, snowMat([ON, OFF, OFF, ON], [ONs, OFFs, OFFs, ONs]), 240, 16);
+    shell(capLine, () => HT, 0.34, snowMat([ON, '#FF8A65', ON, ON], [ONs, '#FFA488', ONs, ONs]), 240, 10);
     // 山腳的森林帶（青木原）
     shell(() => 0.02, (th) => HT * (0.17 + 0.035 * Math.sin(th * 7) + 0.025 * Math.sin(th * 17 + 1)), 0.18, MAT.forest, 120, 6);
     // 火山口
@@ -242,7 +280,7 @@ export function buildWorld(scene) {
     const wallM = M('#FFF4DD', { win: true, y0: 0.5, y1: 11.5, seed: 3 });
     b.add(box(14, 11, 9.5), wallM, 0, 0.5, 0);
     b.add(box(15.2, 0.6, 10.7), M(PAL.coral, { pat: 6, patCol: '#FFE0DF', patScale: 0.5 }), 0, 11.5, 0);
-    b.add(new THREE.ConeGeometry(8.4, 3.4, 4, 1).rotateY(Math.PI / 4).scale(1.3, 1, 0.9), M(PAL.plum, { pat: 6, patCol: '#6A6290', patScale: 0.5 }), 0, 13.8, 0);
+    b.add(new THREE.ConeGeometry(8.4, 3.4, 4, 1).rotateY(Math.PI / 4).scale(1.3, 1, 0.9), seasonalRoof(PAL.plum, '#6A6290', 0.5), 0, 13.8, 0);
     b.add(box(4, 0.25, 1.6), M(PAL.coral, { pat: 4, patCol: '#FFFFFF', patScale: 0.4 }), 0, 3.2, -5.4, -0.25, 0, 0);
     b.add(box(2.4, 2.8, 0.2), M(PAL.plum), 0, 0.5, -4.8);
     b.build(g);
@@ -256,9 +294,9 @@ export function buildWorld(scene) {
     const b = new Batch();
     b.add(box(22, 0.9, 3.2), M('#FFF4DD', { pat: 1, patCol: '#F2DFC2', patScale: 0.5 }), 0, 0, 0);
     for (const x of [-8, -3, 2, 7]) b.add(box(0.3, 3.2, 0.3), MAT.white, x, 0.9, 0.6);
-    b.add(box(20, 0.3, 3.4), M(PAL.coral, { pat: 4, patCol: '#FFFFFF', patScale: 0.6 }), 0, 4.1, 0.2, 0.12, 0, 0);
+    b.add(box(20, 0.3, 3.4), seasonalRoof(PAL.coral, '#FFFFFF', 0.6), 0, 4.1, 0.2, 0.12, 0, 0);
     b.add(box(6, 3.6, 4.5), M(PAL.yellow, { pat: 6, patCol: '#F3C21A', patScale: 0.5 }), -12, 0, -3.5);
-    b.add(new THREE.ConeGeometry(4.8, 2.2, 4).rotateY(Math.PI / 4).scale(1, 1, 0.75), M(PAL.cobalt, { pat: 6, patCol: '#5C7DFF', patScale: 0.5 }), -12, 4.7, -3.5);
+    b.add(new THREE.ConeGeometry(4.8, 2.2, 4).rotateY(Math.PI / 4).scale(1, 1, 0.75), seasonalRoof(PAL.cobalt, '#5C7DFF', 0.5), -12, 4.7, -3.5);
     b.build(g);
   }
 
@@ -300,7 +338,7 @@ export function buildWorld(scene) {
   // ---------- 五重塔的小山（新倉山的感覺）----------
   {
     const HX = 108, HZ = 20, g = new THREE.Group(); g.position.set(HX, 0, HZ); W.add(g);
-    const hill = mesh(new THREE.SphereGeometry(20, 40, 16, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.5, 0.85), M('#6FD889', { pat: 1, patCol: '#54C878', patScale: 1.6 }), 0, 0, 0, g);
+    const hill = mesh(new THREE.SphereGeometry(20, 40, 16, 0, Math.PI * 2, 0, Math.PI / 2).scale(1, 0.5, 0.85), S(['#6FD889', '#3FB868', '#C9D96E', '#F2F4FF'], { pat: 1, patCols: ['#54C878', '#2FA866', '#B4C65A', '#DCE2F7'], patScale: 1.6 }), 0, 0, 0, g);
     hill.userData.kind = 'hill';
     // 山頂平台
     mesh(new THREE.CylinderGeometry(5.2, 5.6, 0.6, 28), M('#FFE6BD', { pat: 1, patCol: '#FFD39A', patScale: 0.8 }), 0, 9.7, 0, g);
@@ -318,11 +356,15 @@ export function buildWorld(scene) {
   // ---------- 田：芝櫻（西邊山腳）和油菜花 ----------
   {
     const b = new Batch();
-    const SHIBA = [['#FF7EB3', '#FFB8D9'], ['#FFFFFF', '#FFC4DA'], ['#B9A0FF', '#DCD0FF'], ['#FF4F93', '#FF8DB5']];
-    // 一條條彎曲的色帶，像芝櫻祭的花毯
+    // 一條條彎曲的色帶，像花祭的花毯：春芝櫻、夏薰衣草、秋掃帚草（紅橘）、冬天蓋上雪
+    const SHIBA = [
+      S(['#FF7EB3', '#B9A0FF', '#FF5A5F', '#F6F7FF'], { pat: 6, patCols: ['#FFB8D9', '#DCD0FF', '#FF9C8F', '#DCE2F7'], patScale: 0.9 }),
+      S(['#FFFFFF', '#9F86F5', '#FF7A45', '#FFFFFF'], { pat: 6, patCols: ['#FFC4DA', '#C9B6FF', '#FFB08A', '#E3EAFA'], patScale: 0.9 }),
+      S(['#B9A0FF', '#C9B6FF', '#E8463C', '#EEF1FF'], { pat: 6, patCols: ['#DCD0FF', '#E6DCFF', '#FF8A80', '#DCE2F7'], patScale: 0.9 }),
+      S(['#FF4F93', '#8E72F0', '#FF9C6B', '#FFFFFF'], { pat: 6, patCols: ['#FF8DB5', '#B9A0FF', '#FFC6A5', '#E3EAFA'], patScale: 0.9 }),
+    ];
     for (let row = 0; row < 9; row++) {
-      const [c, pc] = SHIBA[row % SHIBA.length];
-      const mat = M(c, { pat: 6, patCol: pc, patScale: 0.9 });
+      const mat = SHIBA[row % SHIBA.length];
       for (let k = 0; k < 7; k++) {
         const x = -150 + k * 9.6, z = -38 + row * 6.2 + 4 * Math.sin(k * 0.7 + row * 0.4);
         if (Math.hypot(x - FUJI.x, z - FUJI.z) < R0 + 2) continue;
@@ -330,15 +372,17 @@ export function buildWorld(scene) {
       }
     }
     // 油菜花田，田埂淡色
-    const rape = M(PAL.yellow, { pat: 1, patCol: '#FFF3A6', patScale: 1.6 });
-    const ridge = M('#FFE6BD', { pat: 1, patCol: '#FFD39A', patScale: 0.8 });
+    // 春油菜花、夏一片綠、秋稻穗金黃、冬雪
+    const rape = S([PAL.yellow, '#7FCC45', '#F2C14E', '#F8FAFF'], { pat: 1, patCols: ['#FFF3A6', '#A4E35F', '#FFE08A', '#DCE2F7'], patScale: 1.6 });
+    const ridge = S(['#FFE6BD', '#FFE6BD', '#F7D49B', '#DCD0F2'], { pat: 1, patCols: ['#FFD39A', '#FFD39A', '#E8BE7C', '#C9BEE6'], patScale: 0.8 });
     for (let gx = -150; gx < -96; gx += 11) for (let gz = 18; gz < 66; gz += 9) {
       b.add(box(11, 0.12, 9), ridge, gx + 5.5, 0, gz + 4.5);
       b.add(box(10, 0.2, 8), (gx / 11 + gz / 9) % 3 === 0 ? MAT.forest : rape, gx + 5.5, 0, gz + 4.5);
     }
     // 鐵軌南邊：剛放水的秧田（天藍）和綠色的茶園、油菜花，一格一格像地圖
-    const paddy = M('#A6E3FB', { pat: 6, patCol: '#92E3A0', patScale: 1.2 });
-    const tea = M('#3CBE7E', { pat: 6, patCol: '#2FA866', patScale: 0.9 });
+    // 秧田：春天剛放水（天藍＋秧苗）、夏天綠油油、秋天稻穗金黃、冬天積雪
+    const paddy = S(['#A6E3FB', '#A4E35F', '#F2C14E', '#F8FAFF'], { pat: 6, patCols: ['#92E3A0', '#7FCC45', '#E0A93A', '#DCE2F7'], patScale: 1.2 });
+    const tea = S(['#3CBE7E', '#2FA866', '#3CBE7E', '#CFEBDD'], { pat: 6, patCols: ['#2FA866', '#1F9C64', '#2FA866', '#FFFFFF'], patScale: 0.9 });
     for (let gx = -160; gx < 150; gx += 10.7) for (let gz = RAILZ + 10; gz < RAILZ + 70; gz += 8.7) {
             const cx = gx + 5, cz = gz + 4;
       const v = Math.sin(gx * 0.05 + 1.3) + Math.cos(gz * 0.09);
@@ -400,7 +444,7 @@ function tree(parent, x, z, kind, cs, s = 1, out, far = false) {
   if (kind === 'column') { L(new THREE.CapsuleGeometry(0.9, 2.6, 6, 14), cs.main, 0, 2.0, 0); HI(new THREE.CapsuleGeometry(0.38, 1.3, 6, 10), 0.7, 2.6); }
   if (cs.bloom && !far) for (let i = 0; i < 14; i++) {
     const [px, py, pz, r] = lobes[i % lobes.length], u = R() * 6.28, v = R() * 1.3 - 0.15;
-    b.add(new THREE.SphereGeometry(0.17, 8, 6), M(cs.bloom[i % 2], { shadow: false }), px + Math.cos(u) * Math.cos(v) * r * 0.97, py + Math.sin(v) * r * 0.97, pz + Math.sin(u) * Math.cos(v) * r * 0.97);
+    b.add(new THREE.SphereGeometry(0.17, 8, 6), cs.bloom[i % 2], px + Math.cos(u) * Math.cos(v) * r * 0.97, py + Math.sin(v) * r * 0.97, pz + Math.sin(u) * Math.cos(v) * r * 0.97);
   }
   b.build(c);
   const t = { g, c, p: g.position.clone(), crown: cs, ph: R() * 6.28, sakura: cs === CROWN.sakura || cs === CROWN.sakuraW };
@@ -422,7 +466,7 @@ function house(parent, x, z, face, w, d, i, out) {
   b.add(box(w, h, d), M(wc, { pat: 6, patCol: lt(wc, -0.07), patScale: 0.5 }), 0, B, 0);
   for (const sx of [-1, 1]) for (const sz of [-1, 1]) b.add(box(0.24, h, 0.24), MAT.white, sx * (w / 2 - 0.04), B, sz * (d / 2 - 0.04));
   const [rc, rp] = ROOFS_[(i * 3 + 1) % ROOFS_.length], run = d / 2 + 0.7, rise = 2.4, Ls = Math.hypot(run, rise), th = Math.atan2(rise, run);
-  const roofM = M(rc, { pat: 6, patCol: rp, patScale: 0.55 });
+  const roofM = seasonalRoof(rc, rp);
   for (const sd of [-1, 1]) b.add(new THREE.BoxGeometry(w + 1.1, 0.3, Ls), roofM, 0, B + h + rise / 2 + 0.05, sd * run / 2, sd * th, 0, 0);
   b.add(new THREE.CylinderGeometry(0.2, 0.2, w + 1.25, 10).rotateZ(Math.PI / 2), M(lt(rc, -0.15)), 0, B + h + rise + 0.12, 0);
   const gs = new THREE.Shape(); gs.moveTo(-d / 2, 0); gs.lineTo(d / 2, 0); gs.lineTo(0, rise - 0.15); gs.closePath();
@@ -476,7 +520,7 @@ function pagoda(parent, x, y, z, out) {
   const g = new THREE.Group(); g.position.set(x, y, z); parent.add(g);
   const b = new Batch();
   const red = M(PAL.coral, { pat: 4, patCol: '#E8464C', patScale: 0.35 });
-  const roof = M(PAL.plum, { pat: 6, patCol: '#6A6290', patScale: 0.35 });
+  const roof = seasonalRoof(PAL.plum, '#6A6290', 0.35);
   const gold = M(PAL.yellow, { pat: 1, patCol: '#FFF3A6', patScale: 0.25 });
   b.add(box(5.4, 0.7, 5.4), M('#FFF4DD', { pat: 1, patCol: '#F2DFC2', patScale: 0.4 }));
   let yy = 0.7;
