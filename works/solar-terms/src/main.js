@@ -483,7 +483,7 @@ async function makeCard(shot) {
   x.fillStyle = '#F2C26B'; x.beginPath(); x.arc(P + 10, fy - 8, 10, 0, TAU); x.fill();
   x.fillStyle = '#F4B3C2'; x.beginPath(); x.moveTo(P + 32, fy + 2); x.lineTo(P + 43, fy - 18); x.lineTo(P + 54, fy + 2); x.fill();
   x.strokeStyle = '#5B7FC7'; x.lineWidth = 4; x.lineCap = 'round'; x.lineJoin = 'round'; x.beginPath(); x.moveTo(P + 66, fy - 8); x.lineTo(P + 74, fy - 15); x.lineTo(P + 83, fy - 1); x.lineTo(P + 92, fy - 8); x.stroke();
-  x.font = `400 22px ${MONO}`; x.fillStyle = '#B7B4C6'; x.textAlign = 'right'; x.fillText("節氣圖鑑 · sui's playground", W - P, fy); x.textAlign = 'left';
+  x.font = `400 22px ${MONO}`; x.fillStyle = '#B7B4C6'; x.textAlign = 'right'; x.fillText(`sui.funkuki.com/playground/works/solar-terms/#${T.id}`, W - P, fy);   // 網址直接帶這一頁的錨點 x.textAlign = 'left';
   cardURL = c.toDataURL('image/png');
   cardImg.src = cardURL;
   cardEl.classList.add('open'); cardEl.setAttribute('aria-hidden', 'false'); $('#card-save').focus();
