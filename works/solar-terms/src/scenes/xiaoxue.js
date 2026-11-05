@@ -86,9 +86,32 @@ export default function build(W, { LOOP }) {
   const gulls = Array.from({ length: 5 }, (_, i) => ({ b: bird(W, '#FFFFFF', 1.1), i }));
   const drift = clouds(W, R, [[-40, 21, -4, 1.2], [30, 35, -2, 1.44], [80, 39, 0, 1.04]], LOOP);
   const waves = squiggles(W, R, 60, () => { for (;;) { const x = rr(-90, 90), z = rr(-12, 70); if (z > 14 || (x > -44 && x < 60)) return V3(x, 0, z); } }, [-0.7, 0.7], 2, LOOP);
-  const mullet = Array.from({ length: 3 }, () => { const g = new THREE.Group(); W.add(g); mesh(new THREE.SphereGeometry(0.5, 12, 8).scale(1.6, 0.6, 0.6), dots('#7F8FD6', 0.2, '#A9B6F0'), 0, 0, 0, g); mesh(new THREE.ConeGeometry(0.4, 0.6, 4).rotateZ(Math.PI / 2), M('#7F8FD6'), -0.95, 0, 0, g); g.visible = false; return g; });
-  // 每隔一陣子就有一條烏魚跳出水面
-  const JUMPS = Array.from({ length: 5 }, (_, k) => ({ T: (k + 0.4) * LOOP / 5, p: V3(rr(-60, 70), 0, rr(18, 55)), a: rr(0, TAU) }));
+  // 烏魚：圓滾的流線身體（背灰藍、肚子銀白，側面幾條細細的縱紋），鈍頭大眼，背上前後兩片分開的背鰭，分岔的尾巴
+  const MPROF = [[0.0, -1.3], [0.12, -1.2], [0.24, -0.9], [0.36, -0.4], [0.42, 0.15], [0.4, 0.6], [0.32, 0.95], [0.18, 1.18], [0.0, 1.26]].map(([r, y]) => new THREE.Vector2(r, y));
+  const mfin = (pts) => new THREE.ExtrudeGeometry(new THREE.Shape(pts.map(([x, y]) => new THREE.Vector2(x, y))), { depth: 0.05, bevelEnabled: false, curveSegments: 3 }).translate(0, 0, -0.025);
+  const MB = dots('#5D6FA8', 0.16, '#7F8FD6'), MS = stripes('#E8EEF8', 0.12, '#C3CDE6', 3), MF = M('#5D6FA8'), ME = M('#FFFFFF'), MP = M('#2E2A40');
+  const mulletMesh = () => {
+    const g = new THREE.Group(), b = new Batch();
+    b.add(new THREE.LatheGeometry(MPROF, 16).rotateZ(-Math.PI / 2), MS, 0, 0, 0, 0, 0, 0, 1, 1, 0.82);
+    b.add(new THREE.LatheGeometry(MPROF, 16, Math.PI, Math.PI).rotateZ(-Math.PI / 2), MB, 0, 0, 0, 0, 0, 0, 1.01, 1.04, 0.85);   // 背上那一半
+    b.add(mfin([[0, 0], [-0.3, 0.42], [-0.62, 0.62], [-0.44, 0.2], [-0.36, 0], [-0.44, -0.2], [-0.62, -0.62], [-0.3, -0.42]]), MF, -1.22, 0, 0);   // 分岔的尾巴
+    b.add(mfin([[0.18, 0], [-0.05, 0.36], [-0.2, 0]]), MF, 0.25, 0.38, 0);    // 第一背鰭（短刺）
+    b.add(mfin([[0.16, 0], [-0.12, 0.3], [-0.2, 0]]), MF, -0.55, 0.3, 0);     // 第二背鰭
+    b.add(mfin([[0.16, 0], [-0.12, -0.26], [-0.2, 0]]), MF, -0.55, -0.3, 0);  // 臀鰭
+    for (const sd of [-1, 1]) { b.add(mfin([[0.1, 0], [-0.45, 0.12], [-0.4, -0.05]]).rotateX(sd * 1.3), MF, 0.55, 0.02, sd * 0.3); b.add(new THREE.SphereGeometry(0.11, 10, 8), ME, 0.88, 0.1, sd * 0.24); b.add(new THREE.SphereGeometry(0.06, 8, 6), MP, 0.93, 0.11, sd * 0.29); }
+    b.build(g);
+    g.scale.setScalar(1.25); g.visible = false; W.add(g);
+    return g;
+  };
+  const mullet = Array.from({ length: 34 }, mulletMesh);
+  // 烏魚季：海面上一群一群地跳，一群七到十條，前後只差一點點就接連跳出水面
+  const JUMPS = [];
+  for (let k = 0; k < 18; k++) {
+    // 大多在港西邊那片開闊的海面，少數在防波堤和蚵棚之間
+    const c = k % 3 === 2 ? V3(rr(8, 54), 0, rr(16.5, 19.5)) : V3(rr(-38, -8), 0, rr(4, 32));
+    const T0 = (k + 0.3) * LOOP / 18, a = rr(0, TAU), n = 7 + Math.floor(R() * 4);
+    for (let i = 0; i < n; i++) JUMPS.push({ T: T0 + i * rr(0.07, 0.16), p: c.clone().add(V3(rr(-5, 5), 0, rr(-3.5, 3.5))), a: a + rr(-0.35, 0.35), h: rr(2.6, 4.2) });
+  }
 
   return {
     bg: '#5CC8FF', clickables,
@@ -128,14 +151,15 @@ export default function build(W, { LOOP }) {
         const T = j.once ? j.T : cyc * LOOP + j.T, dt = t - T;
         if (dt < 0 || dt > 1.1 || k >= mullet.length) continue;
         const m = mullet[k++], f = dt / 1.1;
-        m.visible = true; m.position.set(j.p.x + Math.cos(j.a) * (f - 0.5) * 5, Math.sin(Math.PI * f) * 3.2 - 0.3, j.p.z + Math.sin(j.a) * (f - 0.5) * 5);
+        m.visible = true; m.position.set(j.p.x + Math.cos(j.a) * (f - 0.5) * 5, Math.sin(Math.PI * f) * (j.h || 3.4) - 0.3, j.p.z + Math.sin(j.a) * (f - 0.5) * 5);
         m.rotation.set(0, -j.a, Math.cos(Math.PI * f) * 0.9);
-        if (dt > 1.0 && j.splash !== T) { j.splash = T; waterRing.add(V3(j.p.x + Math.cos(j.a) * 2.5, 0, j.p.z + Math.sin(j.a) * 2.5), t, 0.1); }
+        if (dt > 1.0 && j.splash !== T) { j.splash = T; const q = V3(j.p.x + Math.cos(j.a) * 2.5, 0, j.p.z + Math.sin(j.a) * 2.5); waterRing.add(q, t, 0.1); spray.add(V3(q.x, 0.3, q.z), t, R, 0.4); }
+        if (dt < 0.08 && j.out !== T) { j.out = T; spray.add(V3(j.p.x - Math.cos(j.a) * 2.5, 0.3, j.p.z - Math.sin(j.a) * 2.5), t, R, 0.35); }
       }
       waterRing.update(t); spray.update(t);
     },
     poke(kind, ref, p, t) {
-      if (kind === 'water') { waterRing.add(p, t, 0.1); ev.fish.push({ T: t + 0.2, p: p.clone(), a: R() * TAU, once: true }); if (ev.fish.length > 3) ev.fish.shift(); spray.add(V3(p.x, 0.3, p.z), t, R, 0.6); }
+      if (kind === 'water') { waterRing.add(p, t, 0.1); const a = R() * TAU; for (let i = 0; i < 7; i++) ev.fish.push({ T: t + 0.15 + i * 0.1, p: p.clone().add(V3(rr(-2.5, 2.5), 0, rr(-2.5, 2.5))), a: a + rr(-0.4, 0.4), h: rr(2.6, 4), once: true }); if (ev.fish.length > 14) ev.fish.splice(0, ev.fish.length - 14); spray.add(V3(p.x, 0.3, p.z), t, R, 0.6); }
       if (kind === 'light') ev.light = t;
       if (kind === 'roe') ev.roe = t;
       if (kind === 'market') ev.market = t;
