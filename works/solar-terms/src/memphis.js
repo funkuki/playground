@@ -366,7 +366,7 @@ export class Diorama {
     for (const o of hidden) o.visible = true;
     const u = this.comp.uniforms;
     u.cn.value = cam.near; u.cf.value = cam.far; u.uT.value = t; u.uSeed.value = Math.floor(frame / 5) % 4;
-    u.uWob.value = 22 * Math.sin(t * 0.55); u.uGrow.value = opts.grow ?? 1e9;
+    u.uWob.value = opts.wob ?? 22 * Math.sin(t * 0.55); u.uGrow.value = opts.grow ?? 1e9;
     r.setRenderTarget(null); r.render(this.quadScene, this.quadCam);
   }
 }

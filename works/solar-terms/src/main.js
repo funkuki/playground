@@ -512,5 +512,14 @@ if (first < 0) {
 textFx(0, 0);
 sceneFor(first).then((s) => { activate(s); setPage(first); flip.mode = 'open'; flip.dir = 1; flip.T = nowT; });
 loop();
+// 錄影用：停掉即時播放，畫出時間 t 的那一格並剪下插畫；外框的晃動和紙紋改成跟著 LOOP 走，影片才接得成循環
+function still(t, seed, w) {
+  paused = true; nowT = t;
+  active.update(t, t); camera(t, active.view);
+  const v = active.view;
+  dio.fitShadow(_sc.set(v.target[0], 0, v.target[2]), v.shadowR || v.span * 1.6);
+  dio.render(t, seed * 5, { grow: 1e9, wob: 22 * Math.sin((t / LOOP) * TAU * 3) });
+  return grabFrame(w);
+}
 // 除錯／截圖用
-window.__book = { go: (id) => { const i = TERMS.findIndex((T) => T.id === id); if (i >= 0) go(i, 1); }, get cur() { return TERMS[cur]?.id; }, get mode() { return flip.mode; } };
+window.__book = { go: (id) => { const i = TERMS.findIndex((T) => T.id === id); if (i >= 0) go(i, 1); }, get cur() { return TERMS[cur]?.id; }, get mode() { return flip.mode; }, still };
