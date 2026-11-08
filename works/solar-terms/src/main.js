@@ -51,7 +51,7 @@ const caption = $('#caption'), sheet = $('#sheet'), page = $('#page'), index = $
 const L = { cx: 0, cy: 0, hw: 0, hh: 0, cw: 0, ch: 0, wide: true, k: 1 };
 let cur = -1;
 function layout() {
-  const w = innerWidth, h = innerHeight, wide = w >= 900 && w > h * 1.1;
+  const w = innerWidth, h = innerHeight, wide = shot || (w >= 900 && w > h * 1.1);   // 截圖時直式視窗也讓插畫占滿
   L.wide = wide;
   document.body.classList.toggle('wide', wide); document.body.classList.toggle('narrow', !wide);
   let cw, ch;
@@ -513,10 +513,10 @@ textFx(0, 0);
 sceneFor(first).then((s) => { activate(s); setPage(first); flip.mode = 'open'; flip.dir = 1; flip.T = nowT; });
 loop();
 // 錄影用：停掉即時播放，畫出時間 t 的那一格並剪下插畫；外框的晃動和紙紋改成跟著 LOOP 走，影片才接得成循環
-function still(t, seed, w) {
+function still(t, seed, w, look) {
   paused = true; nowT = t;
-  active.update(t, t); camera(t, active.view);
-  const v = active.view;
+  const v = { ...active.view, ...look };     // look：錄影時微調構圖，例如 { span, target }
+  active.update(t, t); camera(t, v);
   dio.fitShadow(_sc.set(v.target[0], 0, v.target[2]), v.shadowR || v.span * 1.6);
   dio.render(t, seed * 5, { grow: 1e9, wob: 22 * Math.sin((t / LOOP) * TAU * 3) });
   return grabFrame(w);
