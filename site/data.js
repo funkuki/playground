@@ -101,6 +101,7 @@ export const WORKS = [
     en: 'Flat Cut-out Explainer Film',
     href: './works/alice-margins/',
     cover: './site/covers/alice-margins.jpg',
+    preview: './site/previews/alice-margins.mp4',
     styles: ['cutout'],
     date: '2026.11.09',
     desc: '一支 TED-Ed 式的解說短片：從《愛麗絲夢遊仙境》看 IP 與故事設計。划船午後、紅心皇后、瘋帽客的茶會、只剩笑容的柴郡貓，有些幕畫在一本會翻頁的羊皮紙書上。可以拖曳時間軸，也能逐格輸出成影片。',
