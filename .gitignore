@@ -3,3 +3,5 @@ dist
 ._*
 .DS_Store
 .claude/
+# Lyria 產生的原始版本，只有 score.m4a 會上線
+public/works/alice-margins/music/score-*.mp3

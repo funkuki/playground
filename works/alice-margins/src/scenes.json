@@ -1,0 +1,161 @@
+{
+  "title": "Down the Margin: Why Wonderland Still Works",
+  "source": "Notion：從《愛麗絲夢遊仙境》看IP與故事設計",
+  "fps": 24,
+  "scenes": [
+    {
+      "id": "boat",
+      "name": "1862 年的划船午後",
+      "kind": "stage",
+      "duration": 16,
+      "visual": "河面橫過畫面，一艘小船從左邊划進來停在中間。高瘦的數學家戴著高帽划槳，船上坐著三個女孩。岸邊的草叢一叢叢長出來。",
+      "action": "船從左滑入後在水面上下晃；划槳的手臂和槳一前一後循環；三個女孩輪流轉頭聽故事。",
+      "narration": "On a summer afternoon in 1862, a young mathematician rowed a boat up the river near Oxford. To pass the time, he made up a story for ten-year-old Alice Liddell and her sisters.",
+      "narration_zh": [
+        "1862 年一個夏日午後，一位年輕的數學家在牛津附近的河上划船。",
+        "為了打發時間，他為十歲的愛麗絲・里德爾和她的姊妹編了一個故事。"
+      ]
+    },
+    {
+      "id": "title-page",
+      "name": "故事變成一本書",
+      "kind": "book",
+      "duration": 20,
+      "visual": "一本打開的羊皮紙書。左頁是黑體字書名 Alice's Adventures in Wonderland 和 Lewis Carroll，紅色首字；右頁是假文字段落，中間的小插圖是剛才那艘船，四周有紅、金色藤蔓花邊。",
+      "action": "書從下方浮上來、稍微放大；插圖裡的船在水面晃動、槳在划；最後鏡頭停在書上。",
+      "narration": "Alice begged him to write it down. In 1865 it became a book, signed with a pen name: Lewis Carroll. It has been translated into more than seventy languages and adapted again and again for film, theatre and art.",
+      "narration_zh": [
+        "愛麗絲央求他把故事寫下來。",
+        "1865 年，故事出版成書，署名用的是筆名：",
+        "路易斯・卡羅。",
+        "它被翻譯成七十多種語言，也一再被改編成電影、舞台劇和藝術作品。"
+      ]
+    },
+    {
+      "id": "nonsense",
+      "name": "數學家的荒誕文學",
+      "kind": "stage",
+      "duration": 18,
+      "visual": "Carroll 站在地平線上，頭頂一個接一個冒出符號：∴、≠、x²、?、A、Z。",
+      "action": "符號依序彈出、繞成一道弧漂浮；Carroll 先托著下巴思考，最後舉手攤開。",
+      "narration": "Carroll loved mathematics, logic and word games, and it shows. Wonderland reads less like a fairy tale than like nonsense literature: a world where every rule is followed, and none of them makes sense.",
+      "narration_zh": [
+        "卡羅熱愛數學、邏輯和文字遊戲，這在書裡處處可見。",
+        "比起童話，《愛麗絲夢遊仙境》更像荒誕文學：",
+        "一個每條規則都被嚴格遵守、卻沒有一條說得通的世界。"
+      ]
+    },
+    {
+      "id": "queen",
+      "name": "紅心皇后：權力不需要道理",
+      "kind": "stage",
+      "duration": 17,
+      "visual": "紅袍、金冠的皇后在左邊，右邊兩個撲克牌士兵拿著斧槍。上方垂下一張卷軸：Sentence first — verdict afterwards。",
+      "action": "皇后伸手一指，士兵舉起斧頭；卷軸由上往下展開；皇后再指一次，士兵嚇得抖。",
+      "narration": "Take the Queen of Hearts. She calls for heads to roll at the slightest offence, and at her trial the sentence comes first and the verdict afterwards. Here, power needs no reason at all.",
+      "narration_zh": [
+        "就拿紅心皇后來說。",
+        "一點小小冒犯，她就喊著要砍頭；在她的審判裡，先判刑，再定罪。",
+        "在這裡，權力根本不需要理由。"
+      ]
+    },
+    {
+      "id": "tea",
+      "name": "瘋帽客的茶會：形式取代意義",
+      "kind": "stage",
+      "duration": 17,
+      "visual": "一張長桌，桌上有茶壺和茶杯。瘋帽客、三月兔、Alice 坐在桌後。旁邊的時鐘停在六點。",
+      "action": "三個人一起往右挪一個位子（小跳），再挪一次；時鐘的指針抖一下又回到六點。",
+      "narration": "At the Mad Hatter's tea party, it is always six o'clock. The guests shuffle from seat to seat, and the conversation never goes anywhere. Everyone keeps to the ritual; nobody solves a thing.",
+      "narration_zh": [
+        "在瘋帽客的茶會上，時間永遠停在六點。",
+        "客人們一個位子換過一個位子，談話卻始終原地打轉。",
+        "每個人都照著儀式走；",
+        "卻沒有人解決任何事。"
+      ]
+    },
+    {
+      "id": "cheshire",
+      "name": "柴郡貓：理性不一定帶來答案",
+      "kind": "stage",
+      "duration": 16,
+      "visual": "右邊一棵樹，柴郡貓趴在樹枝上；左邊 Alice 站在一個指向兩邊的路標旁：This way / That way。",
+      "action": "貓尾巴晃動；Alice 抬頭看貓、再看路標；貓從尾巴開始一塊塊消失，最後只剩笑容，笑容也消失。",
+      "narration": "The Cheshire Cat answers Alice with circular logic and clever word traps. His reasoning sounds sharp, but it doesn't help her find her way. A sound argument isn't always a useful one.",
+      "narration_zh": [
+        "柴郡貓用繞圈子的邏輯和巧妙的文字陷阱回答愛麗絲。",
+        "他的推理聽起來很犀利，卻沒有幫她找到路。",
+        "說得通的道理，不一定派得上用場。"
+      ]
+    },
+    {
+      "id": "grow",
+      "name": "變大又縮小：我是誰",
+      "kind": "stage",
+      "duration": 17,
+      "visual": "Alice 站在一扇很小的門旁，地上有一瓶 DRINK ME。",
+      "action": "Alice 變得比畫面還高，再縮到比門還小，最後回到原本大小、困惑地左右張望。",
+      "narration": "Alice herself keeps growing and shrinking until she's unsure who she even is. It's a fantasy of transformation, but also a story about growing up, when the world keeps asking you to change.",
+      "narration_zh": [
+        "愛麗絲自己也不停變大又縮小，直到她連自己是誰都不確定。",
+        "這是一個關於變身的奇想，也是一個關於長大的故事：世界總是要你改變。"
+      ]
+    },
+    {
+      "id": "reversal",
+      "name": "大人和孩子的位置顛倒",
+      "kind": "book",
+      "duration": 25,
+      "visual": "打開的書。左頁插圖是皇后和瘋帽客在說教；翻頁後，新的左頁插圖是 Alice 頭上冒出問號。",
+      "action": "插圖裡皇后伸手指、瘋帽客點頭；中段右頁翻過去；新插圖裡 Alice 舉手提問，問號一個個冒出。",
+      "narration": "Traditional fairy tales cast adults as teachers and children as pupils. Carroll turned that around. Alice asks, doubts and reasons, while the grown-ups who make the rules make no sense. By parodying the moral poems of his day, Carroll was being quietly rebellious.",
+      "narration_zh": [
+        "傳統童話裡，大人是老師，孩子是學生。",
+        "卡羅把這個關係倒了過來。",
+        "愛麗絲提問、懷疑、推理，而訂規則的大人們卻毫無道理。",
+        "透過戲仿當時的道德詩，卡羅悄悄地叛逆了一回。"
+      ]
+    },
+    {
+      "id": "icons",
+      "name": "角色能走出原作",
+      "kind": "stage",
+      "duration": 21,
+      "visual": "白兔、柴郡貓、瘋帽客、紅心皇后排成一列，每個角色腳下長出植物。",
+      "action": "角色一個接一個從地面彈出來，各自做招牌動作：白兔看懷錶、貓咧嘴、瘋帽客舉杯、皇后指人。",
+      "narration": "There's another reason the story has lasted more than a hundred and sixty years. The White Rabbit, the Cheshire Cat, the Hatter and the Queen are instantly recognisable, and they can step out of the book to live on as illustrations, toys, games and films.",
+      "narration_zh": [
+        "這個故事能流傳超過一百六十年，還有另一個原因。",
+        "白兔、柴郡貓、瘋帽客和紅心皇后一眼就認得出來，它們能走出書頁，以插畫、玩具、遊戲和電影的樣貌繼續活下去。"
+      ]
+    },
+    {
+      "id": "roles",
+      "name": "荒誕照出現實",
+      "kind": "stage",
+      "duration": 15,
+      "visual": "三個穿灰色長外套的大人站成一排，看起來一模一樣。",
+      "action": "金冠、大高帽、兔耳朵從上方掉下來，分別落在三個大人頭上，彈一下；大人們挺起胸膛。",
+      "narration": "Yet the more whimsical they look, the more clearly they expose the contradictions of the real world. Their charm doesn't hide reality. It gives us just enough distance to see it.",
+      "narration_zh": [
+        "然而它們看起來越是古怪可愛，就越清楚地照出現實世界的矛盾。",
+        "它們的魅力並沒有掩蓋現實。",
+        "而是給了我們剛好足夠的距離，去看清它。"
+      ]
+    },
+    {
+      "id": "the-end",
+      "name": "我們是不是也成了那些大人",
+      "kind": "book",
+      "duration": 21,
+      "visual": "打開的書。左頁是段落，右頁中間寫著 The End，下方插圖是 Alice 抬頭看著一個問號。",
+      "action": "插圖裡的問號慢慢浮起；最後右頁翻過來把書蓋上一半，畫面淡出。",
+      "narration": "Perhaps Wonderland's real magic isn't convincing children that the world is full of wonders, but showing adults that the world they trust may be stranger than Wonderland. Which leaves a question: have we become the grown-ups who make rules we can't explain?",
+      "narration_zh": [
+        "也許仙境真正的魔法，不是讓孩子相信世界充滿奇蹟，而是讓大人發現：他們深信的世界，可能比仙境還要古怪。",
+        "這留下了一個問題：",
+        "我們是不是也成了那些訂下自己都說不出道理的規則的大人？"
+      ]
+    }
+  ]
+}

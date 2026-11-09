@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>頁緣仙境 Down the Margin · sui's playground</title>
+    <meta name="description" content="用中世紀手抄本頁緣的扁平剪紙風格，講《愛麗絲夢遊仙境》為什麼能流行一百六十年。Three.js 畫面加 GSAP 主時間軸，可以拖曳、也能逐格輸出成影片。" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500&family=UnifrakturMaguntia&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        --bg: #2a2323; --stage: #382f2f; --bar: #211b1b; --line: #4a3f3d;
+        --parch: #e6dcc6; --muted: #a3958c; --red: #c0473e; --gold: #c4a24c;
+        --ui: Inter, "Noto Sans TC", "PingFang TC", system-ui, sans-serif;
+        color-scheme: dark;
+      }
+      html, body { margin: 0; height: 100%; }
+      body { display: grid; grid-template-rows: minmax(0, 1fr) auto; background: var(--bg); color: var(--parch); font-family: var(--ui); overflow: hidden; }
+      #viewport { position: relative; min-height: 0; overflow: hidden; display: grid; place-items: center; padding-top: 56px; }
+      #frame { position: relative; box-shadow: 0 18px 60px rgba(0, 0, 0, .45); opacity: 0; transition: opacity .4s; }
+      body.ready #frame { opacity: 1; }
+      #film { display: block; width: 100%; height: 100%; background: var(--stage); }
+      #subtitle {
+        position: absolute; left: 50%; bottom: 5.5%; transform: translateX(-50%); max-width: 80%;
+        padding: .28em .7em; border-radius: .3em; background: rgba(20, 15, 15, .72); color: #f3ecdc;
+        font: 500 calc(var(--fw, 960px) * .019)/1.4 Inter, "PingFang TC", "Noto Sans TC", system-ui, sans-serif; text-align: center; text-wrap: balance;
+      }
+      #subtitle span { display: block; }
+      #subtitle[data-mode="both"] .en { font-size: .82em; color: #cfc5b2; }
+      #loading { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); font-size: 13px; }
+      body.ready #loading { display: none; }
+
+      /* ---------- 控制列 ---------- */
+      .bar {
+        display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 10px 14px;
+        padding: 12px max(16px, env(safe-area-inset-right, 0px)) calc(12px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+        background: var(--bar); border-top: 1px solid #2f2727; font-size: 12.5px;
+      }
+      .bar button, .bar select {
+        font: inherit; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 999px;
+        height: 30px; padding: 0 12px; cursor: pointer;
+      }
+      .bar button:hover, .bar select:hover { color: var(--parch); }
+      .bar button[aria-pressed="true"] { color: var(--parch); border-color: var(--parch); }
+      .bar button:focus-visible, .bar select:focus-visible, #scrub:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+      .bar select { max-width: 260px; background: var(--bar); }
+      #play { width: 38px; height: 38px; padding: 0; display: grid; place-items: center; color: var(--bar); background: var(--parch); border: 0; }
+      #play::before { content: ""; width: 0; height: 0; margin-left: 3px; border-left: 12px solid currentColor; border-top: 7px solid transparent; border-bottom: 7px solid transparent; }
+      #play[data-state="pause"]::before { width: 11px; height: 13px; margin: 0; border: 0; background: linear-gradient(90deg, currentColor 0 4px, transparent 4px 7px, currentColor 7px); }
+      .clock { font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
+      .clock b { color: var(--parch); font-weight: 500; }
+      #scrub { width: 100%; min-width: 0; accent-color: var(--red); }
+      .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
+      .row2 { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
+      #status { color: var(--gold); min-width: 0; }
+      body.exporting .bar button, body.exporting .bar select, body.exporting #scrub { pointer-events: none; opacity: .5; }
+      @media (max-width: 720px) {
+        .bar { grid-template-columns: auto 1fr; }
+        .bar .clock { grid-column: 2; }
+        #scrub { grid-column: 1 / -1; }
+        .group { grid-column: 1 / -1; justify-content: flex-start; }
+      }
+
+      /* ---------- 說明視窗（同其他範例） ---------- */
+      #info-btn { position: fixed; top: 14px; right: 14px; z-index: 10; width: 36px; height: 36px; padding: 0; display: grid; place-items: center; color: #0c0c0c; cursor: pointer;
+        background: rgba(255, 255, 255, .88); border: 0; border-radius: 50%; box-shadow: 0 2px 14px rgba(0, 0, 0, .25); }
+      #info-btn:focus-visible, #info-close:focus-visible { outline: 2px solid var(--red); outline-offset: 2px; }
+      #info { position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px; background: rgba(10, 8, 8, .5); opacity: 0; pointer-events: none; transition: opacity .2s; }
+      #info.open { opacity: 1; pointer-events: auto; }
+      #info-panel { position: relative; box-sizing: border-box; width: min(600px, 100%); max-height: calc(100vh - 32px); overflow-y: auto; padding: 28px 28px 24px;
+        color: #3a3030; font: 14px/1.75 "PingFang TC", "Noto Sans TC", system-ui, sans-serif; background: #f1e8d3; border-radius: 14px; box-shadow: 0 12px 40px rgba(0, 0, 0, .4); }
+      #info-panel h1 { margin: 0 0 2px; font: 400 30px/1.1 "UnifrakturMaguntia", serif; color: #2a2220; }
+      #info-panel .sub { margin: 0 0 16px; color: #8a7a6c; font-size: 13px; }
+      #info-panel h2 { margin: 20px 0 6px; font-size: 13px; letter-spacing: .08em; color: #9e2a26; }
+      #info-panel p { margin: 0 0 8px; }
+      #info-panel ul { margin: 0; padding-left: 1.2em; }
+      #info-panel li { margin: 3px 0; }
+      #info-panel code, #info-panel pre { font: 12px ui-monospace, Menlo, monospace; background: rgba(158, 42, 38, .1); border-radius: 4px; }
+      #info-panel code { padding: 1px 5px; }
+      #info-panel pre { padding: 10px 12px; white-space: pre-wrap; word-break: break-all; user-select: all; }
+      #info-close { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0; display: grid; place-items: center; color: #5a4a40; background: transparent; border: 0; border-radius: 50%; cursor: pointer; }
+      #info-close:hover { background: rgba(0, 0, 0, .06); }
+    </style>
+    <link rel="stylesheet" href="../../site/back.css" />
+  </head>
+  <body>
+    <a class="lab-back" href="../../#works" aria-label="回到 sui's playground 範例列表">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      <img src="../../site/logo.svg" width="20" height="20" alt="" /><b>sui's playground</b>
+    </a>
+    <button id="info-btn" type="button" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9" /><path d="M12 11v6M12 7.5v.01" /></svg>
+    </button>
+
+    <div id="viewport">
+      <div id="frame">
+        <canvas id="film" aria-label="動畫短片：從《愛麗絲夢遊仙境》看 IP 與故事設計"></canvas>
+        <p id="subtitle" hidden></p>
+        <div id="loading">載入字體與場景中⋯</div>
+      </div>
+    </div>
+
+    <div class="bar">
+      <button id="play" type="button" aria-label="播放" data-state="play"></button>
+      <span class="clock"><b id="time">00:00.0 / 00:00.0</b> <span id="frame-no">#0000</span></span>
+      <input id="scrub" type="range" min="0" max="1" step="1" value="0" aria-label="時間軸" />
+      <select id="scene" aria-label="跳到場景"></select>
+      <div class="row2">
+        <span id="status" aria-live="polite">空白鍵播放，← → 逐格（加 Shift 跳一秒）</span>
+        <div class="group">
+          <select id="subs" aria-label="字幕">
+            <option value="both" selected>字幕：中英</option>
+            <option value="zh">字幕：中文</option>
+            <option value="en">字幕：英文</option>
+            <option value="off">字幕：關閉</option>
+          </select>
+          <button id="t-twos" type="button" aria-pressed="true">一拍二</button>
+          <button id="t-grain" type="button" aria-pressed="true">顆粒</button>
+          <button id="t-sound" type="button" aria-pressed="true">聲音</button>
+          <button id="export-scene" type="button">輸出這一幕 PNG</button>
+          <button id="export-all" type="button">輸出全片 PNG</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="info" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+      <div id="info-panel">
+        <button id="info-close" type="button" aria-label="關閉說明">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <h1 id="info-title">Down the Margin</h1>
+        <p class="sub">頁緣仙境 · Flat Cut-out Animation · Three.js + GSAP</p>
+        <p>
+          用中世紀手抄本頁緣的扁平剪紙風格，做一支 TED-Ed 式的解說短片：從《愛麗絲夢遊仙境》看 IP 與故事設計。故事來自 sui 的 Notion 筆記，英文口白由英國腔女聲朗讀，並附字幕。
+        </p>
+
+        <h2>畫風</h2>
+        <ul>
+          <li>深暖褐背景，一條地平線上的小舞台；細長的幾何角色、切面植物，整個畫面疊一層紙紋、顆粒和暗角。</li>
+          <li>有些幕在一本打開的羊皮紙書上：書頁是 canvas 畫的（紙紋、黑體字假文字、紅金藤蔓），插圖是另一個小舞台渲染到 render target 再貼上去，還能翻頁。</li>
+        </ul>
+
+        <h2>作法</h2>
+        <ul>
+          <li><strong>一條暫停的 GSAP 主 timeline</strong>：每一幕一段，用 label 標名稱。畫面只跟「第幾格」有關：<code>tl.seek(time)</code> 之後再 render。</li>
+          <li><strong>關節分兩層</strong>：idle 層跑待機循環，act 層跑劇情動作，兩個補間不會搶同一個屬性。</li>
+          <li><strong>一拍二</strong>：第 f 格用 <code>floor(f / 2) × 2 / 24</code> 秒的畫面，動作每兩格才更新一次，像剪紙動畫。</li>
+          <li><strong>聲音</strong>：口白用 Gemini TTS 的客製英國腔女聲逐句產生音檔，每句調到相同響度（<code>tools/narrate.py</code>），每句依實際長度排進那一幕；音效（翻頁、落地、小號、茶杯、時鐘⋯）在各幕動作的同一秒寫成提示點，用 Web Audio 合成，再和低低的環境底音一起用 OfflineAudioContext 混成一整條音軌，講話時底音會自動壓低。</li>
+          <li><strong>決定論</strong>：所有亂數都用有 seed 的 rng，顆粒也跟著格數跳，同一格每次輸出都一樣。</li>
+        </ul>
+
+        <h2>輸出影片</h2>
+        <p>按「輸出這一幕」或「輸出全片」，選一個資料夾，會寫入 1920×1080 的 <code>frame_00000.png</code>⋯ 、音軌 <code>soundtrack.wav</code> 和中英字幕檔 <code>narration.en.srt</code>、<code>narration.zh-TW.srt</code>（不支援選資料夾的瀏覽器會下載 zip）。再用 ffmpeg 合成：</p>
+        <pre>ffmpeg -framerate 24 -i frame_%05d.png -i soundtrack.wav -i narration.en.srt -i narration.zh-TW.srt -map 0:v -map 1:a -map 2:s -map 3:s -c:v libx264 -pix_fmt yuv420p -crf 16 -c:a aac -b:a 192k -c:s mov_text -metadata:s:s:0 language=eng -metadata:s:s:1 language=chi -shortest alice-margins.mp4</pre>
+        <p>上傳 YouTube 時，把兩個 .srt 分別加成英文和中文（台灣）字幕軌，觀眾就能自己切換。</p>
+        <p>網址加上 <code>#queen</code>、<code>#tea</code> 這類場景名稱，可以直接從那一幕開始。</p>
+      </div>
+    </div>
+
+    <script type="module" src="../../site/work-nav.js"></script>
+    <script type="module" src="./src/main.js"></script>
+  </body>
+</html>

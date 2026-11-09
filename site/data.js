@@ -83,9 +83,29 @@ export const STYLES = [
     desc: '換個角度看就會流動的彩虹反光。漸層跟著滑鼠或手機陀螺儀移動，只從星星網點裡透出來，像閃卡和防偽貼紙。',
     recipe: ['CSS 3D transform', 'mix-blend-mode', 'mask-image 星星網點', 'DeviceOrientation'],
   },
+  {
+    id: 'cutout',
+    name: '剪紙',
+    en: 'Flat Cut-out',
+    color: '#9e2a26',
+    desc: '中世紀手抄本頁緣的扁平剪紙動畫：深暖褐底、一條地平線上的小舞台，細長的幾何角色用關節轉動，一拍二的節奏，再疊上紙紋、顆粒和暗角。',
+    recipe: ['正交相機平塗色塊', '三層關節 Group', 'GSAP 主時間軸', '逐格輸出'],
+  },
 ];
 
 export const WORKS = [
+  {
+    id: 'alice-margins',
+    title: 'Down the Margin',
+    subtitle: '頁緣仙境',
+    en: 'Flat Cut-out Explainer Film',
+    href: './works/alice-margins/',
+    cover: './site/covers/alice-margins.jpg',
+    styles: ['cutout'],
+    date: '2026.11.09',
+    desc: '一支 TED-Ed 式的解說短片：從《愛麗絲夢遊仙境》看 IP 與故事設計。划船午後、紅心皇后、瘋帽客的茶會、只剩笑容的柴郡貓，有些幕畫在一本會翻頁的羊皮紙書上。可以拖曳時間軸，也能逐格輸出成影片。',
+    tech: ['GSAP 主時間軸 seek', '一拍二', 'Render target 書頁插圖', 'PNG 序列輸出'],
+  },
   {
     id: 'solar-terms',
     title: 'Solar Terms',

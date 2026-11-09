@@ -1,0 +1,206 @@
+{
+ "engine": "gemini",
+ "voice": "voice_1gfsmp3cvvo2",
+ "clips": [
+  {
+   "scene": "boat",
+   "file": "boat-1.m4a",
+   "text": "On a summer afternoon in 1862, a young mathematician rowed a boat up the river near Oxford.",
+   "duration": 6.843
+  },
+  {
+   "scene": "boat",
+   "file": "boat-2.m4a",
+   "text": "To pass the time, he made up a story for ten-year-old Alice Liddell and her sisters.",
+   "duration": 5.037
+  },
+  {
+   "scene": "title-page",
+   "file": "title-page-1.m4a",
+   "text": "Alice begged him to write it down.",
+   "duration": 2.323
+  },
+  {
+   "scene": "title-page",
+   "file": "title-page-2.m4a",
+   "text": "In 1865 it became a book, signed with a pen name:",
+   "duration": 4.821
+  },
+  {
+   "scene": "title-page",
+   "file": "title-page-3.m4a",
+   "text": "Lewis Carroll.",
+   "duration": 1.146
+  },
+  {
+   "scene": "title-page",
+   "file": "title-page-4.m4a",
+   "text": "It has been translated into more than seventy languages and adapted again and again for film, theatre and art.",
+   "duration": 7.971
+  },
+  {
+   "scene": "nonsense",
+   "file": "nonsense-1.m4a",
+   "text": "Carroll loved mathematics, logic and word games, and it shows.",
+   "duration": 4.835
+  },
+  {
+   "scene": "nonsense",
+   "file": "nonsense-2.m4a",
+   "text": "Wonderland reads less like a fairy tale than like nonsense literature:",
+   "duration": 5.179
+  },
+  {
+   "scene": "nonsense",
+   "file": "nonsense-3.m4a",
+   "text": "a world where every rule is followed, and none of them makes sense.",
+   "duration": 5.252
+  },
+  {
+   "scene": "queen",
+   "file": "queen-1.m4a",
+   "text": "Take the Queen of Hearts.",
+   "duration": 1.498
+  },
+  {
+   "scene": "queen",
+   "file": "queen-2.m4a",
+   "text": "She calls for heads to roll at the slightest offence, and at her trial the sentence comes first and the verdict afterwards.",
+   "duration": 9.288
+  },
+  {
+   "scene": "queen",
+   "file": "queen-3.m4a",
+   "text": "Here, power needs no reason at all.",
+   "duration": 2.961
+  },
+  {
+   "scene": "tea",
+   "file": "tea-1.m4a",
+   "text": "At the Mad Hatter's tea party, it is always six o'clock.",
+   "duration": 4.479
+  },
+  {
+   "scene": "tea",
+   "file": "tea-2.m4a",
+   "text": "The guests shuffle from seat to seat, and the conversation never goes anywhere.",
+   "duration": 5.516
+  },
+  {
+   "scene": "tea",
+   "file": "tea-3.m4a",
+   "text": "Everyone keeps to the ritual;",
+   "duration": 1.812
+  },
+  {
+   "scene": "tea",
+   "file": "tea-4.m4a",
+   "text": "nobody solves a thing.",
+   "duration": 1.839
+  },
+  {
+   "scene": "cheshire",
+   "file": "cheshire-1.m4a",
+   "text": "The Cheshire Cat answers Alice with circular logic and clever word traps.",
+   "duration": 5.568
+  },
+  {
+   "scene": "cheshire",
+   "file": "cheshire-2.m4a",
+   "text": "His reasoning sounds sharp, but it doesn't help her find her way.",
+   "duration": 4.183
+  },
+  {
+   "scene": "cheshire",
+   "file": "cheshire-3.m4a",
+   "text": "A sound argument isn't always a useful one.",
+   "duration": 3.155
+  },
+  {
+   "scene": "grow",
+   "file": "grow-1.m4a",
+   "text": "Alice herself keeps growing and shrinking until she's unsure who she even is.",
+   "duration": 6.386
+  },
+  {
+   "scene": "grow",
+   "file": "grow-2.m4a",
+   "text": "It's a fantasy of transformation, but also a story about growing up, when the world keeps asking you to change.",
+   "duration": 8.703
+  },
+  {
+   "scene": "reversal",
+   "file": "reversal-1.m4a",
+   "text": "Traditional fairy tales cast adults as teachers and children as pupils.",
+   "duration": 6.047
+  },
+  {
+   "scene": "reversal",
+   "file": "reversal-2.m4a",
+   "text": "Carroll turned that around.",
+   "duration": 1.653
+  },
+  {
+   "scene": "reversal",
+   "file": "reversal-3.m4a",
+   "text": "Alice asks, doubts and reasons, while the grown-ups who make the rules make no sense.",
+   "duration": 7.823
+  },
+  {
+   "scene": "reversal",
+   "file": "reversal-4.m4a",
+   "text": "By parodying the moral poems of his day, Carroll was being quietly rebellious.",
+   "duration": 5.822
+  },
+  {
+   "scene": "icons",
+   "file": "icons-1.m4a",
+   "text": "There's another reason the story has lasted more than a hundred and sixty years.",
+   "duration": 4.856
+  },
+  {
+   "scene": "icons",
+   "file": "icons-2.m4a",
+   "text": "The White Rabbit, the Cheshire Cat, the Hatter and the Queen are instantly recognisable, and they can step out of the book to live on as illustrations, toys, games and films.",
+   "duration": 13.898
+  },
+  {
+   "scene": "roles",
+   "file": "roles-1.m4a",
+   "text": "Yet the more whimsical they look, the more clearly they expose the contradictions of the real world.",
+   "duration": 6.624
+  },
+  {
+   "scene": "roles",
+   "file": "roles-2.m4a",
+   "text": "Their charm doesn't hide reality.",
+   "duration": 2.799
+  },
+  {
+   "scene": "roles",
+   "file": "roles-3.m4a",
+   "text": "It gives us just enough distance to see it.",
+   "duration": 2.79
+  },
+  {
+   "scene": "the-end",
+   "file": "the-end-1.m4a",
+   "text": "Perhaps Wonderland's real magic isn't convincing children that the world is full of wonders, but showing adults that the world they trust may be stranger than Wonderland.",
+   "duration": 12.612
+  },
+  {
+   "scene": "the-end",
+   "file": "the-end-2.m4a",
+   "text": "Which leaves a question:",
+   "duration": 1.895
+  },
+  {
+   "scene": "the-end",
+   "file": "the-end-3.m4a",
+   "text": "have we become the grown-ups who make rules we can't explain?",
+   "duration": 4.019
+  }
+ ],
+ "model": "gemini-3.8-flash-tts",
+ "style": "Read in a warm, measured British (Received Pronunciation) accent, like the female narrator of an educational animated documentary. Clear, gently curious and a little wry; unhurried but never slow. Keep the same voice, accent and pace in every line."
+}

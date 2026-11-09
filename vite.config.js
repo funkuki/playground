@@ -20,6 +20,7 @@ export default defineConfig({
         'clay-figures': resolve(root, 'works/clay-figures/index.html'),
         'toy-expo-pass': resolve(root, 'works/toy-expo-pass/index.html'),
         'solar-terms': resolve(root, 'works/solar-terms/index.html'),
+        'alice-margins': resolve(root, 'works/alice-margins/index.html'),
       },
     },
   },
