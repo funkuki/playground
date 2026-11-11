@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>頁緣仙境 Down the Margin · sui's playground</title>
-    <meta name="description" content="用中世紀手抄本頁緣的扁平剪紙風格，講《愛麗絲夢遊仙境》為什麼能流行一百六十年。Three.js 畫面加 GSAP 主時間軸，可以拖曳、也能逐格輸出成影片。" />
+    <meta name="description" content="用剪紙紙偶劇場的風格，講《愛麗絲夢遊仙境》為什麼能流行一百六十年。Canvas 2D 紙偶加 GSAP 主時間軸，可以拖曳、也能逐格輸出成影片。" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+TC:wght@400;500&family=UnifrakturMaguntia&display=swap" rel="stylesheet" />
@@ -116,7 +116,7 @@
             <option value="off">字幕：關閉</option>
           </select>
           <button id="t-twos" type="button" aria-pressed="true">一拍二</button>
-          <button id="t-grain" type="button" aria-pressed="true">顆粒</button>
+          <button id="t-grain" type="button" aria-pressed="false">顆粒</button>
           <button id="t-sound" type="button" aria-pressed="true">聲音</button>
           <button id="export-scene" type="button">輸出這一幕 PNG</button>
           <button id="export-all" type="button">輸出全片 PNG</button>
@@ -137,14 +137,15 @@
 
         <h2>畫風</h2>
         <ul>
-          <li>深暖褐背景，一條地平線上的小舞台；細長的幾何角色、切面植物，整個畫面疊一層紙紋、顆粒和暗角。</li>
+          <li>深暖褐背景，一條地平線上的小舞台，角色像紙偶一樣在同一條水平線上表演，四周留出空間；畫面疊一層暗角（紙紋和顆粒可以用「顆粒」按鈕打開）。</li>
+          <li>角色和道具是照同一段風格描述用 gpt-image 生成的剪紙插畫，再切成頭、手、姿勢等零件：換頭換表情、整張換姿勢、尾巴繞接縫擺動，用 canvas 2D 一格格畫出來。</li>
           <li>有些幕在一本打開的羊皮紙書上：書頁是 canvas 畫的（紙紋、黑體字假文字、紅金藤蔓），插圖是另一個小舞台渲染到 render target 再貼上去，還能翻頁。</li>
         </ul>
 
         <h2>作法</h2>
         <ul>
           <li><strong>一條暫停的 GSAP 主 timeline</strong>：每一幕一段，用 label 標名稱。畫面只跟「第幾格」有關：<code>tl.seek(time)</code> 之後再 render。</li>
-          <li><strong>關節分兩層</strong>：idle 層跑待機循環，act 層跑劇情動作，兩個補間不會搶同一個屬性。</li>
+          <li><strong>2D 紙偶場景</strong>：每一幕是一個 <code>draw(t)</code> 只由秒數決定的 canvas，可以任意 seek；整張畫好後貼到主鏡頭的平面或書頁上。</li>
           <li><strong>一拍二</strong>：第 f 格用 <code>floor(f / 2) × 2 / 24</code> 秒的畫面，動作每兩格才更新一次，像剪紙動畫。</li>
           <li><strong>聲音</strong>：口白用 Gemini TTS 的客製英國腔女聲逐句產生音檔，每句調到相同響度（<code>tools/narrate.py</code>），每句依實際長度排進那一幕；音效（翻頁、落地、小號、茶杯、時鐘⋯）在各幕動作的同一秒寫成提示點，用 Web Audio 合成，再和低低的環境底音一起用 OfflineAudioContext 混成一整條音軌，講話時底音會自動壓低。</li>
           <li><strong>決定論</strong>：所有亂數都用有 seed 的 rng，顆粒也跟著格數跳，同一格每次輸出都一樣。</li>

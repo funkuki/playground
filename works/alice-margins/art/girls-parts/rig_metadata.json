@@ -1,0 +1,213 @@
+{
+  "source_file": "alice_boat_layers/03_three_girls.png",
+  "width": 483,
+  "height": 287,
+  "description": "Extracted character rigs from the grouped original boat-story scene. All registered PNGs use the same 483x287 transparent RGBA stage; body, head and hand parts recompose the extracted figure. Hidden parts have not been hallucinated.",
+  "characters": {
+    "older_sister": {
+      "label_zh": "大姊（磚紅色洋裝、寬緣草帽）",
+      "folder": "01_older_sister",
+      "canvas": [
+        483,
+        287
+      ],
+      "full": "01_older_sister_full.png",
+      "layer_order_back_to_front": [
+        "02_body_base.png",
+        "03_head.png",
+        "04_lap_hand.png"
+      ],
+      "pivots_on_canvas": {
+        "03_head.png": [
+          139,
+          110
+        ],
+        "04_lap_hand.png": [
+          166,
+          218
+        ]
+      },
+      "cropped_regions": {
+        "03_head_cropped.png": {
+          "crop_origin": [
+            38,
+            5
+          ],
+          "pivot_canvas": [
+            139,
+            110
+          ],
+          "pivot_cropped": [
+            101,
+            105
+          ],
+          "width": 161,
+          "height": 134
+        },
+        "04_lap_hand_cropped.png": {
+          "crop_origin": [
+            157,
+            204
+          ],
+          "pivot_canvas": [
+            166,
+            218
+          ],
+          "pivot_cropped": [
+            9,
+            14
+          ],
+          "width": 49,
+          "height": 28
+        }
+      },
+      "limitations": [
+        "Only the visible hand above the younger sister’s dress; most of the other hand is occluded."
+      ]
+    },
+    "younger_sister": {
+      "label_zh": "二妹（奶油色洋裝、藍灰帽帶）",
+      "folder": "02_younger_sister",
+      "canvas": [
+        483,
+        287
+      ],
+      "full": "01_younger_sister_full.png",
+      "layer_order_back_to_front": [
+        "02_body_base.png",
+        "03_head.png",
+        "04_chin_hands.png"
+      ],
+      "pivots_on_canvas": {
+        "03_head.png": [
+          215,
+          190
+        ],
+        "04_chin_hands.png": [
+          251,
+          202
+        ]
+      },
+      "cropped_regions": {
+        "03_head_cropped.png": {
+          "crop_origin": [
+            163,
+            105
+          ],
+          "pivot_canvas": [
+            215,
+            190
+          ],
+          "pivot_cropped": [
+            52,
+            85
+          ],
+          "width": 110,
+          "height": 104
+        },
+        "04_chin_hands_cropped.png": {
+          "crop_origin": [
+            224,
+            160
+          ],
+          "pivot_canvas": [
+            251,
+            202
+          ],
+          "pivot_cropped": [
+            27,
+            42
+          ],
+          "width": 48,
+          "height": 85
+        }
+      },
+      "limitations": [
+        "The two overlapping hands and supporting forearms act as a single component because the original drawing merges them."
+      ]
+    },
+    "alice": {
+      "label_zh": "Alice（藍灰連衣裙、奶油色圍裙）",
+      "folder": "03_alice",
+      "canvas": [
+        483,
+        287
+      ],
+      "full": "01_alice_full.png",
+      "layer_order_back_to_front": [
+        "02_body_base.png",
+        "03_head.png",
+        "04_left_chin_hand.png",
+        "05_right_chin_hand.png"
+      ],
+      "pivots_on_canvas": {
+        "03_head.png": [
+          386,
+          147
+        ],
+        "04_left_chin_hand.png": [
+          389,
+          193
+        ],
+        "05_right_chin_hand.png": [
+          415,
+          196
+        ]
+      },
+      "cropped_regions": {
+        "03_head_cropped.png": {
+          "crop_origin": [
+            297,
+            65
+          ],
+          "pivot_canvas": [
+            386,
+            147
+          ],
+          "pivot_cropped": [
+            89,
+            82
+          ],
+          "width": 143,
+          "height": 139
+        },
+        "04_left_chin_hand_cropped.png": {
+          "crop_origin": [
+            360,
+            108
+          ],
+          "pivot_canvas": [
+            389,
+            193
+          ],
+          "pivot_cropped": [
+            29,
+            85
+          ],
+          "width": 49,
+          "height": 103
+        },
+        "05_right_chin_hand_cropped.png": {
+          "crop_origin": [
+            388,
+            101
+          ],
+          "pivot_canvas": [
+            415,
+            196
+          ],
+          "pivot_cropped": [
+            27,
+            95
+          ],
+          "width": 46,
+          "height": 111
+        }
+      },
+      "limitations": [
+        "One chin-supporting hand with forearm.",
+        "Second chin-supporting hand with forearm."
+      ]
+    }
+  }
+}

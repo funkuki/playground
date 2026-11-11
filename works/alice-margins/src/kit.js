@@ -92,6 +92,104 @@ export function windy(meshes, top, bottom, amp = 0.06) {
   return meshes;
 }
 
+// ---------- 圓滑剪影（第二版畫風）----------
+// 控制點用 Catmull-Rom 連成平滑曲線；點的第三個值寫 'c' 就是尖角（例如鞋尖、下擺的角）
+function smooth(pts, closed, seg = 8) {
+  const n = pts.length, out = [];
+  const at = (i) => pts[closed ? (i + n) % n : Math.min(n - 1, Math.max(0, i))];
+  const tan = (i) => {
+    const p = at(i);
+    if (p[2] === 'c' || (!closed && (i === 0 || i === n - 1))) return [0, 0];
+    const a = at(i - 1), b = at(i + 1);
+    return [(b[0] - a[0]) * 0.5, (b[1] - a[1]) * 0.5];
+  };
+  for (let i = 0; i < (closed ? n : n - 1); i++) {
+    const p1 = at(i), p2 = at(i + 1), m1 = tan(i), m2 = tan(i + 1);
+    for (let k = 0; k < seg; k++) {
+      const t = k / seg, t2 = t * t, t3 = t2 * t;
+      const h1 = 2 * t3 - 3 * t2 + 1, h2 = t3 - 2 * t2 + t, h3 = -2 * t3 + 3 * t2, h4 = t3 - t2;
+      out.push([h1 * p1[0] + h2 * m1[0] + h3 * p2[0] + h4 * m2[0], h1 * p1[1] + h2 * m1[1] + h3 * p2[1] + h4 * m2[1]]);
+    }
+  }
+  if (!closed) out.push(at(n - 1).slice(0, 2));
+  return out;
+}
+
+const fillCache = new Map();
+function fillMat(wind) {
+  if (!fillCache.has(wind)) {
+    const m = new THREE.MeshBasicMaterial({ vertexColors: true, side: THREE.DoubleSide });
+    if (wind) {
+      m.onBeforeCompile = windMat(0xffffff).onBeforeCompile;
+      m.customProgramCacheKey = () => 'wind-vc';
+    }
+    fillCache.set(wind, m);
+  }
+  return fillCache.get(wind);
+}
+
+// 由下往上的漸層（顏色對 y 是線性的，三角形怎麼切都不會走樣）
+function paint(geo, bottom, top, y0, y1) {
+  const pos = geo.attributes.position, col = new Float32Array(pos.count * 3);
+  const a = new THREE.Color(bottom), b = new THREE.Color(top), c = new THREE.Color();
+  for (let i = 0; i < pos.count; i++) {
+    c.copy(a).lerp(b, Math.min(1, Math.max(0, (pos.getY(i) - y0) / (y1 - y0 || 1))));
+    col.set([c.r, c.g, c.b], i * 3);
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+}
+
+// 平滑剪影：c 是底部顏色、lit 是頂部顏色（預設亮 18%）；wind = [不動的高度, 下擺高度, 幅度]
+export function shape(parent, pts, c, { lit = shade(c, 0.18), z = 0, y0, y1, wind } = {}) {
+  const p = smooth(pts, true);
+  const ys = p.map((q) => q[1]);
+  const s = new THREE.Shape();
+  p.forEach(([x, y], i) => (i ? s.lineTo(x, y) : s.moveTo(x, y)));
+  const geo = new THREE.ShapeGeometry(s);
+  paint(geo, c, lit, y0 ?? Math.min(...ys), y1 ?? Math.max(...ys));
+  if (wind) {
+    const [top, bottom, amp] = wind, pos = geo.attributes.position, w = new Float32Array(pos.count);
+    for (let i = 0; i < pos.count; i++) w[i] = amp * Math.min(1, Math.max(0, (top - pos.getY(i)) / (top - bottom))) ** 1.6;
+    geo.setAttribute('aWind', new THREE.BufferAttribute(w, 1));
+  }
+  const m = new THREE.Mesh(geo, fillMat(!!wind));
+  m.position.z = z;
+  parent.add(m);
+  return m;
+}
+
+// 平滑曲線（皺褶、髮絲、嘴、細手臂）：寬度從 w 漸變到 w1，兩端是圓的
+export function line(parent, pts, c, { w = 0.03, w1 = w, z = 0, wind } = {}) {
+  const p = smooth(pts, false), n = p.length, pos = [], idx = [];
+  for (let i = 0; i < n; i++) {
+    const a = p[Math.max(0, i - 1)], b = p[Math.min(n - 1, i + 1)];
+    const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+    const r = (w + (w1 - w) * (i / (n - 1))) / 2;
+    pos.push(p[i][0] - (dy / l) * r, p[i][1] + (dx / l) * r, 0, p[i][0] + (dy / l) * r, p[i][1] - (dx / l) * r, 0);
+    if (i) idx.push(2 * i - 2, 2 * i - 1, 2 * i, 2 * i - 1, 2 * i + 1, 2 * i);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  geo.setIndex(idx);
+  paint(geo, c, c, 0, 1);
+  if (wind) {
+    const [top, bottom, amp] = wind, pa = geo.attributes.position, ww = new Float32Array(pa.count);
+    for (let i = 0; i < pa.count; i++) ww[i] = amp * Math.min(1, Math.max(0, (top - pa.getY(i)) / (top - bottom))) ** 1.6;
+    geo.setAttribute('aWind', new THREE.BufferAttribute(ww, 1));
+  }
+  const g = new THREE.Group();
+  const m = new THREE.Mesh(geo, fillMat(!!wind));
+  g.add(m);
+  for (const [q, r] of [[p[0], w / 2], [p[n - 1], w1 / 2]]) {
+    const d = new THREE.Mesh(new THREE.CircleGeometry(r, 10), mat(c));
+    d.position.set(q[0], q[1], 0);
+    g.add(d);
+  }
+  g.position.z = z;
+  parent.add(g);
+  return g;
+}
+
 export function stroke(parent, pts, w, c, z = 0) {
   const g = new THREE.Group();
   for (let i = 0; i < pts.length - 1; i++) {

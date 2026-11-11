@@ -1,6 +1,12 @@
 // 角色與道具。全部面向右、腳底在 y = 0；要面向左就把 root.scale.x 設成 -1
 import * as THREE from 'three';
 import { C, poly, stroke, disc, heart, joint, shade, textPlane, windy } from './kit.js';
+import * as v2 from './cast2.js';
+
+// 第二版畫風試作：網址加 ?v2 時，瘋帽客和 Alice 換成 cast2.js 的圓滑版本
+const V2 = new URLSearchParams(location.search).has('v2');
+export function girl(parent, x, opts = {}) { return (V2 ? v2.girl : girl1)(parent, x, opts); }
+export function hatter(parent, x, opts = {}) { return (V2 ? v2.hatter : hatter1)(parent, x, opts); }
 
 function rootAt(parent, x, z = 0, flip = false) {
   const root = new THREE.Group();
@@ -49,7 +55,7 @@ export function adult(parent, x, { flip = false, z = 0, coat = C.coat, coatLit =
 }
 
 // Alice（或船上的姊妹）：裙子、圍裙、長髮
-export function girl(parent, x, { flip = false, z = 0, dress = C.blue, dressLit = C.blueLit, apron = true, hair = C.hair, scale = 1 } = {}) {
+function girl1(parent, x, { flip = false, z = 0, dress = C.blue, dressLit = C.blueLit, apron = true, hair = C.hair, scale = 1 } = {}) {
   const root = rootAt(parent, x, z, flip);
   const size = joint(root);
   size.pos.scale.setScalar(scale);
@@ -128,7 +134,7 @@ export function cardSoldier(parent, x, { flip = false, z = 0, suit = 'heart' } =
   return { root, body, head, shoulder };
 }
 
-export function hatter(parent, x, { flip = false, z = 0 } = {}) {
+function hatter1(parent, x, { flip = false, z = 0 } = {}) {
   const root = rootAt(parent, x, z, flip);
   const body = joint(root);
   stroke(body.act, [[-0.12, 1.4], [-0.18, 0.05]], 0.13, C.trouser, -0.01);

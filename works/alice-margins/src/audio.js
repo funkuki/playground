@@ -177,6 +177,11 @@ function voice(ctx, out, noise, r) {
       trem.connect(d);
       d.connect(g.gain);
     },
+    poof(t, { vol = 0.1, pitch = 1 } = {}) {
+      // 柔和的「噗」：一口被濾過的氣音，加一個很輕、往上滑的正弦音
+      gainAt(t, vol, 0.02, 0.28, filter('lowpass', 1400 * pitch, 0.7, noiseSrc(t, 0.32)));
+      gainAt(t, vol * 0.35, 0.02, 0.35, osc('sine', t, 660 * pitch, 990 * pitch, 0.35));
+    },
     splash(t, { vol = 0.22 } = {}) {
       gainAt(t, vol, 0.01, 0.35, filter('bandpass', 900 + r() * 400, 0.9, noiseSrc(t, 0.45)));
     },

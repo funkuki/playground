@@ -1,0 +1,30 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Roles Scene Test</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #2a1f20; }
+  body { display: flex; align-items: center; justify-content: center; }
+  canvas { display: block; max-width: 100vw; max-height: 100vh; }
+</style>
+<canvas id="c" width="1920" height="1080"></canvas>
+<script type="module">
+// 第十幕荒誕照出現實的 2D 紙偶場景（src/roles2d.js）單獨播放
+import { rolesScene } from '../src/roles2d.js';
+
+const book = false;
+const c = document.getElementById('c'), g = c.getContext('2d');
+const S = rolesScene({ base: './' });
+const FPS = 24;
+const draw = (t) => {
+  const v = S.draw(t);
+  g.fillStyle = book ? '#e8dcc0' : '#000';
+  g.fillRect(0, 0, c.width, c.height);
+  g.drawImage(v, 0, 0);
+};
+window.__test = { ready: S.ready, draw, frames: FPS * 15, fps: FPS, canvas: c };
+if (!/render/.test(location.search)) S.ready.then(() => {
+  const t0 = performance.now();
+  const loop = (now) => { draw(((now - t0) / 1000) % 15); requestAnimationFrame(loop); };
+  requestAnimationFrame(loop);
+});
+</script>

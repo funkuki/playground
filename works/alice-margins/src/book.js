@@ -233,6 +233,17 @@ export function illustration(pageMesh, rc, { viewH = 6.2, groundFrom = 0.55 } = 
   return { scene, camera, world, rt, width: viewH * aspect };
 }
 
+// 插圖（2D 版）：src 是 { ready, draw(t) → canvas }，每格重畫後更新貼圖
+export function canvasIllustration(pageMesh, rc, src) {
+  const p = rectToPlane(rc);
+  const tex = new THREE.CanvasTexture(src.canvas);
+  tex.anisotropy = 4;
+  const plane = new THREE.Mesh(new THREE.PlaneGeometry(p.w, p.h), new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false }));
+  plane.position.set(p.x, p.y, 0.004);
+  pageMesh.add(plane);
+  return { ready: src.ready, draw(t) { src.draw(t); tex.needsUpdate = true; } };
+}
+
 // 一本打開的書：紅色封皮、書背厚度、左右兩頁
 export function openBook(parent, leftTex, rightTex) {
   const root = new THREE.Group();

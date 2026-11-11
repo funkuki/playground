@@ -32,6 +32,8 @@ async function start() {
   const sfx = [];
   const scenes = buildFilm(main, tl, FILM.scenes, sfx);
   const DURATION = scenes.at(-1).end;
+  // 2D 插圖的素材要先載完
+  await Promise.all(scenes.flatMap((s) => s.illus.map((il) => il.ready)).filter(Boolean));
   const FRAMES = Math.round(DURATION * FPS);
   tl.set({}, {}, DURATION);
 
@@ -39,7 +41,7 @@ async function start() {
   const rt = new THREE.WebGLRenderTarget(1, 1, { samples: 4 });
   const post = new THREE.ShaderMaterial({
     uniforms: {
-      tScene: { value: rt.texture }, uTime: { value: 0 }, uGrain: { value: 1 }, uFade: { value: 1 },
+      tScene: { value: rt.texture }, uTime: { value: 0 }, uGrain: { value: 0 }, uFade: { value: 1 },
       uRes: { value: new THREE.Vector2(1, 1) },
     },
     vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }',
@@ -89,7 +91,7 @@ async function start() {
   for (const s of scenes) cues.filter((c) => c.scene === s.id).forEach((c, i) => { c.zh = s.narration_zh?.[i] ?? ''; });
 
   // ---------- 畫一格 ----------
-  const flags = { twos: true, grain: true, sound: true };
+  const flags = { twos: true, grain: false, sound: true };   // 紙紋和顆粒預設關掉，可以用「顆粒」按鈕打開
   let subs = 'both'; // en / zh / both / off
   const smooth = (x) => { const t = Math.min(1, Math.max(0, x)); return t * t * (3 - 2 * t); };
   const timeOf = (f) => (flags.twos ? Math.floor(f / 2) * 2 : f) / FPS;
@@ -103,6 +105,7 @@ async function start() {
     for (const s of scenes) s.root.visible = s === active;
     renderer.setClearColor(0x000000, 0);
     for (const il of active.illus) {
+      if (il.draw) { il.draw(t - active.start); continue; }
       renderer.setRenderTarget(il.rt);
       renderer.clear();
       renderer.render(il.scene, il.camera);

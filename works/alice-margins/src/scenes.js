@@ -3,7 +3,17 @@
 import * as THREE from 'three';
 import { C, clump, ground, rng, textPlane, joint, poly, stroke } from './kit.js';
 import * as cast from './cast.js';
-import { openBook, pageTexture, illustration, flipPage } from './book.js';
+import { openBook, pageTexture, illustration, canvasIllustration, flipPage } from './book.js';
+import { boatScene } from './boat2d.js';
+import { nonsenseScene, GLYPHS } from './nonsense2d.js';
+import { queenScene } from './queen2d.js';
+import { cheshireScene } from './cheshire2d.js';
+import { growScene } from './grow2d.js';
+import { lectureScene, askScene } from './reversal2d.js';
+import { teaScene } from './tea2d.js';
+import { iconsScene } from './icons2d.js';
+import { rolesScene } from './roles2d.js';
+import { aliceScene, grownupScene } from './end2d.js';
 
 export const GROUND_Y = -1.7;
 
@@ -97,30 +107,33 @@ function questionMarks(parent, A, xs, y, start, gap = 0.5) {
 }
 
 // ---------- 各幕 ----------
+// 滿版的 2D 場景：src 是 { ready, canvas, draw(t) }，每格重畫後更新貼圖（畫面 16×9 對齊主鏡頭）
+function canvasStage(root, src) {
+  const tex = new THREE.CanvasTexture(src.canvas);
+  tex.anisotropy = 4;
+  root.add(new THREE.Mesh(new THREE.PlaneGeometry(16, 9), new THREE.MeshBasicMaterial({ map: tex, depthWrite: false })));
+  return { ready: src.ready, draw(t) { src.draw(t); tex.needsUpdate = true; } };
+}
+
 const BUILD = {
   boat(main, A) {
-    const { root, world } = stage(main);
-    const w = cast.water(world, 18, 3.2, 0.3);
-    A.fromTo(w.ripples.position, { x: 0 }, { x: -1.4, duration: A.D, ease: 'none' }, 0);
-    A.plants(world, [[-6.3, 0.8, -0.4], [-4.4, 0.65, -0.4], [3.6, 0.7, -0.4], [6.0, 0.9, -0.4]], 10, 0.3);
-    boatParty(world, A, { x: -0.6, enter: 0.2 });
+    // 2D 紙偶場景（boat2d.js）畫在滿版的貼圖上；船從左邊划進來
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, boatScene({ enter: [0.2, 2.8] }));
     A.sfx('water', 0, { len: A.D });
     A.sfx('whoosh', 0.3, { dur: 2.4, vol: 0.12, from: 200, to: 700 });
-    return { root };
+    return { root, illus: [il] };
   },
 
   'title-page'(main, A) {
     const root = new THREE.Group();
     main.add(root);
     const L = pageTexture('left', 21, [{ type: 'title' }, { type: 'text', lines: 9 }]);
-    const R = pageTexture('right', 22, [{ type: 'text', lines: 6, cap: 'A' }, { type: 'illus', h: 380 }, { type: 'text', lines: 4 }]);
+    const R = pageTexture('right', 22, [{ type: 'text', lines: 6, cap: 'A' }, { type: 'illus', h: 285 }, { type: 'text', lines: 5 }]);
     const book = openBook(root, L.tex, R.tex);
-    const il = illustration(book.right, R.illus[0], { viewH: 5.2, groundFrom: 1.1 });
-    const w = cast.water(il.world, 9.5, 0.8, 0.3);
-    clump(il.world, -5.2, 23, 0.6, 0.2);
-    clump(il.world, 5.2, 24, 0.7, 0.2);
-    A.fromTo(w.ripples.position, { x: 0 }, { x: -1.2, duration: A.D, ease: 'none' }, 0);
-    boatParty(il.world, A, { x: 0, enter: null });
+    // 插圖：第一幕的 2D 紙偶場景，書頁版（透明底、墨色水面），裁出船和兩岸
+    const il = canvasIllustration(book.right, R.illus[0], boatScene({ book: true, crop: [370, 418, 1300, 479], out: 1160 }));
     A.fromTo(book.root.position, { y: -0.7 }, { y: 0, duration: 1.3, ease: 'power3.out' }, 0);
     A.fromTo(book.root.scale, { x: 0.92, y: 0.92 }, { x: 1, y: 1, duration: 1.3, ease: 'power3.out' }, 0);
     A.to(book.root.scale, { x: 1.07, y: 1.07, duration: A.D - 2, ease: 'sine.inOut' }, 1.6);
@@ -131,167 +144,83 @@ const BUILD = {
   },
 
   nonsense(main, A) {
-    const { root, world } = stage(main);
-    ground(world);
-    A.plants(world, [[-5.2, 0.9, -0.3], [-2.4, 0.7, 0.3], [2.2, 0.8, 0.3], [5.0, 1.0, -0.3]], 30);
-    const carroll = cast.adult(world, -0.4);
-    A.loop(carroll.body.idle.rotation, { z: -0.015 }, { z: 0.015 }, 2.4);
-    // 托著下巴想，最後攤手
-    A.to(carroll.shoulder.act.rotation, { z: 0.35, duration: 0.6, ease: 'power2.inOut' }, 0.8);
-    A.to(carroll.elbow.act.rotation, { z: 1.75, duration: 0.6, ease: 'power2.inOut' }, 0.8);
-    A.to(carroll.head.act.rotation, { z: 0.12, duration: 0.8 }, 1.0);
-    A.to(carroll.shoulder.act.rotation, { z: 1.25, duration: 0.5, ease: 'back.out(2)' }, 10.2);
-    A.to(carroll.elbow.act.rotation, { z: 0.5, duration: 0.5, ease: 'back.out(2)' }, 10.2);
-    A.to(carroll.head.act.rotation, { z: -0.1, duration: 0.5 }, 10.2);
+    // 2D 紙偶場景（nonsense2d.js）：托腮想、頭上冒出符號，10.2 秒攤手
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, nonsenseScene());
+    GLYPHS.forEach(([, at], i) => A.sfx('pop', at, { pitch: 0.8 + i * 0.12 }));
     A.sfx('boing', 10.2, { dur: 0.45, vol: 0.2 });
-    const glyphs = ['∴', '≠', 'x²', '?', 'A', 'Z', '∞'];
-    glyphs.forEach((g, i) => {
-      const a = Math.PI * (0.88 - (0.76 * i) / (glyphs.length - 1));
-      const q = new THREE.Group();
-      q.position.set(-0.3 + Math.cos(a) * 2.5, 3.85 + Math.sin(a) * 0.9, 0.3);
-      world.add(q);
-      textPlane(q, g, { font: /[A-Z]/.test(g) ? 'UnifrakturMaguntia' : 'Georgia', px: 110, color: i % 3 === 1 ? '#c4a24c' : '#e6dcc6', height: 0.7 });
-      A.pop(q, 2.0 + i * 0.6);
-      A.sfx('pop', 2.0 + i * 0.6, { pitch: 0.8 + i * 0.12 });
-      A.loop(q.position, { y: q.position.y - 0.08 }, { y: q.position.y + 0.08 }, 1.3 + (i % 3) * 0.3, 2.6 + i * 0.6);
-      A.loop(q.rotation, { z: -0.12 }, { z: 0.12 }, 1.7 + (i % 2) * 0.4, 2.6 + i * 0.6);
-    });
-    return { root };
+    return { root, illus: [il] };
   },
 
   queen(main, A) {
-    const { root, world } = stage(main);
-    ground(world);
-    A.plants(world, [[-5.6, 0.9, -0.3], [-1.4, 0.7, 0.4], [5.6, 0.9, 0.3]], 40);
-    const q = cast.queen(world, -3.3);
-    const soldiers = [cast.cardSoldier(world, 1.4, { flip: true }), cast.cardSoldier(world, 3.6, { flip: true, suit: 'spade', z: -0.1 })];
-    A.loop(q.body.idle.rotation, { z: -0.015 }, { z: 0.02 }, 2.2);
-    A.loop(q.head.idle.rotation, { z: -0.03 }, { z: 0.05 }, 1.7);
-    // 第一次指：手臂抬起、身體前傾
-    A.to(q.shoulder.act.rotation, { z: 1.3, duration: 0.4, ease: 'back.out(2)' }, 1.2);
-    A.to(q.elbow.act.rotation, { z: -0.25, duration: 0.4 }, 1.2);
-    A.to(q.body.act.rotation, { z: -0.06, duration: 0.4 }, 1.2);
+    // 2D 紙偶場景（queen2d.js）：1.2 秒抬手指士兵、3 秒卷軸降下、8.6 秒再指一次，士兵發抖
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, queenScene());
     A.sfx('fanfare', 1.0);
-    soldiers.forEach((s, i) => {
-      A.loop(s.body.idle.rotation, { z: -0.02 }, { z: 0.02 }, 1.6 + i * 0.3);
-      A.to(s.shoulder.act.rotation, { z: 0.55, duration: 0.35, ease: 'back.out(2.5)' }, 1.6 + i * 0.15);
-      A.sfx('clank', 1.8 + i * 0.15);
-    });
-    // 卷軸由上往下展開
-    const scroll = new THREE.Group();
-    scroll.position.set(-0.6, 5.2, 0.4);
-    world.add(scroll);
-    stroke(scroll, [[-1.9, 0], [1.9, 0]], 0.1, C.wood, 0.01);
-    const sheet = new THREE.Group();
-    scroll.add(sheet);
-    poly(sheet, [[-1.7, 0], [1.7, 0], [1.7, -1.6], [-1.7, -1.6]], C.parch);
-    const l1 = textPlane(sheet, 'Sentence first —', { color: '#1d1818', height: 0.5, z: 0.01 });
-    l1.position.y = -0.5;
-    const l2 = textPlane(sheet, 'verdict afterwards.', { color: '#9e2a26', height: 0.5, z: 0.01 });
-    l2.position.y = -1.08;
-    A.fromTo(sheet.scale, { y: 0.0001 }, { y: 1, duration: 1.2, ease: 'power2.out' }, 3.4);
+    for (let i = 0; i < 3; i++) A.sfx('clank', 1.8 + i * 0.15);
     A.sfx('whoosh', 3.0, { dur: 0.6, vol: 0.2, from: 1200, to: 300 });
     A.sfx('page', 3.4, { dur: 1.1, vol: 0.25 });
-    A.fromTo(scroll.position, { y: 7.0 }, { y: 5.2, duration: 0.6, ease: 'power2.out' }, 3.0);
-    // 第二次指，士兵發抖
-    A.to(q.shoulder.act.rotation, { z: 0.2, duration: 0.5, ease: 'power2.inOut' }, 5.6);
-    A.to(q.body.act.rotation, { z: 0, duration: 0.5 }, 5.6);
-    A.to(q.shoulder.act.rotation, { z: 1.45, duration: 0.3, ease: 'back.out(3)' }, 8.6);
-    A.to(q.body.act.rotation, { z: -0.1, duration: 0.3 }, 8.6);
     A.sfx('fanfare', 8.5, { short: true });
     for (let k = 0; k < 14; k++) A.sfx('tick', 8.9 + k * 0.1, { vol: 0.12, f: 1400 + (k % 2) * 600 });
-    soldiers.forEach((s) => A.fromTo(s.body.act.position, { x: -0.04 }, { x: 0.04, duration: 0.06, repeat: 23, yoyo: true, ease: 'none' }, 8.9));
-    return { root };
+    return { root, illus: [il] };
   },
 
   tea(main, A) {
-    const { root, world } = stage(main);
-    ground(world);
-    A.plants(world, [[-6.0, 0.8, -0.3], [5.8, 0.9, -0.3]], 50);
-    const ck = cast.clock(world, -4.6, 2.2, 0.1);
-    A.fromTo(ck.minute.rotation, { z: -0.18 }, { z: 0.18, duration: 0.08, repeat: 9, yoyo: true, ease: 'none' }, 6.0);
-    A.to(ck.minute.rotation, { z: 0, duration: 0.2 }, 6.8);
+    // 2D 紙偶場景（tea2d.js）：鐘停在六點，6 秒指針狂轉兩圈、鐘跳起來又彈回六點；4.2、8.6 秒三個人往右挪一個位子
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, teaScene());
     for (let k = 0.5; k < A.D; k += 1) A.sfx('tick', k, { vol: 0.07 });
-    for (let k = 0; k < 10; k++) A.sfx('tick', 6.0 + k * 0.08, { vol: 0.12 });
-    const seats = [-1.6, 0.1, 1.7];
-    const who = [
-      cast.hatter(world, 0, { z: -0.1 }),
-      cast.rabbit(world, 0, { flip: true, brown: true, coat: false, z: -0.12 }),
-      cast.girl(world, 0, { flip: true, z: -0.14 }),
-    ];
-    const lift = [-0.95, -0.95, -0.55];
-    who.forEach((w, i) => {
-      w.root.position.set(seats[i], lift[i], w.root.position.z);
-      A.loop(w.head.idle.rotation, { z: -0.05 }, { z: 0.06 }, 1.6 + i * 0.4);
-    });
-    cast.table(world, 0.2);
-    // 喝茶
-    A.to(who[0].elbow.act.rotation, { z: 0.6, duration: 0.4 }, 1.6);
-    A.to(who[0].head.act.rotation, { z: 0.15, duration: 0.4 }, 1.6);
-    A.to(who[0].elbow.act.rotation, { z: 0, duration: 0.4 }, 2.8);
+    for (let k = 0; k < 18; k++) A.sfx('tick', 6.0 + k * 0.066, { vol: 0.13, f: 1400 + (k % 2) * 600 });
+    for (let k = 0; k < 5; k++) A.sfx('pop', 6.2 + k * 0.2, { pitch: 0.5, vol: 0.22 });
+    A.sfx('boing', 7.2, { dur: 0.5, vol: 0.16 });
+    for (const k of [2.4, 10.4, 14.2]) A.sfx('tick', k, { vol: 0.12, f: 2000 });
     A.sfx('clink', 3.1);
-    A.to(who[0].head.act.rotation, { z: 0, duration: 0.4 }, 2.8);
-    // 換位子：每個人往右一格，最右邊的跳回最左邊
     for (const [k, s] of [[1, 4.2], [2, 8.6]]) {
-      who.forEach((w, i) => {
-        const x = seats[(i + k) % 3], wrap = (i + k) % 3 === 0;
-        A.to(w.root.position, { x, duration: wrap ? 0.9 : 0.6, ease: 'power1.inOut' }, s + i * 0.08);
+      for (let i = 0; i < 3; i++) {
+        const wrap = (i + k) % 3 === 0;
         A.sfx(wrap ? 'boing' : 'pop', s + i * 0.08, wrap ? { dur: 0.9, vol: 0.18 } : { pitch: 0.7, vol: 0.3 });
         A.sfx('clink', s + i * 0.08 + (wrap ? 0.9 : 0.6), { vol: 0.08 });
-        A.to(w.root.position, { y: lift[i] + (wrap ? 1.6 : 0.45), duration: (wrap ? 0.45 : 0.3), ease: 'power2.out', yoyo: true, repeat: 1 }, s + i * 0.08);
-      });
+      }
     }
-    return { root };
+    return { root, illus: [il] };
   },
 
   cheshire(main, A) {
-    const { root, world } = stage(main);
-    ground(world);
-    A.plants(world, [[-5.8, 0.9, -0.3], [-1.6, 0.7, 0.3], [5.4, 0.8, 0.3]], 60);
-    cast.tree(world, 3.4);
-    const cat = cast.cheshire(world, 1.9, 2.66, { flip: true, z: 0.05 });
-    const alice = cast.girl(world, -3.0);
-    cast.signpost(world, -0.9, -0.05);
-    A.loop(cat.tail.idle.rotation, { z: -0.25 }, { z: 0.2 }, 1.1);
-    A.loop(cat.head.idle.rotation, { z: -0.05 }, { z: 0.06 }, 1.8);
-    A.loop(alice.body.idle.rotation, { z: -0.01 }, { z: 0.01 }, 2.0);
-    A.to(alice.head.act.rotation, { z: 0.38, duration: 0.6, ease: 'power2.inOut' }, 1.4);
-    A.to(alice.head.act.rotation, { z: -0.05, duration: 0.6, ease: 'power2.inOut' }, 4.6);
-    A.to(alice.shoulder.act.rotation, { z: 1.2, duration: 0.5, ease: 'back.out(2)' }, 5.0);
-    A.to(alice.shoulder.act.rotation, { z: 0, duration: 0.5 }, 6.6);
-    A.to(alice.head.act.rotation, { z: 0.38, duration: 0.6, ease: 'power2.inOut' }, 7.4);
-    // 從尾巴開始一塊塊消失，只剩笑容
-    cat.parts.forEach((p, i) => A.sfx('vanish', 8.0 + i * 0.6));
-    A.sfx('shimmer', 9.9, { vol: 0.1 });
-    A.sfx('pop', 12.4, { pitch: 0.6, vol: 0.3 });
-    cat.parts.forEach((p, i) => A.to(p.act.scale, { x: 0.0001, y: 0.0001, duration: 0.45, ease: 'back.in(2)' }, 8.0 + i * 0.6));
-    A.to(cat.grin.scale, { x: 1.25, y: 1.25, duration: 0.5, ease: 'back.out(2)' }, 9.9);
-    A.to(cat.grin.scale, { x: 0.0001, y: 0.0001, duration: 0.6, ease: 'back.in(2)' }, 12.4);
-    return { root };
+    // 2D 紙偶場景（cheshire2d.js）：Alice 問路，貓一開口路標就轉圈；8 秒起貓從尾巴一段段消失，只剩笑容，12.4 秒笑容也消失
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, cheshireScene());
+    A.sfx('pop', 3.0, { pitch: 1.3, vol: 0.15 });
+    for (let k = 0; k < 8; k++) A.sfx('tick', 4.3 + k * 0.28 * (1 - k * 0.06), { vol: 0.1, f: 900 + k * 120 });
+    A.sfx('boing', 6.7, { dur: 0.5, vol: 0.14 });
+    // 和 cheshire2d.js 的 VANISH 同步：每一段在這個時間開始淡出
+    [8.0, 8.4, 8.8, 9.2, 9.6].forEach((t, i) => A.sfx('poof', t, { pitch: 1 + i * 0.12 }));
+    A.sfx('shimmer', 9.9, { vol: 0.06 });
+    A.sfx('pop', 12.4, { pitch: 0.6, vol: 0.15 });
+    // Alice 頭上冒問號（和 cheshire2d.js 的 QMARKS 同步），一個比一個高
+    [1.5, 4.5, 4.9, 5.3, 13.6, 14.1].forEach((t, i) => A.sfx('pop', t, { pitch: 1.5 + (i % 3) * 0.2, vol: 0.18 }));
+    return { root, illus: [il] };
   },
 
   grow(main, A) {
-    const { root, world } = stage(main);
-    ground(world);
-    A.plants(world, [[-5.6, 0.9, -0.3], [-3.6, 0.6, 0.3], [4.6, 0.8, 0.3], [6.2, 0.7, -0.3]], 70);
-    cast.door(world, 2.6);
-    cast.bottle(world, 0.7);
-    const alice = cast.girl(world, -1.0);
-    A.loop(alice.head.idle.rotation, { z: -0.05 }, { z: 0.05 }, 1.7);
-    A.to(alice.size.act.scale, { x: 2.2, y: 2.2, duration: 1.4, ease: 'power2.inOut' }, 1.8);
-    A.sfx('boing', 1.8, { dur: 1.4, up: true });
-    A.sfx('boing', 5.6, { dur: 1.4, up: false });
+    // 2D 紙偶場景（grow2d.js）：喝 DRINK ME、變得比畫面高、縮得比小門小、跑到門邊，9.6 秒變回原本大小，左右張望
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, growScene());
+    [1.0, 1.25, 1.5].forEach((t) => A.sfx('pop', t, { pitch: 0.55, vol: 0.12 }));   // 咕嚕
+    A.sfx('boing', 1.9, { dur: 1.4, up: true });
+    A.sfx('boing', 5.7, { dur: 1.3, up: false });
+    for (let t = 7.35; t < 8.9; t += 0.11) A.sfx('tick', t, { vol: 0.05, f: 2600 });   // 小碎步
+    A.sfx('pop', 8.6, { pitch: 0.7, vol: 0.12 });   // 小門打開
     A.sfx('pop', 9.6, { pitch: 0.9 });
     [11.0, 11.8, 12.6].forEach((s) => A.sfx('tick', s, { vol: 0.15, f: 2200 }));
-    A.to(alice.shoulder.act.rotation, { z: 1.0, duration: 0.4 }, 3.0);
-    A.to(alice.size.act.scale, { x: 0.28, y: 0.28, duration: 1.4, ease: 'power2.inOut' }, 5.6);
-    A.to(alice.shoulder.act.rotation, { z: 0, duration: 0.4 }, 5.6);
-    A.to(alice.size.act.scale, { x: 1, y: 1, duration: 1.0, ease: 'back.out(1.6)' }, 9.6);
-    // 左右張望：整個人轉向，再轉回來
-    A.set(alice.root.scale, { x: -1 }, 11.0);
-    A.set(alice.root.scale, { x: 1 }, 11.8);
-    A.set(alice.root.scale, { x: -1 }, 12.6);
-    return { root };
+    // 問號：清楚的高音 pop，加兩個很輕的亮音，蓋過口白也聽得到
+    A.sfx('pop', 13.9, { pitch: 1.6, vol: 0.4 });
+    A.sfx('shimmer', 13.95, { vol: 0.07, notes: [1568, 2093] });
+    return { root, illus: [il] };
   },
 
   reversal(main, A) {
@@ -303,137 +232,67 @@ const BUILD = {
     const R2 = pageTexture('right', 84, [{ type: 'text', lines: 7, cap: 'B' }, { type: 'gap', h: 30 }, { type: 'text', lines: 9 }]);
     const book = openBook(root, L.tex, R2.tex);
     const flip = flipPage(book, R1.tex, L2.tex);
-    // 插圖 A：大人說教
-    const ia = illustration(book.left, L.illus[0], { viewH: 5.6, groundFrom: 0.7 });
-    ground(ia.world, 9);
-    const q = cast.queen(ia.world, -1.5);
-    const h = cast.hatter(ia.world, 1.6, { flip: true });
-    A.loop(q.shoulder.act.rotation, { z: 0.7 }, { z: 1.35 }, 0.7, 0.6, 9);
-    A.loop(h.head.act.rotation, { z: -0.1 }, { z: 0.12 }, 0.45, 0.6, 9);
-    A.loop(h.elbow.act.rotation, { z: 0 }, { z: 0.9 }, 0.9, 0.6, 9);
-    // 插圖 B：Alice 提問（畫在翻過去那頁的背面）
-    const ib = illustration(flip.back, L2.illus[0], { viewH: 5.6, groundFrom: 0.7 });
-    ground(ib.world, 9);
-    clump(ib.world, -2.6, 85, 0.7, 0.2);
-    clump(ib.world, 2.8, 86, 0.8, 0.2);
-    const alice = cast.girl(ib.world, -0.4);
-    A.to(alice.shoulder.act.rotation, { z: 2.6, duration: 0.5, ease: 'back.out(2)' }, 10.2);
-    A.loop(alice.head.idle.rotation, { z: -0.04 }, { z: 0.14 }, 1.2, 10.2);
-    questionMarks(ib.world, A, [0.9, 1.7, 2.4], 3.0, 11.0, 0.7);
+    // 插圖 A：大人說教；插圖 B：Alice 提問（畫在翻過去那頁的背面）。都是 reversal2d.js 的 2D 紙偶書頁插圖
+    const ia = canvasIllustration(book.left, L.illus[0], lectureScene({ w: 1160, h: Math.round(1160 * L.illus[0].h / L.illus[0].w) }));
+    const ib = canvasIllustration(flip.back, L2.illus[0], askScene({ w: 1160, h: Math.round(1160 * L2.illus[0].h / L2.illus[0].w) }));
     A.fromTo(book.root.position, { y: -0.7 }, { y: 0, duration: 1.3, ease: 'power3.out' }, 0);
     turnPage(A, flip, 8.0, 1.7);
     A.sfx('whoosh', 0, { dur: 1.1, vol: 0.25 });
     A.sfx('thud', 1.0, { vol: 0.35, pitch: 0.8 });
     A.sfx('page', 8.0, { dur: 1.7 });
     A.sfx('boing', 10.2, { dur: 0.35, vol: 0.15 });
-    [11.0, 11.7, 12.4].forEach((s, i) => A.sfx('pop', s, { pitch: 1 + i * 0.25 }));
+    [11.0, 11.7, 12.4].forEach((s, i) => A.sfx('pop', s, { pitch: 1 + i * 0.25, vol: 0.4 }));
+    [14.4, 17.2, 20.0, 22.6].forEach((s) => A.sfx('pop', s, { pitch: 0.8, vol: 0.15 }));   // Alice 換姿勢
+    A.sfx('boing', 17.2, { dur: 0.4, vol: 0.12, up: false });                                // 大人被問住
+    [20.6, 21.1].forEach((s, i) => A.sfx('pop', s, { pitch: 1.4 + i * 0.2, vol: 0.35 }));   // 大人頭上的問號
     return { root, illus: [ia, ib] };
   },
 
   icons(main, A) {
-    const { root, world } = stage(main);
-    ground(world);
-    // 開場：年份從出版那年一路翻到今天，數字縮掉之後角色才一個個登場
-    const years = new THREE.Group();
-    years.position.set(0, 2.55, 0.2);
-    world.add(years);
-    const ys = ['1865', '1951', '2010', '2026'];
-    const yearPlanes = ys.map((y, i) => {
-      const m = textPlane(years, y, { font: 'Georgia', px: 160, color: i === ys.length - 1 ? '#e0c46e' : '#e6dcc6', height: 1.7 });
-      m.visible = i === 0;
-      return m;
-    });
-    const since = new THREE.Group();
-    since.position.y = -1.2;
-    years.add(since);
-    textPlane(since, '160 years & counting', { font: 'Georgia', px: 72, color: '#e0c46e', height: 0.5 });
-    stroke(since, [[-3.1, 0], [-2.3, 0]], 0.04, C.gold);
-    stroke(since, [[2.3, 0], [3.1, 0]], 0.04, C.gold);
-    // 一年一本：書越疊越高
-    const pile = new THREE.Group();
-    pile.position.set(0, 0, 0.1);
-    world.add(pile);
-    const covers = [[C.red, C.redLit], [C.blue, C.blueLit], [C.green, C.greenLit], [C.violet, C.violetLit]];
-    const books = covers.map(([c, lit], i) => {
-      const b = new THREE.Group();
-      b.position.set((i % 2 ? 0.12 : -0.1) + (i === 3 ? 0.05 : 0), i * 0.26 + 0.13, i * 0.01);
-      b.rotation.z = [0.0, -0.04, 0.05, -0.02][i];
-      pile.add(b);
-      const w = [1.7, 1.5, 1.6, 1.3][i];
-      poly(b, [[-w / 2, -0.13], [w / 2, -0.13], [w / 2, 0.13], [-w / 2, 0.13]], c);
-      poly(b, [[w / 2 - 0.12, -0.13], [w / 2, -0.13], [w / 2, 0.13], [w / 2 - 0.12, 0.13]], lit, 0.001);
-      poly(b, [[-w / 2 + 0.06, -0.09], [w / 2 - 0.16, -0.09], [w / 2 - 0.16, 0.09], [-w / 2 + 0.06, 0.09]], C.parch, -0.001);
-      stroke(b, [[-w * 0.2, 0], [w * 0.15, 0]], 0.03, C.gold, 0.002);
-      return b;
-    });
-    A.to(pile.scale, { x: 0.0001, y: 0.0001, duration: 0.4, ease: 'back.in(2)' }, 4.1);
-    A.pop(years, 0.2, 0.6);
+    // 2D 紙偶場景（icons2d.js）：書疊高、年份翻到 2026；四個角色依序從水平線彈出來做招牌動作，最後道具從上方垂下來
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, iconsScene());
     A.sfx('pop', 0.2, { pitch: 0.7, vol: 0.3 });
-    books.forEach((b, i) => {
-      const s = i ? 0.9 + i * 0.7 : 0.35;
-      A.fromTo(b.position, { y: b.position.y + 3 }, { y: b.position.y, duration: 0.45, ease: 'bounce.out' }, s);
-      A.fromTo(b.scale, { x: 0.0001 }, { x: 1, duration: 0.01 }, s);
-      A.sfx('thud', s + 0.15, { vol: 0.3, pitch: 1.3 });
-    });
-    for (let i = 1; i < ys.length; i++) {
-      const s = 0.9 + i * 0.7;
-      A.set(yearPlanes[i - 1], { visible: false }, s);
-      A.set(yearPlanes[i], { visible: true }, s);
-      A.fromTo(yearPlanes[i].scale, { y: 0.55 }, { y: 1, duration: 0.25, ease: 'back.out(3)' }, s);
-      A.sfx('tick', s, { vol: 0.2, f: 2400 });
-    }
-    A.pop(since, 3.2, 0.5);
+    [0.35, 1.6, 2.3, 3.0].forEach((s) => A.sfx('thud', s + 0.42, { vol: 0.3, pitch: 1.3 }));   // 書落下
+    [1.6, 2.3, 3.0].forEach((s) => A.sfx('tick', s, { vol: 0.2, f: 2400 }));                     // 年份翻頁
     A.sfx('shimmer', 3.2, { vol: 0.08 });
-    A.to(years.scale, { x: 0.0001, y: 0.0001, duration: 0.45, ease: 'back.in(2)' }, 4.05);
     A.sfx('whoosh', 4.05, { dur: 0.45, vol: 0.12, from: 2000, to: 400 });
-
-    const xs = [-5.0, -1.9, 1.5, 4.6];
-    const rb = cast.rabbit(world, xs[0]);
-    const cat = cast.cheshire(world, xs[1], 0.32, { z: 0.05 });
-    const ht = cast.hatter(world, xs[2], { flip: true });
-    const qn = cast.queen(world, xs[3], { flip: true });
-    const roots = [rb.root, cat.root, ht.root, qn.root];
-    roots.forEach((r, i) => {
-      A.pop(r, 4.6 + i * 1.5, 0.6, 'back.out(1.8)');
-      A.sfx('thud', 4.6 + i * 1.5, { vol: 0.45, pitch: 1.2 });
-      A.sfx('pop', 4.65 + i * 1.5, { pitch: 1 + i * 0.15 });
-      A.plants(world, [[xs[i] - 0.9, 0.6, 0.3], [xs[i] + 0.9, 0.55, -0.3]], 90 + i * 2, 4.7 + i * 1.5);
+    // 和 icons2d.js 的登場時間同步：白兔、貓、帽客、皇后
+    [4.6, 6.1, 7.6, 9.1].forEach((s, i) => {
+      A.sfx('thud', s, { vol: 0.4, pitch: 1.2 });
+      A.sfx('pop', s + 0.05, { pitch: 1 + i * 0.15 });
     });
-    // 招牌動作
-    A.loop(rb.earA.idle.rotation, { z: -0.08 }, { z: 0.08 }, 1.4);
-    A.to(rb.shoulder.act.rotation, { z: 0.9, duration: 0.4, ease: 'back.out(2)' }, 6.0);
-    A.to(rb.head.act.rotation, { z: -0.25, duration: 0.4 }, 6.0);
+    A.sfx('boing', 6.0, { dur: 0.3, vol: 0.12 });                                               // 白兔看錶嚇一跳
     for (let k = 0; k < 6; k++) A.sfx('tick', 6.4 + k * 0.5, { vol: 0.1 });
-    A.sfx('vanish', 7.2, { vol: 0.12 });
-    A.sfx('clink', 9.2);
-    A.sfx('fanfare', 10.3, { short: true, vol: 0.12 });
-    A.loop(cat.tail.idle.rotation, { z: -0.25 }, { z: 0.2 }, 1.1);
-    A.loop(cat.grin.scale, { x: 1, y: 1 }, { x: 1.15, y: 1.15 }, 0.8, 7.0);
-    A.to(ht.elbow.act.rotation, { z: 0.8, duration: 0.4, ease: 'back.out(2)' }, 9.0);
-    A.loop(ht.hat.idle.rotation, { z: -0.06 }, { z: 0.06 }, 0.6, 9.4);
-    A.to(qn.shoulder.act.rotation, { z: 1.3, duration: 0.4, ease: 'back.out(2)' }, 10.4);
-    A.loop(qn.head.idle.rotation, { z: -0.03 }, { z: 0.06 }, 1.5);
-    return { root };
+    A.sfx('poof', 7.2, { vol: 0.08, pitch: 1.2 });                                               // 貓閃一下
+    A.sfx('shimmer', 7.6, { vol: 0.05, notes: [1318.5, 1760] });                                  // 眨眼
+    A.sfx('clink', 9.0);                                                                          // 帽客舉杯
+    A.sfx('fanfare', 10.4, { short: true, vol: 0.12 });                                           // 皇后指人
+    for (let t = 17.4; t < 18.6; t += 0.1) A.sfx('tick', t, { vol: 0.05, f: 2600 });             // 白兔小跑步
+    // 道具垂下來：插畫、玩具、遊戲、電影
+    [15.6, 16.4, 17.2, 18.0].forEach((s, i) => {
+      A.sfx('whoosh', s, { dur: 0.4, vol: 0.1, from: 1800, to: 600 });
+      A.sfx('pop', s + 0.5, { pitch: 1.2 + i * 0.15, vol: 0.25 });
+    });
+    return { root, illus: [il] };
   },
 
   roles(main, A) {
-    const { root, world } = stage(main);
-    ground(world);
-    A.plants(world, [[-5.6, 0.9, -0.3], [-1.6, 0.6, 0.3], [1.6, 0.6, 0.3], [5.6, 0.9, -0.3]], 110);
-    const props = [cast.crown, cast.tallHat, cast.bunnyEars];
-    [-3.4, 0, 3.4].forEach((x, i) => {
-      const a = cast.adult(world, x, { hat: false, coat: C.grey, coatLit: C.greyLit, hair: i === 1 ? 0x6a5a4a : C.hairDark });
-      A.loop(a.body.idle.rotation, { z: -0.012 }, { z: 0.012 }, 2.1 + i * 0.3);
-      const p = props[i](a.hat.act);
-      p.position.x = -0.05;
-      A.fromTo(p.position, { y: 6 }, { y: 0, duration: 0.9, ease: 'bounce.out' }, 2.6 + i * 1.1);
-      A.sfx('whoosh', 2.4 + i * 1.1, { dur: 0.4, vol: 0.15, from: 2000, to: 500 });
-      [[0.33, 0.5], [0.67, 0.25], [0.85, 0.12]].forEach(([d, v]) => A.sfx(i === 0 ? 'clink' : 'thud', 2.6 + i * 1.1 + d * 0.9, { vol: v }));
-      A.sfx('boing', 7.6 + i * 0.2, { dur: 0.3, vol: 0.12 });
-      A.to(a.head.act.rotation, { z: 0.15, duration: 0.5, ease: 'back.out(2)' }, 7.6 + i * 0.2);
-      A.to(a.body.act.scale, { y: 1.04, duration: 0.5, ease: 'back.out(2)' }, 7.6 + i * 0.2);
+    // 2D 紙偶場景（roles2d.js）：三個一模一樣的灰外套大人，金冠、大高帽、兔耳朵掉到頭上；挺胸之後各自做出角色的招牌動作
+    const root = new THREE.Group();
+    main.add(root);
+    const il = canvasStage(root, rolesScene());
+    // 和 roles2d.js 的 ADULTS 同步：頭飾在 land 秒開始掉，落地後彈兩下
+    [2.6, 3.7, 4.8].forEach((s, i) => {
+      A.sfx('whoosh', s - 0.1, { dur: 0.4, vol: 0.15, from: 2000, to: 500 });
+      [[0.36, 0.5], [0.73, 0.25], [0.91, 0.12]].forEach(([d, v]) => A.sfx(i === 0 ? 'clink' : 'thud', s + d * 0.9, { vol: v }));
     });
-    return { root };
+    A.sfx('boing', 7.6, { dur: 0.35, vol: 0.14 });                       // 挺起胸膛
+    A.sfx('fanfare', 9.6, { short: true, vol: 0.1 });                     // 伸手指人
+    A.sfx('clink', 10.3, { vol: 0.2 });                                   // 端茶
+    for (let k = 0; k < 5; k++) A.sfx('tick', 11.0 + k * 0.5, { vol: 0.1 });   // 看懷錶
+    return { root, illus: [il] };
   },
 
   'the-end'(main, A) {
@@ -450,33 +309,13 @@ const BUILD = {
     under.position.z = -0.05;
     book.root.add(under);
 
-    // 右頁插圖：Alice 抬頭看著一個問號
-    const il = illustration(flip.front, R.illus[0], { viewH: 5.4, groundFrom: 0.6 });
-    ground(il.world, 9);
-    clump(il.world, -3.0, 125, 0.7, 0.2);
-    clump(il.world, 3.0, 126, 0.8, 0.2);
-    const alice = cast.girl(il.world, -1.2);
-    A.to(alice.head.act.rotation, { z: 0.4, duration: 0.8, ease: 'power2.inOut' }, 3.0);
-    A.loop(alice.body.idle.rotation, { z: -0.01 }, { z: 0.01 }, 2.0);
-    questionMarks(il.world, A, [1.0], 2.0, 6.0);
-
-    // 翻過去的新一頁：戴著皇冠、高帽、兔耳的大人們，頭上冒出問號（「我們是不是也成了那些大人？」）
-    const il2 = illustration(flip.back, back.illus[0], { viewH: 5.4, groundFrom: 0.5 });
-    ground(il2.world, 10);
-    clump(il2.world, -3.4, 127, 0.6, 0.2);
-    clump(il2.world, 3.4, 128, 0.6, 0.2);
-    const crowd = new THREE.Group();
-    crowd.scale.setScalar(0.95);
-    il2.world.add(crowd);
-    const props = [cast.crown, cast.tallHat, cast.bunnyEars];
-    [-2.2, 0, 2.2].forEach((x, i) => {
-      const a = cast.adult(crowd, x, { hat: false, flip: i === 2, coat: C.grey, coatLit: C.greyLit, hair: i === 1 ? 0x6a5a4a : C.hairDark });
-      props[i](a.hat.act).position.x = -0.05;
-      A.loop(a.body.idle.rotation, { z: -0.012 }, { z: 0.012 }, 2.1 + i * 0.3);
-      A.to(a.head.act.rotation, { z: [0.18, -0.12, 0.18][i], duration: 0.6, ease: 'power2.inOut' }, 17.2 + i * 0.15);
-    });
-    questionMarks(il2.world, A, [-1.1, 1.1], 3.7, 16.2, 0.55);
-    [16.2, 16.75].forEach((s, i) => A.sfx('pop', s, { pitch: 0.9 + i * 0.2 }));
+    // 右頁插圖：Alice 抬頭看著一個問號；翻過去的新一頁：同一個大人輪流換上皇冠、高帽、兔耳，頭上冒出問號
+    // （「我們是不是也成了那些大人？」）。都是 end2d.js 的 2D 紙偶書頁插圖
+    const size = (rc) => ({ w: 1160, h: Math.round(1160 * rc.h / rc.w) });
+    const il = canvasIllustration(flip.front, R.illus[0], aliceScene(size(R.illus[0])));
+    const il2 = canvasIllustration(flip.back, back.illus[0], grownupScene(size(back.illus[0])));
+    [16.2, 16.75, 19.6].forEach((s, i) => A.sfx('pop', s, { pitch: 0.9 + i * 0.2, vol: 0.35 }));   // 大人頭上的問號
+    [16.0, 16.7, 17.4, 18.1, 18.8].forEach((s, i) => A.sfx('pop', s, { pitch: 0.7 + (i % 3) * 0.12, vol: 0.15 }));   // 換頭飾（和 end2d.js 的 SWAPS 同步）
 
     A.fromTo(book.root.position, { y: -0.7 }, { y: 0, duration: 1.3, ease: 'power3.out' }, 0);
     A.to(book.root.scale, { x: 1.05, y: 1.05, duration: A.D - 6.5, ease: 'sine.inOut' }, 1.5);
@@ -484,7 +323,9 @@ const BUILD = {
     turnPage(A, flip, 13.3, 2.0);
     A.sfx('whoosh', 0, { dur: 1.1, vol: 0.25 });
     A.sfx('thud', 1.0, { vol: 0.35, pitch: 0.8 });
-    A.sfx('pop', 6.0, { pitch: 1.2 });
+    A.sfx('pop', 6.0, { pitch: 1.2, vol: 0.4 });                          // Alice 頭上的問號
+    A.sfx('shimmer', 6.05, { vol: 0.06, notes: [1568, 2093] });
+    A.sfx('pop', 9.0, { pitch: 0.8, vol: 0.15 });                         // 托腮
     A.sfx('page', 13.3, { dur: 2.0 });
     A.sfx('shimmer', A.D - 1.0, { vol: 0.1, notes: [523.3, 659.3, 784, 1046.5] });
     return { root, illus: [il, il2] };

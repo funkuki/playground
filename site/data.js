@@ -104,8 +104,8 @@ export const WORKS = [
     preview: './site/previews/alice-margins.mp4',
     styles: ['cutout'],
     date: '2026.11.09',
-    desc: '一支 TED-Ed 式的解說短片：從《愛麗絲夢遊仙境》看 IP 與故事設計。划船午後、紅心皇后、瘋帽客的茶會、只剩笑容的柴郡貓，有些幕畫在一本會翻頁的羊皮紙書上。可以拖曳時間軸，也能逐格輸出成影片。',
-    tech: ['GSAP 主時間軸 seek', '一拍二', 'Render target 書頁插圖', 'PNG 序列輸出'],
+    desc: '一支 TED-Ed 式的解說短片：從《愛麗絲夢遊仙境》看 IP 與故事設計。划船午後、紅心皇后、瘋帽客的茶會、只剩笑容的柴郡貓，角色都是剪紙紙偶，站在同一條地平線上表演，有些幕畫在一本會翻頁的羊皮紙書上。可以拖曳時間軸，也能逐格輸出成影片。',
+    tech: ['Canvas 2D 紙偶', 'gpt-image 生成部件', 'GSAP 主時間軸 seek', '一拍二', '逐格輸出'],
   },
   {
     id: 'solar-terms',
