@@ -13,7 +13,7 @@ const backIn = (x) => { x = Math.min(Math.max(x, 0), 1); const c = 1.7; return (
 // 共用：載入皇后、帽客、Alice 的部件，提供畫各個紙偶的函式（第九幕也用，舞台版投影比較深）
 export function puppets(base, shadowColor = SHADOW) {
   const qp = {}, hp = {}, ap = {}, pr = {}, QR = {}, HR = {}, AR = {};
-  const load = (dir, obj, names) => names.map(async (n) => { obj[n] = await loadImg(`${base}${dir}/${n}.png`); });
+  const load = (dir, obj, names) => names.map(async (n) => { obj[n] = await loadImg(`${base}${dir}/${n}.webp`); });
   const QH = ['stern', 'glare', 'side', 'shout', 'scowl', 'wince'], HH = ['talk', 'laugh', 'grin', 'blink', 'oh', 'sip'];
   const AP = ['ref', 'head-neutral', 'head-puzzled', 'head-surprised', 'head-blink', 'pose-raise', 'pose-think', 'pose-cross', 'pose-explain'];
   const ready = Promise.all([

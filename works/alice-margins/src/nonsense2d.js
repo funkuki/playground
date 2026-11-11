@@ -36,8 +36,8 @@ export function nonsenseScene({ base = './art/' } = {}) {
   const RIG = {};
   const ready = Promise.all([
     ...['base', 'hands', 'card-hand', 'hand-palm-up', ...HEADS.map((h) => 'head-' + h)]
-      .map(async (n) => { cp[n] = await loadImg(`${base}carroll-parts/${n}.png`); }),
-    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props3/${n}.png`); }),
+      .map(async (n) => { cp[n] = await loadImg(`${base}carroll-parts/${n}.webp`); }),
+    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props3/${n}.webp`); }),
     fetch(`${base}carroll-parts/rig.json`).then((r) => r.json()).then((j) => Object.assign(RIG, j)),
   ]);
 

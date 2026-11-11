@@ -42,9 +42,9 @@ const PROPS = ['post', 'tree', 'this', 'that', 'mush1', 'mush2', 'mush3', 'bell'
 export function cheshireScene({ base = './art/' } = {}) {
   const pr = {}, ap = {}, cp = {}, RIG = {};
   const ready = Promise.all([
-    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props6/${n}.png`); }),
-    ...ALICE.map(async (n) => { ap[n] = await loadImg(`${base}girl-parts/alice-stand/${n}.png`); }),
-    ...CATP.map(async (n) => { cp[n] = await loadImg(`${base}cheshire-parts/${n}.png`); }),
+    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props6/${n}.webp`); }),
+    ...ALICE.map(async (n) => { ap[n] = await loadImg(`${base}girl-parts/alice-stand/${n}.webp`); }),
+    ...CATP.map(async (n) => { cp[n] = await loadImg(`${base}cheshire-parts/${n}.webp`); }),
     fetch(`${base}girl-parts/alice-stand/rig.json`).then((r) => r.json()).then((j) => { RIG.alice = j; }),
     fetch(`${base}cheshire-parts/rig.json`).then((r) => r.json()).then((j) => { RIG.cat = j; }),
   ]);

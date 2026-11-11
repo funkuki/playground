@@ -36,8 +36,8 @@ const PROPS = ['wall', 'door', 'door-open', 'key', 'table', 'bottle', 'grass', '
 export function growScene({ base = './art/' } = {}) {
   const pr = {}, ap = {}, RIG = {};
   const ready = Promise.all([
-    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props7/${n}.png`); }),
-    ...ALICE.map(async (n) => { ap[n] = await loadImg(`${base}girl-parts/alice7/${n}.png`); }),
+    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props7/${n}.webp`); }),
+    ...ALICE.map(async (n) => { ap[n] = await loadImg(`${base}girl-parts/alice7/${n}.webp`); }),
     fetch(`${base}girl-parts/alice7/rig.json`).then((r) => r.json()).then((j) => { RIG.alice = j; }),
   ]);
 

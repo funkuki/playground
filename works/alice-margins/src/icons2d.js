@@ -46,10 +46,10 @@ export function iconsScene({ base = './art/' } = {}) {
   const P = puppets(base, SHADOW);
   const ready = Promise.all([
     P.ready,
-    ...RABBIT.map(async (n) => { rp[n] = await loadImg(`${base}rabbit-parts/${n}.png`); }),
-    ...CATP.map(async (n) => { cp[n] = await loadImg(`${base}cheshire-parts/${n}.png`); }),
-    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props9/${n}.png`); }),
-    ...PLANTS.map(async (n) => { pl[n] = await loadImg(`${base}props6/${n}.png`); }),
+    ...RABBIT.map(async (n) => { rp[n] = await loadImg(`${base}rabbit-parts/${n}.webp`); }),
+    ...CATP.map(async (n) => { cp[n] = await loadImg(`${base}cheshire-parts/${n}.webp`); }),
+    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props9/${n}.webp`); }),
+    ...PLANTS.map(async (n) => { pl[n] = await loadImg(`${base}props6/${n}.webp`); }),
     fetch(`${base}rabbit-parts/rig.json`).then((r) => r.json()).then((j) => { RIG.rabbit = j; }),
     fetch(`${base}cheshire-parts/rig.json`).then((r) => r.json()).then((j) => { RIG.cat = j; }),
   ]);

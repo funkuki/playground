@@ -39,8 +39,8 @@ const PLANTS = ['grass', 'fern', 'bell', 'mush1', 'sprig', 'bush-ol', 'stone2'];
 export function rolesScene({ base = './art/' } = {}) {
   const ap = {}, pl = {}, RIG = {};
   const ready = Promise.all([
-    ...[...POSES, ...HATS].map(async (n) => { ap[n] = await loadImg(`${base}adult-parts/${n}.png`); }),
-    ...PLANTS.map(async (n) => { pl[n] = await loadImg(`${base}props6/${n}.png`); }),
+    ...[...POSES, ...HATS].map(async (n) => { ap[n] = await loadImg(`${base}adult-parts/${n}.webp`); }),
+    ...PLANTS.map(async (n) => { pl[n] = await loadImg(`${base}props6/${n}.webp`); }),
     fetch(`${base}adult-parts/rig.json`).then((r) => r.json()).then((j) => Object.assign(RIG, j)),
   ]);
 

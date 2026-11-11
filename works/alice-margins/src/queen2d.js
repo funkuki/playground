@@ -27,7 +27,7 @@ const backOut = (x) => { x = Math.min(Math.max(x, 0), 1); const c = 2.4; return 
 export function queenScene({ base = './art/' } = {}) {
   const qp = {}, sp = {}, pr = {};
   const QR = {}, SR = {};
-  const load = (dir, obj, names) => names.map(async (n) => { obj[n] = await loadImg(`${base}${dir}/${n}.png`); });
+  const load = (dir, obj, names) => names.map(async (n) => { obj[n] = await loadImg(`${base}${dir}/${n}.webp`); });
   const ready = Promise.all([
     ...load('queen-parts', qp, ['base', 'arm', 'crown-front', ...QHEADS.map((h) => 'head-' + h)]),
     ...load('soldier-parts', sp, ['base', 'banner', ...SHEADS.map((h) => 'head-' + h), ...S.cards.map((c) => 'card-' + c)]),

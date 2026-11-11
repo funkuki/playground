@@ -50,11 +50,11 @@ const CLOCK = { x: 235, s: 1.0, face: [116, 185] };
 export function teaScene({ base = './art/' } = {}) {
   const pr = {}, pp = {}, RIG = {};
   const ready = Promise.all([
-    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props5/${n}.png`); }),
+    ...PROPS.map(async (n) => { pr[n] = await loadImg(`${base}props5/${n}.webp`); }),
     ...ORDER.flatMap((n) => {
       const c = CAST[n]; pp[n] = {};
       const files = ['base', ...c.heads.map((h) => 'head-' + h), ...(c.hands ? ['hands'] : [])];
-      return files.map(async (f) => { pp[n][f] = await loadImg(`${base}${c.dir}/${f}.png`); });
+      return files.map(async (f) => { pp[n][f] = await loadImg(`${base}${c.dir}/${f}.webp`); });
     }),
     fetch(`${base}hatter-parts/rig.json`).then((r) => r.json()).then((j) => { RIG.hatter = j; }),
     fetch(`${base}hare-parts/rig.json`).then((r) => r.json()).then((j) => { RIG.hare = j; }),

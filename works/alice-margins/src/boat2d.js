@@ -63,8 +63,8 @@ export function boatScene({ base = './art/', book = false, crop = null, out = nu
   const img = {}, mp = {}, gp = {};
   let RIG, GRIG;
   const ready = Promise.all([
-    ...BOAT.map(async (n) => { img[n] = await loadImg(`${base}boat-layers/${n}.png`); }),
-    ...MATH.map(async (n) => { mp[n] = await loadImg(`${base}math-parts/${n}.png`); }),
+    ...BOAT.map(async (n) => { img[n] = await loadImg(`${base}boat-layers/${n}.webp`); }),
+    ...MATH.map(async (n) => { mp[n] = await loadImg(`${base}math-parts/${n}.webp`); }),
     fetch(`${base}math-parts/rig.json`).then((r) => r.json()).then((j) => { RIG = j; }),
     fetch(`${base}girl-parts/rig.json`).then((r) => r.json()).then((j) => {
       GRIG = j;
@@ -72,7 +72,7 @@ export function boatScene({ base = './art/', book = false, crop = null, out = nu
         gp[n] = {};
         const files = ['base', ...Object.keys(R.heads).map((h) => 'head-' + h)];
         if (R.hands) files.push('hands');
-        return files.map(async (k) => { gp[n][k] = await loadImg(`${base}girl-parts/${n}/${k}.png`); });
+        return files.map(async (k) => { gp[n][k] = await loadImg(`${base}girl-parts/${n}/${k}.webp`); });
       }));
     }),
   ]);

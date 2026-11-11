@@ -42,7 +42,7 @@ export function grownupScene({ base = './art/', w = 1160, h = 1200 } = {}) {
   const pc = pageCanvas(w, h), g = pc.g, LINE = h - 70;
   const ap = {}, RIG = {};
   const ready = Promise.all([
-    ...['proud', 'stand', 'crown', 'tophat', 'ears'].map(async (n) => { ap[n] = await loadImg(`${base}adult-parts/${n}.png`); }),
+    ...['proud', 'stand', 'crown', 'tophat', 'ears'].map(async (n) => { ap[n] = await loadImg(`${base}adult-parts/${n}.webp`); }),
     fetch(`${base}adult-parts/rig.json`).then((r) => r.json()).then((j) => Object.assign(RIG, j)),
   ]);
   const S = 0.64, X = 560;
