@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <!-- 首頁分享縮圖（public/site/og.jpg）的排版頁，只在 dev server 用：npm run dev 後用 headless Chrome 以 1200×630 截圖 -->
+    <title>og hero</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;800&family=Noto+Sans+TC:wght@400;500&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="../site/site.css" />
+    <style>
+      html, body { width: 1200px; height: 630px; overflow: hidden; }
+      .og {
+        width: 1200px; height: 630px; display: grid; grid-template-columns: 1fr 560px; gap: 16px; align-items: center;
+        padding: 0 24px 0 76px;
+      }
+      .og h1 { font-size: 78px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.02; margin: 0; }
+      .og .eyebrow { margin-bottom: 22px; }
+      .og .lead { margin: 28px 0 0; max-width: 25em; font-size: 20px; }
+      .og .site { display: flex; align-items: center; gap: 10px; margin-top: 40px; font: 500 17px var(--sans); color: var(--ink2); }
+      .og .site img { width: 30px; height: 30px; }
+      .og .site span { color: var(--muted); font-weight: 400; }
+      #hero-canvas { width: 560px; height: 560px; display: block; }
+    </style>
+  </head>
+  <body>
+    <div class="og">
+      <div>
+        <p class="eyebrow">Three.js styles &amp; examples</p>
+        <h1>Tiny worlds,<br />many styles.</h1>
+        <p class="lead">收錄精選的 three.js 靈感，拆解作法並重製動態範例，一起學習創作 3D 互動世界！</p>
+        <p class="site"><img src="../site/logo.svg" alt="" />sui's playground <span>· sui.funkuki.com/playground</span></p>
+      </div>
+      <canvas id="hero-canvas"></canvas>
+    </div>
+    <script type="module">
+      import { initHero } from '../site/hero.js';
+      initHero(document.getElementById('hero-canvas'));
+    </script>
+  </body>
+</html>
