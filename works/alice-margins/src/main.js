@@ -2,7 +2,6 @@
 // 畫面只由「第幾格」決定：frame → seek(time) → render，所以可以拖曳、也可以逐格輸出成 PNG 序列。
 import * as THREE from 'three';
 import gsap from 'gsap';
-import { zipSync } from 'fflate';
 import FILM from './scenes.json';
 import { C, WIND } from './kit.js';
 import { buildFilm } from './scenes.js';
@@ -239,65 +238,22 @@ async function start() {
       .map((c, i) => `${i + 1}\n${srtTime(Math.max(c.start, t0) - t0)} --> ${srtTime(Math.min(c.end, t1) - t0)}\n${c[key]}\n`)
       .join('\n');
   }
-  const toBlob = () => new Promise((r) => canvas.toBlob(r, 'image/png'));
-  let exporting = false;
-
-  async function exportRange(f0, f1, label) {
-    if (exporting) return;
-    let dir = null;
-    const files = {};
-    if ('showDirectoryPicker' in window) {
-      try { dir = await window.showDirectoryPicker({ id: 'alice-margins-frames', mode: 'readwrite' }); }
-      catch { return; }
-    }
-    exporting = true;
+  // 相機：把目前這一格用 1920×1080 畫一次，存成 PNG
+  $('snap').addEventListener('click', () => {
     setPlaying(false);
-    document.body.classList.add('exporting');
-    const status = $('status');
-    const write = async (name, data) => {
-      if (dir) {
-        const fh = await dir.getFileHandle(name, { create: true });
-        const ws = await fh.createWritable();
-        await ws.write(data);
-        await ws.close();
-      } else {
-        files[name] = new Uint8Array(await new Blob([data]).arrayBuffer());
-      }
-    };
-    try {
-      setDrawSize(OUT_W, OUT_H, 1);
-      for (let f = f0; f < f1; f++) {
-        renderFrame(f);
-        await write(`frame_${String(f - f0).padStart(5, '0')}.png`, await toBlob());
-        status.textContent = `輸出中 ${f - f0 + 1} / ${f1 - f0}`;
-      }
-      await write('narration.en.srt', srt(f0 / FPS, f1 / FPS));
-      await write('narration.zh-TW.srt', srt(f0 / FPS, f1 / FPS, 'zh'));
-      status.textContent = '輸出音軌…';
-      await trackReady;
-      if (track) await write('soundtrack.wav', wav(track, f0 / FPS, f1 / FPS));
-      if (!dir) {
-        const zip = zipSync(files, { level: 0 });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(new Blob([zip], { type: 'application/zip' }));
-        a.download = `alice-margins-${label}.zip`;
-        a.click();
-        setTimeout(() => URL.revokeObjectURL(a.href), 10000);
-      }
-      status.textContent = `已輸出 ${f1 - f0} 格`;
-    } catch (err) {
-      status.textContent = `輸出失敗：${err.message}`;
-    } finally {
-      exporting = false;
-      document.body.classList.remove('exporting');
-      layout();
-    }
-  }
-  $('export-scene').addEventListener('click', () => {
-    const s = sceneAt(timeOf(frame));
-    exportRange(Math.round(s.start * FPS), Math.round(s.end * FPS), s.id);
+    setDrawSize(OUT_W, OUT_H, 1);
+    renderFrame(frame);
+    const name = `alice-margins-${sceneAt(timeOf(frame)).id}-${String(frame).padStart(4, '0')}.png`;
+    canvas.toBlob((blob) => {
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = name;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+      $('status').textContent = `已存截圖 ${name}`;
+    }, 'image/png');
+    layout();
   });
-  $('export-all').addEventListener('click', () => exportRange(0, FRAMES, 'full'));
 
   // ---------- 說明視窗 ----------
   const info = $('info');

@@ -4,11 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>頁緣仙境 Down the Margin · sui's playground</title>
-    <meta name="description" content="用剪紙紙偶劇場的風格，講《愛麗絲夢遊仙境》為什麼能流行一百六十年。Canvas 2D 紙偶加 GSAP 主時間軸，可以拖曳、也能逐格輸出成影片。" />
+    <meta name="description" content="用剪紙紙偶劇場的風格，講《愛麗絲夢遊仙境》為什麼能流行一百六十年。Canvas 2D 紙偶加 GSAP 主時間軸，可以拖曳、逐格看，也能存下任一格的截圖。" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="sui's playground" />
     <meta property="og:title" content="頁緣仙境 Down the Margin · sui's playground" />
-    <meta property="og:description" content="用剪紙紙偶劇場的風格，講《愛麗絲夢遊仙境》為什麼能流行一百六十年。Canvas 2D 紙偶加 GSAP 主時間軸，可以拖曳、也能逐格輸出成影片。" />
+    <meta property="og:description" content="用剪紙紙偶劇場的風格，講《愛麗絲夢遊仙境》為什麼能流行一百六十年。Canvas 2D 紙偶加 GSAP 主時間軸，可以拖曳、逐格看，也能存下任一格的截圖。" />
     <meta property="og:url" content="https://sui.funkuki.com/playground/works/alice-margins/" />
     <meta property="og:image" content="https://sui.funkuki.com/playground/site/covers/alice-margins.jpg" />
     <meta property="og:image:width" content="1200" />
@@ -63,7 +63,7 @@
       .group { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
       .row2 { grid-column: 1 / -1; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; }
       #status { color: var(--gold); min-width: 0; }
-      body.exporting .bar button, body.exporting .bar select, body.exporting #scrub { pointer-events: none; opacity: .5; }
+      #snap { width: 30px; padding: 0; display: grid; place-items: center; }
       @media (max-width: 720px) {
         .bar { grid-template-columns: auto 1fr; }
         .bar .clock { grid-column: 2; }
@@ -127,8 +127,9 @@
           <button id="t-twos" type="button" aria-pressed="true">一拍二</button>
           <button id="t-grain" type="button" aria-pressed="false">顆粒</button>
           <button id="t-sound" type="button" aria-pressed="true">聲音</button>
-          <button id="export-scene" type="button">輸出這一幕 PNG</button>
-          <button id="export-all" type="button">輸出全片 PNG</button>
+          <button id="snap" type="button" aria-label="存這一格的截圖" title="存這一格的截圖">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 8h3l2-3h6l2 3h3v11H4z" /><circle cx="12" cy="13" r="3.5" /></svg>
+          </button>
         </div>
       </div>
     </div>
@@ -141,7 +142,7 @@
         <h1 id="info-title">Down the Margin</h1>
         <p class="sub">頁緣仙境 · Flat Cut-out Animation · Three.js + GSAP</p>
         <p>
-          用中世紀手抄本頁緣的扁平剪紙風格，做一支 TED-Ed 式的解說短片：從《愛麗絲夢遊仙境》看 IP 與故事設計。故事來自 sui 的 Notion 筆記，英文口白由英國腔女聲朗讀，並附字幕。
+          用中世紀手抄本頁緣的扁平剪紙風格，做一支 TED-Ed 式的解說短片。故事來自 sui 的 Notion 筆記，英文口白由英國腔女聲朗讀，並附字幕。
         </p>
 
         <h2>畫風</h2>
