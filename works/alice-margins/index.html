@@ -151,10 +151,6 @@
           <li><strong>決定論</strong>：所有亂數都用有 seed 的 rng，顆粒也跟著格數跳，同一格每次輸出都一樣。</li>
         </ul>
 
-        <h2>輸出影片</h2>
-        <p>按「輸出這一幕」或「輸出全片」，選一個資料夾，會寫入 1920×1080 的 <code>frame_00000.png</code>⋯ 、音軌 <code>soundtrack.wav</code> 和中英字幕檔 <code>narration.en.srt</code>、<code>narration.zh-TW.srt</code>（不支援選資料夾的瀏覽器會下載 zip）。再用 ffmpeg 合成：</p>
-        <pre>ffmpeg -framerate 24 -i frame_%05d.png -i soundtrack.wav -i narration.en.srt -i narration.zh-TW.srt -map 0:v -map 1:a -map 2:s -map 3:s -c:v libx264 -pix_fmt yuv420p -crf 16 -c:a aac -b:a 192k -c:s mov_text -metadata:s:s:0 language=eng -metadata:s:s:1 language=chi -shortest alice-margins.mp4</pre>
-        <p>上傳 YouTube 時，把兩個 .srt 分別加成英文和中文（台灣）字幕軌，觀眾就能自己切換。</p>
         <p>網址加上 <code>#queen</code>、<code>#tea</code> 這類場景名稱，可以直接從那一幕開始。</p>
       </div>
     </div>
