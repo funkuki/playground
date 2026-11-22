@@ -95,6 +95,19 @@ export const STYLES = [
 
 export const WORKS = [
   {
+    id: 'pixel-shop-pv',
+    title: 'このまちのおみせ',
+    subtitle: '像素遊戲宣傳影片',
+    en: 'Pixel Game Promo Video',
+    href: './works/pixel-shop-pv/',
+    cover: './site/covers/pixel-shop-pv.jpg',
+    preview: './site/previews/pixel-shop-pv.mp4',
+    styles: ['pixel'],
+    date: '2026.11.22',
+    desc: '虛構經營模擬遊戲《このまちのおみせ》的 35 秒宣傳影片。放學後，五位像素女孩把沒有客人的老商店街一間一間重新開張：佈置書店、畫室和花店，客人上門、店鋪升級，四季過去，最後在聖誕市集大盛況。配樂是瀏覽器即時合成的八位元音樂。',
+    tech: ['320×180 整數倍放大', '精靈圖表', 'frame(t) 決定論動畫', 'Web Audio 合成配樂', '逐格輸出'],
+  },
+  {
     id: 'alice-margins',
     title: 'Down the Margin',
     subtitle: '頁緣仙境',

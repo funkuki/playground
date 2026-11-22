@@ -12,6 +12,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(root, 'index.html'),
+        'pixel-shop-pv': resolve(root, 'works/pixel-shop-pv/index.html'),
         'pixel-flower-shop': resolve(root, 'works/pixel-flower-shop/index.html'),
         'toon-greenhouse-cafe': resolve(root, 'works/toon-greenhouse-cafe/index.html'),
         'toon-dusk-flower-shop': resolve(root, 'works/toon-dusk-flower-shop/index.html'),

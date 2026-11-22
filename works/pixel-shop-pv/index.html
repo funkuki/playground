@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>このまちのおみせ 像素遊戲宣傳影片 · sui's playground</title>
+    <meta name="description" content="虛構經營模擬遊戲《このまちのおみせ》的 35 秒宣傳影片。放學後，五位像素女孩把沒有客人的老商店街一間一間重新開張。" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="sui's playground" />
+    <meta property="og:title" content="このまちのおみせ 像素遊戲宣傳影片 · sui's playground" />
+    <meta property="og:description" content="虛構經營模擬遊戲《このまちのおみせ》的 35 秒宣傳影片。放學後，五位像素女孩把沒有客人的老商店街一間一間重新開張。" />
+    <meta property="og:url" content="https://sui.funkuki.com/playground/works/pixel-shop-pv/" />
+    <meta property="og:image" content="https://sui.funkuki.com/playground/site/covers/pixel-shop-pv.jpg" />
+    <meta property="og:image:width" content="1600" />
+    <meta property="og:image:height" content="1000" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <style>
+      html, body { margin: 0; height: 100%; background: #17131c; overflow: hidden; }
+      #stage { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+      #wrap { position: relative; line-height: 0; }
+      canvas { image-rendering: pixelated; image-rendering: crisp-edges; display: block; cursor: pointer; }
+      #play {
+        position: absolute; left: 50%; top: 50%; width: 72px; height: 72px; margin: -36px 0 0 -36px;
+        border: 0; border-radius: 0; background: #fbf1dc; cursor: pointer; padding: 0;
+        box-shadow: 0 0 0 4px #2a2233, 6px 6px 0 4px rgba(0,0,0,.35);
+      }
+      #play::before {
+        content: ""; position: absolute; left: 27px; top: 20px;
+        border-style: solid; border-width: 16px 0 16px 24px; border-color: transparent transparent transparent #2a2233;
+      }
+      /* 重播按鈕放在畫面下方，不擋住結尾卡 */
+      #play.again { top: 100%; width: 36px; height: 36px; margin: 14px 0 0 -18px; box-shadow: 0 0 0 3px #2a2233; }
+      #play.again::before {
+        left: 9px; top: 9px; width: 10px; height: 10px; border: 4px solid #2a2233; border-right-color: transparent; border-radius: 50%;
+      }
+      #hint {
+        position: fixed; left: 12px; bottom: 10px; color: #a79fae;
+        font: 12px/1.4 ui-monospace, Menlo, monospace; opacity: .8; pointer-events: none;
+      }
+
+      /* ---------- 右上角 info 圖示 ---------- */
+      #info-btn {
+        position: fixed; top: 14px; right: 14px; width: 36px; height: 36px; padding: 0;
+        display: grid; place-items: center; color: #4a4640;
+        background: rgba(244, 242, 238, 0.85); border: 1px solid #b8b2a8; border-radius: 50%;
+        cursor: pointer; transition: background .15s, transform .15s;
+      }
+      #info-btn:hover { background: #fff; transform: scale(1.06); }
+      #info-btn:focus-visible, #info-close:focus-visible { outline: 2px solid #e8a23a; outline-offset: 2px; }
+
+      /* ---------- 說明視窗：半透明 + 背景模糊 ---------- */
+      #info {
+        position: fixed; inset: 0; z-index: 20; display: grid; place-items: center; padding: 16px;
+        background: rgba(20, 16, 26, 0.4);
+        opacity: 0; pointer-events: none; transition: opacity .2s;
+      }
+      #info.open { opacity: 1; pointer-events: auto; }
+      #info-panel {
+        position: relative; box-sizing: border-box; width: min(560px, 100%); max-height: calc(100vh - 32px);
+        overflow-y: auto; padding: 28px 28px 24px;
+        color: #3a3632; font: 14px/1.75 "PingFang TC", "Noto Sans TC", system-ui, sans-serif;
+        background: rgba(251, 246, 236, 0.9);
+        -webkit-backdrop-filter: blur(14px) saturate(1.1); backdrop-filter: blur(14px) saturate(1.1);
+        border: 1px solid rgba(255, 255, 255, 0.7); border-radius: 14px;
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35);
+        transform: translateY(8px) scale(.98); transition: transform .2s;
+      }
+      #info.open #info-panel { transform: none; }
+      #info-panel h1 { margin: 0 0 2px; font-size: 20px; letter-spacing: .02em; }
+      #info-panel .sub { margin: 0 0 18px; color: #7a746c; font-size: 13px; }
+      #info-panel h2 { margin: 20px 0 6px; font-size: 13px; letter-spacing: .08em; color: #b9741c; }
+      #info-panel p { margin: 0 0 8px; }
+      #info-panel ul { margin: 0; padding-left: 1.2em; }
+      #info-panel li { margin: 2px 0; }
+      #info-panel code {
+        font: 12px ui-monospace, Menlo, monospace; padding: 1px 5px;
+        background: rgba(185, 116, 28, 0.12); border-radius: 4px;
+      }
+      #info-close {
+        position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; padding: 0;
+        display: grid; place-items: center; color: #6a6660;
+        background: transparent; border: 0; border-radius: 50%; cursor: pointer;
+      }
+      #info-close:hover { background: rgba(0, 0, 0, 0.06); }
+    </style>
+      <link rel="icon" href="../../favicon.ico" sizes="any" />
+      <link rel="icon" href="../../site/logo.svg" type="image/svg+xml" />
+      <link rel="apple-touch-icon" href="../../apple-touch-icon.png" />
+      <link rel="manifest" href="../../site.webmanifest" />
+      <meta name="theme-color" content="#17131c" />
+    <link rel="stylesheet" href="../../site/back.css" />
+  </head>
+  <body>
+    <a class="lab-back" href="../../#works" aria-label="回到 sui's playground 範例列表">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+      <img src="../../site/logo.svg" width="20" height="20" alt="" /><b>sui's playground</b>
+    </a>
+
+    <div id="stage"><div id="wrap">
+      <canvas id="pv" width="320" height="180"></canvas>
+      <button id="play" aria-label="播放"></button>
+    </div></div>
+    <div id="hint">點畫面播放（有聲音）　35 秒</div>
+
+    <button id="info-btn" aria-label="範例說明" aria-haspopup="dialog" aria-controls="info">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r="0.6" fill="currentColor" />
+      </svg>
+    </button>
+
+    <div id="info" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+      <div id="info-panel">
+        <button id="info-close" aria-label="關閉說明">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+        </button>
+        <h1 id="info-title">このまちのおみせ — 像素遊戲宣傳影片</h1>
+        <p class="sub">Pixel Game Promo Video · Three.js + Web Audio</p>
+
+        <h2>這是什麼</h2>
+        <p>
+          一支 35 秒的虛構遊戲宣傳影片。遊戲《このまちのおみせ》（這條街上的店）是日常經營模擬：放學後，五位女孩把沒有客人的老商店街一間一間重新開張。遊戲和角色設定都是虛構的。
+        </p>
+        <p>
+          影片先是遊戲標題畫面，接著用同一套流程介紹書店、畫室和花店（佈置、開店、客人上門、升級），中間穿插商店街地圖、季節快轉和五人點名，最後在聖誕市集收尾。
+        </p>
+
+        <h2>作法簡介</h2>
+        <ul>
+          <li><strong>角色</strong>：先用 AI 影像模型生成像素風的模擬圖，再用程式重建一致的網格和色盤，重繪成每格 64 × 64 px 的精靈圖表。</li>
+          <li><strong>場景</strong>：320 × 180 px，直接用程式畫出來，和角色用同一個像素比例；家具拆成圖層，依底部位置決定誰擋住誰。</li>
+          <li><strong>畫面</strong>：<code>OrthographicCamera</code> 加一支自訂著色器的平面精靈，直接以 320 × 180 繪製，再用最近鄰取樣整數倍放大。鏡頭只用 1、2、3 倍跳格切換。</li>
+          <li><strong>時間軸</strong>：每一格畫面只由時間算出，所以可以逐格擷取、輸出成影片。</li>
+          <li><strong>介面與文字</strong>：面板、對話框和升級橫幅是程式用色塊畫的；日文字用開源像素字型 Cubic 11 預先畫成圖片。</li>
+          <li><strong>配樂</strong>：用 Web Audio 即時合成的八位元音樂，120 BPM，不使用音檔。</li>
+        </ul>
+      </div>
+    </div>
+
+    <script type="module" src="../../site/work-nav.js"></script>
+    <script type="module" src="./src/info.js"></script>
+    <!-- 影片本體是一般（非模組）腳本，放在 public/works/pixel-shop-pv/，原始檔在 pixel 專案的 game_pv/ -->
+    <script src="./three.min.js"></script>
+    <script src="./assets.js"></script>
+    <script src="./audio.js"></script>
+    <script src="./pv.js"></script>
+  </body>
+</html>
