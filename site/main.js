@@ -1,4 +1,4 @@
-import { STYLES, WORKS } from './data.js';
+import { STYLES, WORKS, OTHERS } from './data.js';
 import { initHero } from './hero.js';
 
 const styleById = Object.fromEntries(STYLES.map((s) => [s.id, s]));
@@ -51,29 +51,41 @@ filters.innerHTML = [{ id: 'all', name: '全部' }, ...active]
   .map((s) => `<button class="chip" role="tab" data-filter="${s.id}" aria-selected="${s.id === 'all'}">${esc(s.name)}</button>`)
   .join('');
 
-// ---------- 作品卡 ----------
-const workGrid = document.getElementById('work-grid');
-workGrid.innerHTML = WORKS.map((w, i) => `
-  <a class="work-card reveal" style="--i:${i % 2}" href="${w.href}" data-styles="${w.styles.join(' ')}">
+// ---------- 作品卡（Examples 和 Others 共用） ----------
+// Examples 的標籤是風格；Others 的標籤是製作工具和類型
+const card = (w, i, tags, attrs = '') => `
+  <a class="work-card reveal" style="--i:${i % 2}" href="${w.href}"${attrs}>
     <div class="work-cover">
       <img src="${w.cover}" alt="${esc(w.title)} ${esc(w.subtitle)} 截圖" loading="lazy" />
       ${w.preview ? `<video src="${w.preview}" muted loop playsinline preload="none" aria-hidden="true"></video>` : ''}
-      <span class="play">進入範例 →</span>
+      <span class="play">${w.tool ? '觀看作品' : '進入範例'} →</span>
     </div>
     <div class="work-meta">
-      <span class="work-badge"><img src="${w.cover}" alt="" loading="lazy" /></span>
+      <span class="work-badge"><img src="${w.cover}" alt="" loading="lazy"${w.badgeFocus ? ` style="transform-origin:${w.badgeFocus}"` : ''} /></span>
       <div>
         <h3>${esc(w.title)}<small>${esc(w.subtitle)}</small></h3>
-        <div class="chips">${w.styles.map((id) => `<span class="chip"><i class="dot" style="background:${styleById[id].color}"></i>${esc(styleById[id].name)}</span>`).join('')}</div>
+        <div class="chips">${tags}</div>
       </div>
     </div>
     <p class="work-desc">${esc(w.desc)}</p>
     <div class="work-tech">${w.tech.map((t) => `<span>${esc(t)}</span>`).join('')}<span>${w.date}</span></div>
-  </a>`).join('');
+  </a>`;
+const dotChip = (color, label) => `<span class="chip"><i class="dot" style="background:${color}"></i>${esc(label)}</span>`;
+
+const workGrid = document.getElementById('work-grid');
+workGrid.innerHTML = WORKS.map((w, i) =>
+  card(w, i, w.styles.map((id) => dotChip(styleById[id].color, styleById[id].name)).join(''), ` data-styles="${w.styles.join(' ')}"`),
+).join('');
+
+const otherGrid = document.getElementById('other-grid');
+otherGrid.innerHTML = OTHERS.map((w, i) =>
+  card(w, i, `<span class="chip chip-tool"><i class="dot" style="background:${w.toolColor}"></i>made with <b>${esc(w.tool)}</b></span>`
+    + (w.kind ? `<span class="chip">${esc(w.kind)}</span>` : '')),
+).join('');
 
 // 滑過卡片播放預覽短片，離開就停下並倒回開頭（只在有滑鼠的裝置）
 if (matchMedia('(hover: hover)').matches) {
-  workGrid.querySelectorAll('.work-card').forEach((card) => {
+  document.querySelectorAll('.work-card').forEach((card) => {
     const video = card.querySelector('video');
     if (!video) return;
     video.addEventListener('playing', () => card.classList.add('previewing'));
@@ -86,6 +98,42 @@ if (matchMedia('(hover: hover)').matches) {
   });
 }
 
+// ---------- 分頁：超過 PER_PAGE 篇就分頁（篩選後的篇數也算） ----------
+const PER_PAGE = 10;
+const pageArrow = (d) => `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"
+  stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="${d}" /></svg>`;
+
+function makePager(grid, label) {
+  const nav = document.createElement('nav');
+  nav.className = 'pager';
+  nav.setAttribute('aria-label', `${label}分頁`);
+  grid.after(nav);
+  let page = 1;
+
+  // 只算沒被篩選掉的卡片；換頁時捲回區塊開頭
+  function render(next = page, scroll = false) {
+    const cards = [...grid.children].filter((c) => !c.hidden);
+    const pages = Math.max(1, Math.ceil(cards.length / PER_PAGE));
+    page = Math.min(Math.max(1, next), pages);
+    cards.forEach((c, i) => c.classList.toggle('off-page', Math.floor(i / PER_PAGE) + 1 !== page));
+    nav.hidden = pages <= 1;
+    nav.innerHTML = pages <= 1 ? '' : `
+      <button type="button" data-page="${page - 1}" aria-label="上一頁" ${page === 1 ? 'disabled' : ''}>${pageArrow('M15 5l-7 7 7 7')}</button>
+      ${Array.from({ length: pages }, (_, i) => i + 1).map((n) =>
+        `<button type="button" data-page="${n}" ${n === page ? 'aria-current="page"' : ''} aria-label="第 ${n} 頁">${n}</button>`).join('')}
+      <button type="button" data-page="${page + 1}" aria-label="下一頁" ${page === pages ? 'disabled' : ''}>${pageArrow('M9 5l7 7-7 7')}</button>`;
+    if (scroll) grid.closest('section').scrollIntoView();
+  }
+  nav.addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-page]');
+    if (b && !b.disabled && b.getAttribute('aria-current') !== 'page') render(Number(b.dataset.page), true);
+  });
+  render();
+  return render;
+}
+const workPager = makePager(workGrid, 'Examples ');
+makePager(otherGrid, 'Others ');
+
 function setFilter(id) {
   filters.querySelectorAll('.chip').forEach((c) => c.setAttribute('aria-selected', String(c.dataset.filter === id)));
   styleGrid.querySelectorAll('.style-card:not(.soon)').forEach((c) => {
@@ -96,6 +144,7 @@ function setFilter(id) {
   workGrid.querySelectorAll('.work-card').forEach((c) => {
     c.hidden = id !== 'all' && !c.dataset.styles.split(' ').includes(id);
   });
+  workPager(1);
 }
 filters.addEventListener('click', (e) => {
   const b = e.target.closest('[data-filter]');

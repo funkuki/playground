@@ -225,3 +225,40 @@ export const WORKS = [
     tech: ['MeshToonMaterial', 'Inverted hull', 'Emissive + Bloom', 'CanvasTexture'],
   },
 ];
+
+// 不是 three.js 做的小作品（影片、SVG、其他工具渲染的實驗）。和 WORKS 分開，首頁放在 Others 區塊。
+// 作品頁放在 others/<id>/，一樣要在 vite.config.js 加入口；tool 是卡片上標出的製作工具。
+export const OTHERS = [
+  {
+    id: 'mini-dressing-room',
+    title: '迷你更衣室',
+    subtitle: '分層像素紙娃娃',
+    en: 'Layered Pixel Paper Doll',
+    href: './others/mini-dressing-room/',
+    cover: './site/covers/mini-dressing-room.jpg',
+    preview: './site/previews/mini-dressing-room.mp4',
+    tool: 'Python + Canvas',
+    toolColor: '#a8687a',
+    badgeFocus: '24.5% 48%', // 對準試穿鏡裡小人的臉
+    kind: '互動',
+    date: '2026.11.24',
+    desc: '幫 18×24 格的像素小人換裝。膚色、眼睛、衣服、頭髮、配件五張圖層共用同一套畫格，疊起來就是一個角色；八個方向、三種視角，還能切到貓和狗。',
+    tech: ['分層精靈圖', '共用畫格', '合成時才加輪廓線', '八方向 × 三視角', 'Canvas 2D'],
+  },
+  {
+    id: 'cat-pounce',
+    title: '撲螢',
+    subtitle: '像素貓追螢火蟲',
+    en: 'Pixel Splat Short · Cats & a Firefly',
+    href: './others/cat-pounce/',
+    cover: './site/covers/cat-pounce.jpg',
+    preview: './site/previews/cat-pounce.mp4',
+    tool: 'ink studio',
+    toolColor: '#22c7b8',
+    badgeFocus: '47% 21%', // 圓形小圖示放大 2.4 倍時的 transform-origin（預設正中央），這裡對準藍貓的臉
+    kind: '影片',
+    date: '2026.11.23',
+    desc: '一支 18 秒的像素短片。圓胖的英短藍貓追撲螢火蟲，每一腳落地都盪開螢光水紋；奶油小貓從草叢冒出頭，爆出一圈亮粉，兩隻滾在地上扭打，最後一前一後跑出畫面。',
+    tech: ['SDF 雕塑', '像素 Gaussian splat', '跳躍表驅動動畫', 'CLI 逐格渲染', 'ffmpeg'],
+  },
+];

@@ -254,7 +254,7 @@ button.chip:focus-visible, .btn:focus-visible, .nav a:focus-visible, .work-card:
   margin-top: 96px; padding: 32px 36px; border-radius: 24px; background: var(--card);
   display: grid; grid-template-columns: 220px 1fr; gap: 8px 40px;
 }
-.lab-note h3 { grid-row: span 2; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
+.lab-note h3 { grid-row: span 3; font-size: 28px; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; }
 .lab-note p { margin: 0 0 10px; font-size: 15.5px; color: #3a3a3a; }
 .kbd {
   display: inline-grid; place-items: center; width: 22px; height: 22px; border-radius: 50%;
@@ -323,3 +323,23 @@ button.chip:focus-visible, .btn:focus-visible, .nav a:focus-visible, .work-card:
   .btn { padding: 12px 24px; font-size: 16px; }
   .footer { flex-direction: column; gap: 6px; padding: 24px 16px 32px; }
 }
+
+/* ---------- Others：卡片標出製作工具 ---------- */
+.chip-tool { color: #6b6767; }
+.chip-tool b { font-weight: 600; color: var(--fg); }
+
+/* ---------- 分頁：超過 10 篇時出現在卡片下方 ---------- */
+.work-card.off-page { display: none; }
+.pager { display: flex; justify-content: center; align-items: center; gap: 4px; margin-top: 56px; }
+.pager[hidden] { display: none; }
+.pager button {
+  min-width: 40px; height: 40px; padding: 0 12px; display: grid; place-items: center;
+  font: 500 15px/1 var(--sans); font-variant-numeric: tabular-nums; color: var(--fg);
+  background: transparent; border: 0; border-radius: 999px; cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+.pager button:hover:not([disabled]):not([aria-current]) { background: var(--chip); }
+.pager button[aria-current="page"] { background: var(--ink2); color: #fff; cursor: default; }
+.pager button[disabled] { color: #cfcac2; cursor: default; }
+.pager button:focus-visible { outline: 2px solid var(--fg); outline-offset: 2px; }
+@media (max-width: 680px) { .pager { margin-top: 40px; } }
