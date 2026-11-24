@@ -1,0 +1,624 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>迷你牧場 等角像素小農場 · sui's playground</title>
+<meta name="description" content="等角視角的像素小牧場：農舍、菜園、圍著柵欄的牧場和池塘。操作 18×24 格的像素小人走動、採收、摸摸動物，到農舍的迷你更衣室換裝，換好的造型會帶回牧場。" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="sui's playground" />
+<meta property="og:title" content="迷你牧場 等角像素小農場 · sui's playground" />
+<meta property="og:description" content="等角視角的像素小牧場：農舍、菜園、圍著柵欄的牧場和池塘。操作 18×24 格的像素小人走動、採收、摸摸動物，到農舍的迷你更衣室換裝，換好的造型會帶回牧場。" />
+<meta property="og:url" content="https://sui.funkuki.com/playground/others/mini-farm/" />
+<meta property="og:image" content="https://sui.funkuki.com/playground/site/covers/mini-farm.jpg" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="750" />
+<meta name="twitter:card" content="summary_large_image" />
+<link rel="icon" href="../../favicon.ico" sizes="any" />
+<link rel="icon" href="../../site/logo.svg" type="image/svg+xml" />
+<link rel="apple-touch-icon" href="../../apple-touch-icon.png" />
+<link rel="manifest" href="../../site.webmanifest" />
+<meta name="theme-color" content="#2f6a48" />
+<link rel="stylesheet" href="../../site/back.css" />
+<style>
+  /* 俐方體 11 號（Cubic 11，SIL OFL 授權，見 fonts/Cubic_11_OFL.txt）。字級只用 12 的倍數。 */
+  @font-face { font-family:"Cubic 11"; src:url("fonts/Cubic_11.woff2") format("woff2"); font-display:swap; }
+  :root { --ink:#6b4a5a; --cream:#fdf3e0; --cream-hi:#fffaf0; --mauve-lo:#8a5264; --gold:#f8cf6a; }
+  * { box-sizing:border-box; }
+  html, body { margin:0; height:100%; overflow:hidden; background:#2f6a48; font-synthesis:none;
+               font:400 12px/1.5 "Cubic 11", "PingFang TC", "Noto Sans TC", sans-serif; color:var(--ink); }
+  h1, b, button { font-weight:400; }
+  #game { position:fixed; left:0; top:0; image-rendering:pixelated; touch-action:none; cursor:pointer; }
+
+  /* 像素圓角方塊：九宮格邊框圖，圖在腳本裡依顏色產生（和迷你更衣室同一套） */
+  .box { border:8px solid transparent; border-image:var(--b-panel) 4 fill / 8px; }
+  .shadow { filter:drop-shadow(0 4px 0 rgba(40,60,40,.35)); }
+  .ico { display:inline-block; background:center / contain no-repeat; flex:none; image-rendering:pixelated; }
+  .hud { position:fixed; z-index:5; display:flex; gap:10px; align-items:center; }
+  #tl { left:14px; top:14px; flex-wrap:wrap; }
+  #tr { right:14px; top:14px; }
+  .logo { border-image-source:var(--b-ribbon); color:var(--cream-hi); padding:0 12px 2px 8px; display:flex; gap:10px; align-items:center; }
+  .logo h1 { margin:0; font-size:24px; line-height:1.25; letter-spacing:.1em; text-shadow:0 2px 0 var(--mauve-lo); }
+  .coin { border-image-source:var(--b-dark); color:var(--cream-hi); display:flex; gap:8px; align-items:center; padding:0 10px 0 4px; letter-spacing:.08em; }
+  button, .btn { font:inherit; color:var(--ink); cursor:pointer; text-decoration:none; background:none; border-radius:0;
+                 border:8px solid transparent; border-image:var(--b-btn) 4 fill / 8px; padding:2px 8px; line-height:1.5;
+                 display:inline-flex; gap:8px; align-items:center; filter:drop-shadow(0 4px 0 rgba(40,60,40,.35)); }
+  button:hover, .btn:hover { border-image-source:var(--b-btn-hover); }
+  button:active, .btn:active { transform:translateY(2px); filter:drop-shadow(0 2px 0 rgba(40,60,40,.35)); }
+  button:focus-visible, .btn:focus-visible { outline:3px solid #fff; outline-offset:2px; }
+  #dress { border-image-source:var(--b-btn-on); }
+
+  /* 靠近可以互動的東西時出現的提示，也可以直接點 */
+  #act { position:fixed; z-index:5; left:50%; bottom:76px; transform:translateX(-50%); white-space:nowrap; }
+  #act:active { transform:translate(-50%, 2px); }
+  #act[hidden] { display:none; }
+  .key { flex:none; min-width:39px; height:24px; padding:0 6px; display:grid; place-items:center; color:var(--cream-hi); background:#8a6272; }
+  .float { position:fixed; z-index:4; pointer-events:none; color:#fff; text-shadow:1px 0 0 #2a2130, -1px 0 0 #2a2130, 0 1px 0 #2a2130, 0 -1px 0 #2a2130;
+           animation:rise .9s steps(9) forwards; }
+  @keyframes rise { to { transform:translateY(-36px); opacity:0; } }
+
+  footer { position:fixed; z-index:5; left:0; right:0; bottom:0; background:#cfb1d0; border-top:3px solid #b893b8; box-shadow:inset 0 3px 0 #e6d0e6;
+           padding:10px 16px 12px; display:flex; flex-wrap:wrap; gap:6px 0; justify-content:center; color:#5a3d4a; }
+  footer span { display:flex; gap:8px; align-items:center; padding:0 16px; position:relative; white-space:nowrap; }
+  footer span + span::before { content:''; position:absolute; left:-2px; top:50%; width:3px; height:18px; margin-top:-9px; background:#ecdcec; box-shadow:3px 0 0 #bb9abb; }
+  footer b { padding:0 6px; color:var(--cream-hi); background:#8a6272; }
+  @media (max-width:640px) { footer span + span::before { display:none; } footer span { padding:0 8px; } .logo h1 { font-size:12px; } }
+
+  /* ---------- playground 外框 ---------- */
+  #info-btn, #info-close { border:0; border-image:none; filter:none; padding:0; display:grid; place-items:center; cursor:pointer; transform:none; }
+  #info-btn { position:fixed; top:14px; right:14px; z-index:10; width:36px; height:36px; color:#4a4640;
+              background:rgba(255,255,255,.88); border-radius:50%; box-shadow:0 2px 14px rgba(0,0,0,.12); transition:background .15s; }
+  #info-btn:hover { background:#fff; }
+  #info-btn:focus-visible, #info-close:focus-visible { outline:2px solid #a8687a; outline-offset:2px; }
+  #info { position:fixed; inset:0; z-index:20; display:grid; place-items:center; padding:16px; background:rgba(60,40,70,.45);
+          opacity:0; pointer-events:none; transition:opacity .2s; }
+  #info.open { opacity:1; pointer-events:auto; }
+  #info-panel { position:relative; width:min(560px, 100%); max-height:calc(100vh - 32px); overflow-y:auto; padding:28px 28px 24px;
+                color:#3a3632; font:14px/1.75 "PingFang TC", "Noto Sans TC", system-ui, sans-serif; background:rgba(253,246,236,.94);
+                -webkit-backdrop-filter:blur(14px) saturate(1.1); backdrop-filter:blur(14px) saturate(1.1);
+                border:1px solid rgba(255,255,255,.7); border-radius:14px; box-shadow:0 12px 40px rgba(0,0,0,.35);
+                transform:translateY(8px) scale(.98); transition:transform .2s; }
+  #info.open #info-panel { transform:none; }
+  #info-panel h1 { margin:0 0 2px; font-size:20px; font-weight:700; letter-spacing:.02em; text-shadow:none; }
+  #info-panel .sub { margin:0 0 18px; color:#7a746c; font-size:13px; }
+  #info-panel h2 { margin:20px 0 6px; font-size:13px; font-weight:700; letter-spacing:.08em; color:#a8687a; }
+  #info-panel p { margin:0 0 8px; }
+  #info-panel ul { margin:0; padding-left:1.2em; }
+  #info-panel li { margin:2px 0; }
+  #info-panel strong { font-weight:700; }
+  #info-panel a { color:#a8687a; }
+  #info-close { position:absolute; top:12px; right:12px; width:32px; height:32px; color:#6a6660; background:transparent; border-radius:50%; }
+  #info-close:hover { background:rgba(0,0,0,.06); }
+
+  #tl, #tr { top:64px; }
+</style>
+</head>
+<body>
+<a class="lab-back" href="../../#others" aria-label="回到 sui's playground 作品列表">
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7" /></svg>
+  <img src="../../site/logo.svg" width="20" height="20" alt="" /><b>sui's playground</b>
+</a>
+<button id="info-btn" aria-label="作品說明" aria-haspopup="dialog" aria-controls="info">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="9.5" /><path d="M12 11v6" /><circle cx="12" cy="7.5" r="0.6" fill="currentColor" />
+  </svg>
+</button>
+<div id="info" role="dialog" aria-modal="true" aria-labelledby="info-title" aria-hidden="true">
+  <div id="info-panel">
+    <button id="info-close" aria-label="關閉說明">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
+    </button>
+    <h1 id="info-title">迷你牧場 — 等角像素小農場</h1>
+    <p class="sub">Isometric Pixel Farm · made with Python + Canvas</p>
+
+    <h2>這是什麼</h2>
+    <p>
+      一座等角視角的像素小牧場，有農舍、水井、菜園、圍著柵欄的牧場和池塘。操作一個 18×24 格的像素小人在裡面走動，後面跟著一隻狗或貓。
+    </p>
+    <p>
+      菜園裡的紅蘿蔔、高麗菜、番茄和南瓜會慢慢長大，成熟了可以採收換金幣。右上角的按鈕或農舍門口可以進<strong>迷你更衣室</strong>幫小人和寵物換裝，換好的造型會帶回牧場。
+    </p>
+
+    <h2>靈感來源</h2>
+    <p>
+      小人的做法來自 <a href="https://www.threads.com/share/DrJ_poyVN" target="_blank" rel="noopener">@tinyslowlife 在 Threads 分享的像素角色作法</a>：把角色拆成膚色、眼睛、衣服、頭髮、配件五張圖層，像紙娃娃一樣疊起來，所有圖層共用同一套走路和跑步的畫格。詳細說明在更衣室那一頁的 i 裡。
+    </p>
+
+    <h2>操作</h2>
+    <ul>
+      <li>方向鍵或 WASD 移動，按住 Shift 跑步；也可以點地面讓小人走過去</li>
+      <li>空白鍵：採收成熟的作物、摸摸動物、在農舍門口進更衣室（靠近時下方會出現提示，也可以直接點）</li>
+    </ul>
+
+    <h2>作法簡介</h2>
+    <ul>
+      <li><strong>等角地圖</strong>：一格地磚是 32×16 的菱形。草地、泥土路、菜園和池塘是逐像素算出來的一整張底圖。</li>
+      <li><strong>同一種像素大小</strong>：場景和小人用同樣大小的像素，小人以 1:1 放進去，整個畫面一起以整數倍、最近鄰放大。</li>
+      <li><strong>物件是程式畫的</strong>：樹、柵欄、水井、作物、綿羊和小雞都是用矩形和橢圓畫在小畫布上，再加一圈輪廓線；農舍是把牆面和屋頂逐點投影到畫面上。</li>
+      <li><strong>前後遮擋</strong>：每一格把物件依深度由遠到近畫。農舍佔了好幾格，所以分成農舍後面的、農舍、農舍前面的三段。</li>
+      <li><strong>移動</strong>：固定每 1/60 秒走一步，每步剛好移動整數個像素；鏡頭直接跟著小人取整後的位置，所以捲動時不會抖。</li>
+      <li><strong>共用造型</strong>：小人用更衣室斜俯視那一組圖層，造型存在瀏覽器裡，兩頁讀同一份。</li>
+    </ul>
+  </div>
+</div>
+
+
+<canvas id="game"></canvas>
+
+<div class="hud" id="tl">
+  <div class="logo box shadow"><span class="ico" data-ico="barn" data-c="#fdf3e0" data-s="2"></span><h1>迷你牧場</h1></div>
+  <div class="coin box shadow"><span class="ico" data-ico="coin" data-c="#f8cf6a" data-s="2"></span><b id="coins">0</b></div>
+</div>
+<div class="hud" id="tr">
+  <a class="btn" id="dress" href="dressing-room.html?from=farm"><span class="ico" data-ico="hanger" data-c="#6b4a5a" data-s="2"></span>迷你更衣室</a>
+</div>
+<button id="act" hidden><b class="key">空白鍵</b><span id="actlabel"></span></button>
+<footer>
+  <span><b>方向鍵</b>或<b>WASD</b>移動，也可以點地面</span>
+  <span><b>Shift</b>跑步</span>
+  <span><b>空白鍵</b>採收、摸摸動物、進門</span>
+</footer>
+
+<script src="data.js"></script>
+<script src="pets/data.js"></script>
+<script>
+// ---------- 介面用的像素圖（和迷你更衣室同一套做法） ----------
+const svgUrl = s => `url("data:image/svg+xml,${encodeURIComponent(s)}")`;
+function box(fill, border, hi, lo) {      // 12×12 的圓角方塊，四邊各 4 格當九宮格的邊
+  return svgUrl(`<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' shape-rendering='crispEdges'>` +
+    `<path fill='${border}' d='M2 0h8v1h1v1h1v8h-1v1h-1v1h-8v-1h-1v-1h-1v-8h1v-1h1z'/>` +
+    `<path fill='${fill}' d='M2 1h8v1h1v8h-1v1h-8v-1h-1v-8h1z'/>` +
+    `<path fill='${hi}' d='M2 1h8v1h-8z'/><path fill='${lo}' d='M2 10h8v1h-8z'/></svg>`);
+}
+const BOXES = {
+  panel: ['#fdf3e0', '#b08a8a', '#fffaf0', '#efdcc0'], ribbon: ['#a8687a', '#6b4a5a', '#c28a98', '#8a5264'],
+  dark: ['#8a6272', '#6b4a5a', '#a37c8a', '#75505f'], btn: ['#fffaf0', '#8a6272', '#ffffff', '#efdcc0'],
+  'btn-hover': ['#ffffff', '#8a6272', '#ffffff', '#f4e6cf'], 'btn-on': ['#f8cf6a', '#8a6272', '#fde6a0', '#e0a840'],
+};
+for (const k in BOXES) document.documentElement.style.setProperty('--b-' + k, box(...BOXES[k]));
+function bitmap(rows, colors) {            // 文字點陣轉成 SVG；colors 是字元對顏色
+  const w = Math.max(...rows.map(r => r.length));
+  let s = `<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${rows.length}' shape-rendering='crispEdges'>`;
+  rows.forEach((r, y) => [...r].forEach((ch, x) => { if (colors[ch]) s += `<rect x='${x}' y='${y}' width='1' height='1' fill='${colors[ch]}'/>`; }));
+  return { url: svgUrl(s + '</svg>'), w, h: rows.length };
+}
+const ICONS = {
+  hanger: ['....##...', '...#..#..', '.....#...', '....#....', '...###...', '.##...##.', '#.......#', '#########'],
+  coin: ['..#####..', '.#######.', '###ooo###', '###o#####', '###o#####', '###ooo###', '.#######.', '..#####..'],
+  barn: ['....#....', '...###...', '..#####..', '.#######.', '#########', '#.#####.#', '#.#...#.#', '#.#...#.#', '###...###'],
+};
+for (const e of document.querySelectorAll('[data-ico]')) {
+  const b = bitmap(ICONS[e.dataset.ico], { '#': e.dataset.c, o: '#e0a840' }), s = +e.dataset.s;
+  e.style.backgroundImage = b.url; e.style.width = b.w * s + 'px'; e.style.height = b.h * s + 'px';
+}
+
+// ---------- 小工具 ----------
+const $ = id => document.getElementById(id);
+const OUT = '#2a2130';                                     // 輪廓線，和角色同一個顏色
+const R = (c, col, x, y, w, h) => { c.fillStyle = col; c.fillRect(x, y, w, h); };
+function blob(c, col, cx, cy, rx, ry) {                    // 橢圓形色塊，一列一列畫
+  for (let dy = -ry; dy <= ry; dy++) { const hw = Math.round(rx * Math.sqrt(1 - (dy * dy) / ((ry + .5) * (ry + .5)))); R(c, col, cx - hw, cy + dy, hw * 2, 1); }
+}
+const mk = (w, h, draw) => { const cv = Object.assign(document.createElement('canvas'), { width: w, height: h }); draw(cv.getContext('2d')); return cv; };
+// 沿外形加一圈輪廓線：剪影往四個方向各移一格、塗成深色，再把原圖疊上去（和角色的做法一樣）
+const outlined = (src, col = OUT) => mk(src.width + 2, src.height + 2, c => {
+  for (const [dx, dy] of [[0, 1], [2, 1], [1, 0], [1, 2]]) c.drawImage(src, dx, dy);
+  c.globalCompositeOperation = 'source-in'; R(c, col, 0, 0, src.width + 2, src.height + 2);
+  c.globalCompositeOperation = 'source-over'; c.drawImage(src, 1, 1);
+});
+const grid = (rows, colors) => mk(Math.max(...rows.map(r => r.length)), rows.length, c =>
+  rows.forEach((r, y) => [...r].forEach((ch, x) => { if (colors[ch]) R(c, colors[ch], x, y, 1, 1); })));
+const flip = src => mk(src.width, src.height, c => { c.translate(src.width, 0); c.scale(-1, 1); c.drawImage(src, 0, 0); });
+function hash(x, y) {                                      // 固定的雜湊，同一格每次都得到同一個 0–1 的數
+  let n = Math.imul(x | 0, 374761393) + Math.imul(y | 0, 668265263); n = Math.imul(n ^ (n >>> 13), 1274126177);
+  return ((n ^ (n >>> 16)) >>> 0) / 4294967296;
+}
+const store = { get(k, d) { try { return JSON.parse(localStorage.getItem(k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} } };
+
+// ---------- 地圖 ----------
+// 等角投影：一格是 32×16 的菱形，世界座標 (i, j) 對到畫面 ((i - j) × 16, (i + j) × 8)，高度 z 直接往上減。
+// i 往右下、j 往左下。一個場景像素等於一個角色像素，角色以 1:1 放進去。
+const N = 36, S = 4, OX = N * 16;                          // 地圖 36×36 格；S 是外圍多留的樹林，下面的座標都先寫成不含 S 的
+const iso = (i, j) => [(i - j) * 16, (i + j) * 8];
+const HOUSE = { i0: 7 + S, i1: 11 + S, j0: 6 + S, j1: 9 + S };
+const DOOR = [11.55 + S, 7.5 + S];
+const PASTURE = { i0: 5, i1: 12, j0: 13, j1: 20 }, GATE = [12, 16];
+const GARDEN = { i0: 16, i1: 21, j0: 9, j1: 13 };
+const POND = [19.5, 18.5, 2.4];
+const playable = (i, j) => i >= 4 && j >= 4 && i < 24 && j < 24;
+// 池塘是圓的，不照格子：用到中心的距離判斷（i、j 是連續的世界座標）
+const inPond = (i, j, pad = 0) => Math.hypot(i - S - POND[0], j - S - POND[1]) < POND[2] + pad;
+function type(wi, wj) {                                    // 地面種類：g 草地、p 泥土路、s 菜園的土、m 牧草
+  const i = wi - S, j = wj - S;
+  if ((j === 7 && i >= 11 && i <= 18) || (i === 14 && j >= 7 && j <= 21) || (j === 16 && i >= 12 && i <= 14) || (j === 11 && i === 15) || (i === 18 && j === 8)) return 'p';
+  if (i >= GARDEN.i0 && i <= GARDEN.i1 && j >= GARDEN.j0 && j <= GARDEN.j1) return 's';
+  if (i >= PASTURE.i0 && i <= PASTURE.i1 && j >= PASTURE.j0 && j <= PASTURE.j1) return 'm';
+  return 'g';
+}
+const isFence = (wi, wj) => { const i = wi - S, j = wj - S, P = PASTURE;
+  return i >= P.i0 && i <= P.i1 && j >= P.j0 && j <= P.j1 && (i === P.i0 || i === P.i1 || j === P.j0 || j === P.j1) && !(i === GATE[0] && j === GATE[1]); };
+const solid = new Set();                                   // 被樹、水井、乾草佔住的格子
+const key = (i, j) => i * 100 + j;
+function blocked(i, j) {
+  const ti = Math.floor(i), tj = Math.floor(j);
+  if (!playable(ti - S, tj - S)) return true;
+  if (ti >= HOUSE.i0 && ti < HOUSE.i1 && tj >= HOUSE.j0 && tj < HOUSE.j1) return true;
+  return inPond(i, j, .05) || isFence(ti, tj) || solid.has(key(ti, tj));
+}
+
+// 地面一次畫好存起來。每個像素的顏色由地面種類和固定的雜湊決定；路、土、水的邊緣遇到別種地面時加一圈深色。
+const TILE = {
+  g: { base: [0x8c, 0xc4, 0x74], lo: [0x7a, 0xb5, 0x64], hi: [0xa0, 0xd4, 0x88] },
+  m: { base: [0xa8, 0xd8, 0x8c], lo: [0x94, 0xca, 0x7a], hi: [0xbc, 0xe4, 0xa0] },
+  p: { base: [0xe3, 0xc5, 0x90], lo: [0xd2, 0xae, 0x78], hi: [0xee, 0xd6, 0xa8], rim: [0xb8, 0x92, 0x60] },
+  s: { base: [0xa9, 0x73, 0x4c], lo: [0x8f, 0x5e, 0x3d], hi: [0xb9, 0x83, 0x5a], rim: [0x7a, 0x4e, 0x33] },
+  w: { base: [0x6d, 0xb8, 0xe2], lo: [0x5a, 0xa6, 0xd6], hi: [0x9b, 0xd3, 0xf0], rim: [0x4a, 0x8f, 0xc0], sand: [0xee, 0xdc, 0xb0] },
+};
+const ground = mk(N * 32, N * 16, c => {
+  const im = c.createImageData(N * 32, N * 16), d = im.data;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+    const t = type(i, j), T = TILE[t], x0 = (i - j) * 16 - 16 + OX, y0 = (i + j) * 8;
+    for (let y = 0; y < 16; y++) for (let x = 0; x < 32; x++) {
+      const e = Math.abs(x - 15.5) / 16 + Math.abs(y - 7.5) / 8;
+      if (e > 1) continue;
+      const r = hash(x0 + x, y0 + y);
+      let col = r < .07 ? T.lo : r > .93 ? T.hi : T.base;
+      if (t === 's' && Math.floor((y / 16 - (x - 16) / 32 + 1) * 4) % 2) col = T.lo;               // 菜園的田壟，沿 i 方向
+      if (T.rim && e > .86) {                              // 邊緣：看這一側的鄰格是不是同一種地面
+        const n = x < 16 ? (y < 8 ? type(i - 1, j) : type(i, j + 1)) : (y < 8 ? type(i, j - 1) : type(i + 1, j));
+        if (n !== t) col = T.rim;
+      }
+      const X = x0 + x - OX + .5, Y = y0 + y + .5, pd = Math.hypot(X / 32 + Y / 16 - S - POND[0], Y / 16 - X / 32 - S - POND[1]) - POND[2];
+      if (pd < .22) { const W = TILE.w; col = pd > 0 ? W.sand : pd > -.14 ? W.rim : pd > -.3 ? W.hi : hash((x0 + x) / 3, y0 + y) > .9 ? W.hi : r < .07 ? W.lo : W.base; }   // 池塘：沙岸、深色水邊、淺水
+      const k = ((y0 + y) * N * 32 + x0 + x) * 4;
+      d[k] = col[0]; d[k + 1] = col[1]; d[k + 2] = col[2]; d[k + 3] = 255;
+    }
+  }
+  c.putImageData(im, 0, 0);
+  for (let i = S + 4; i < S + 24; i++) for (let j = S + 4; j < S + 24; j++) {                         // 草地上零星的小花和草葉
+    const t = type(i, j), r = hash(i * 7, j * 13), [x, y] = iso(i + .5, j + .5), fx = x + OX + Math.round(hash(i, j) * 14 - 7), fy = y + Math.round(hash(j, i) * 6 - 3);
+    if ((t !== 'g' && t !== 'm') || inPond(i + .5, j + .5, .7)) continue;
+    if (r < .16) { const p = r < .08 ? '#fffaf0' : '#fbd3da'; R(c, p, fx - 1, fy, 3, 1); R(c, p, fx, fy - 1, 1, 3); R(c, '#f8cf6a', fx, fy, 1, 1); }
+    else if (r < .5) { R(c, '#6fae60', fx, fy, 1, 2); R(c, '#6fae60', fx + 2, fy + 1, 1, 1); }
+  }
+});
+const gctx = ground.getContext('2d');
+const groundShadow = (i, j, rx, ry) => { const [x, y] = iso(i, j); blob(gctx, '#74ad60', x + OX, y, rx, ry); };
+
+// ---------- 場景物件 ----------
+// 每件各自畫在一張小畫布上（一格一色），再加輪廓線。ax、ay 是圖上對到地面站位的那一點。
+const statics = [];
+const put = (ti, tj, spr, ax, ay, block = true) => { statics.push({ i: ti + .5, j: tj + .5, spr, ax, ay }); if (block) solid.add(key(ti, tj)); };
+
+const treeRound = outlined(mk(26, 36, c => {
+  R(c, '#8a5a3c', 11, 22, 4, 13); R(c, '#6b432e', 11, 22, 1, 13); R(c, '#a8754e', 14, 22, 1, 13); R(c, '#8a5a3c', 9, 34, 8, 1); R(c, '#6b432e', 9, 35, 8, 1);
+  blob(c, '#3f8a4c', 13, 13, 12, 12); blob(c, '#57a556', 12, 11, 10, 9); blob(c, '#79c268', 10, 8, 6, 4);
+  for (const [x, y] of [[6, 14], [15, 9], [18, 14], [9, 18], [14, 17], [20, 10], [4, 10]]) { R(c, '#79c268', x, y, 2, 1); R(c, '#3f8a4c', x + 1, y + 1, 2, 1); }
+  for (const [x, y] of [[8, 6], [12, 4], [6, 9]]) R(c, '#a0d884', x, y, 2, 1);
+}));
+const treePine = outlined(mk(22, 40, c => {
+  R(c, '#8a5a3c', 10, 31, 3, 8); R(c, '#6b432e', 10, 31, 1, 8);
+  for (let t = 0; t < 4; t++) for (let r = 0; r < 12; r++) {
+    const hw = Math.max(1, Math.round((10 - t * 2) * (r + 1) / 12)), y = 22 - t * 7 + r;
+    R(c, r === 11 ? '#2f6a48' : '#3a7d54', 11 - hw, y, hw * 2, 1); if (r < 11) R(c, '#55a268', 11, y, Math.max(1, hw - 1), 1);
+  }
+}));
+const bush = outlined(mk(16, 11, c => { blob(c, '#3f8a4c', 8, 6, 8, 4); blob(c, '#57a556', 7, 5, 6, 3); blob(c, '#79c268', 6, 3, 3, 1);
+  for (const [x, y] of [[4, 6], [10, 4], [12, 7]]) R(c, '#e2574c', x, y, 2, 2); }));
+const well = outlined(mk(18, 24, c => {
+  R(c, '#8a5a3c', 3, 6, 2, 10); R(c, '#8a5a3c', 13, 6, 2, 10); R(c, '#6b432e', 4, 8, 10, 1); R(c, '#6b432e', 9, 9, 1, 3); R(c, '#d8c8a0', 8, 11, 3, 3);
+  for (let r = 0; r < 6; r++) { const hw = 3 + Math.round(r * 1.2); R(c, r === 5 ? '#a2423c' : '#c9584c', 9 - hw, r, hw * 2, 1); } R(c, '#e8887a', 7, 0, 4, 1);
+  R(c, '#a8a098', 2, 15, 14, 8); R(c, '#c8c0b8', 2, 14, 14, 2); R(c, '#4f7a9c', 4, 14, 10, 1); R(c, '#8a8278', 2, 22, 14, 1);
+  for (const [x, y] of [[4, 18], [9, 17], [13, 19], [6, 20], [11, 21]]) R(c, '#8a8278', x, y, 3, 1);
+}));
+const hay = outlined(mk(16, 12, c => { R(c, '#e8c860', 0, 2, 16, 10); R(c, '#f4dc88', 0, 0, 16, 3); R(c, '#c8a040', 0, 11, 16, 1);
+  for (const x of [4, 10]) R(c, '#c8a040', x, 0, 2, 12); for (const [x, y] of [[1, 5], [7, 7], [13, 4], [7, 3]]) R(c, '#f4dc88', x, y, 2, 1); }));
+
+// 柵欄：每一格一根木樁，朝有柵欄的鄰格各伸出半段橫桿
+function fencePiece(ti, tj) {
+  return mk(34, 24, c => {
+    const cx = 17, cy = 20;
+    for (const [di, dj, sx, sy] of [[-1, 0, -1, -1], [0, -1, 1, -1], [1, 0, 1, 1], [0, 1, -1, 1]]) {
+      if (!isFence(ti + di, tj + dj)) continue;
+      for (let t = 0; t <= 16; t++) for (const z of [5, 10]) {
+        const x = cx + sx * t - (sx < 0 ? 1 : 0), y = cy + sy * Math.floor(t / 2) - z;
+        R(c, '#e3ae80', x, y, 1, 1); R(c, '#c98a5a', x, y + 1, 1, 1); R(c, '#a66d3f', x, y + 2, 1, 1);
+      }
+    }
+    R(c, '#c98a5a', cx - 2, cy - 14, 3, 15); R(c, '#e3ae80', cx - 2, cy - 14, 1, 14); R(c, '#a66d3f', cx, cy - 13, 1, 14); R(c, '#e3ae80', cx - 2, cy - 15, 3, 1); R(c, OUT, cx - 2, cy + 1, 3, 1);
+  });
+}
+
+// 農舍：依投影把每個面取樣畫出來。左牆在 j = dj、山牆（有門）在 i = di，屋脊沿 i 方向。
+const HD = { di: HOUSE.i1 - HOUSE.i0, dj: HOUSE.j1 - HOUSE.j0, H: 22, Rf: 17 };
+const HAX = HD.dj * 16 + 8, HAY = HD.H + HD.Rf + 14;       // 農舍圖上對到 (i0, j0) 地面那一點
+const house = outlined(mk((HD.di + HD.dj) * 16 + 16, (HD.di + HD.dj) * 8 + HD.H + HD.Rf + 18, c => {
+  const { di, dj, H, Rf } = HD, jm = dj / 2;
+  const px = (a, b, z, col) => R(c, col, Math.round((a - b) * 16 + HAX), Math.round((a + b) * 8 - z + HAY), 1, 1);
+  const surf = (u0, u1, du, v0, v1, dv, f) => { for (let u = u0; u <= u1; u += du) for (let v = v0; v <= v1; v += dv) { const p = f(u, v); if (p) px(...p); } };
+  const win = (u, z, u0, u1, z0, z1) => {                  // 牆上的窗戶：木框、十字窗格、玻璃反光
+    if (u < u0 || u > u1 || z < z0 || z > z1) return null;
+    const pu = (u - u0) * 16, pw = (u1 - u0) * 16;
+    if (pu < 1 || pu > pw - 1 || z < z0 + 1 || z > z1 - 1) return '#8a5a3c';
+    if (Math.abs(pu - pw / 2) < .6 || Math.abs(z - (z0 + z1) / 2) < .6) return '#fffaf0';
+    return pu + (z - z0) < pw * .55 ? '#a8d8f0' : '#c8e8f8';
+  };
+  // 左牆（背光）：石頭牆基、橫木板、兩扇窗
+  surf(0, di, 1 / 40, 0, H, .5, (a, z) => [a, dj, z,
+    z < 3 ? (Math.floor(a * 16 / 5 + Math.floor(z / 2)) % 2 ? '#a8a098' : '#8a8278')
+    : win(a, z, .55, 1.45, 8, 17) || win(a, z, 2.45, 3.35, 8, 17) || (z % 4 < 1 ? '#c9b48a' : '#e6d2aa')]);
+  // 山牆（受光）：門、圓窗，上緣是屋簷的邊
+  surf(0, dj, 1 / 40, 0, H + Rf, .5, (b, z) => {
+    const top = H + Rf * (1 - Math.abs(b - jm) / jm);
+    if (z > top) return null;
+    let col = z < 3 ? (Math.floor(b * 16 / 5 + Math.floor(z / 2)) % 2 ? '#c8c0b8' : '#a8a098') : z % 4 < 1 ? '#e0cc9c' : '#f8e8c4';
+    if (top - z < 2.5) col = '#a2423c';
+    const pd = (b - jm) * 16;                              // 離牆面中線幾個像素
+    if (Math.abs(pd) < 6.5 && z < 18) col = Math.abs(pd) > 5 || z > 16.5 ? '#6b432e' : (Math.abs(Math.abs(pd) - 2.5) < .6 && z > 3 && z < 15 ? '#8f5a36' : '#b0683c');
+    if (Math.abs(pd + 3.5) < .8 && Math.abs(z - 8) < 1) col = '#f8cf6a';
+    const rr = Math.hypot(pd, z - (H + 6)); if (rr < 3.6) col = rr > 2.4 ? '#8a5a3c' : (pd + z - H - 6 < 0 ? '#a8d8f0' : '#c8e8f8');
+    return [di, b, z, col];
+  });
+  // 屋頂靠近鏡頭的那一面：從屋簷（比牆頂低一點、往外伸一點）鋪到屋脊，瓦片一排排交錯
+  const b0 = dj + .22, z0 = H - Rf * .22 / jm;
+  surf(-.16, di + .16, 1 / 44, 0, 1, 1 / 90, (a, t) => {
+    const row = Math.floor(t * 8), ft = t * 8 - row, fa = (a * 3.2 + (row % 2) * .5) % 1;
+    let col = row % 2 ? '#c9584c' : '#d4675a';
+    if (ft < .16 || (fa + 1) % 1 < .1) col = '#a2423c';
+    if (t > .95) col = '#e8887a'; if (t < .04) col = '#8a3a36';
+    if (a > di + .08) col = '#8a3a36';
+    return [a, b0 + (jm - b0) * t, z0 + (H + Rf - z0) * t, col];
+  });
+  // 煙囪：一個小方柱
+  const [a0, a1, cb0, cb1, cz0, cz1] = [.9, 1.45, 1.75, 2.3, H + 6, H + Rf + 6];
+  surf(a0, a1, 1 / 40, cz0, cz1, .5, (a, z) => [a, cb1, z, z > cz1 - 2 ? '#8a8278' : Math.floor(z / 3) % 2 ? '#a8736a' : '#b8837a']);
+  surf(cb0, cb1, 1 / 40, cz0, cz1, .5, (b, z) => [a1, b, z, z > cz1 - 2 ? '#a8a098' : Math.floor(z / 3) % 2 ? '#c8938a' : '#d8a39a']);
+  surf(a0, a1, 1 / 40, cb0, cb1, 1 / 40, (a, b) => [a, b, cz1, '#5a4a52']);
+}));
+
+// 作物：四種，三個階段（剛發芽、長葉、可以採收）
+const CROPS = [
+  { name: '紅蘿蔔', coin: 2, ripe: c => { R(c, '#e88a3c', 3, 6, 3, 2); R(c, '#c96f2c', 4, 8, 1, 1); for (const [x, y, h] of [[1, 2, 4], [3, 0, 6], [5, 1, 5], [7, 3, 3]]) R(c, x % 2 ? '#57a556' : '#79c268', x, y, 1, h); } },
+  { name: '高麗菜', coin: 3, ripe: c => { blob(c, '#79c268', 5, 5, 5, 3); blob(c, '#a8dc8c', 5, 4, 3, 2); R(c, '#57a556', 1, 7, 8, 1); R(c, '#d0f0b0', 4, 3, 2, 1); R(c, '#57a556', 5, 4, 1, 3); } },
+  { name: '番茄', coin: 4, ripe: c => { R(c, '#8a5a3c', 4, 0, 1, 11); blob(c, '#57a556', 5, 5, 4, 4); R(c, '#79c268', 3, 2, 3, 2);
+      for (const [x, y] of [[2, 4], [6, 3], [5, 7], [1, 8]]) { R(c, '#e2574c', x, y, 2, 2); R(c, '#f08a7a', x, y, 1, 1); } } },
+  { name: '南瓜', coin: 5, ripe: c => { blob(c, '#57a556', 3, 8, 3, 1); blob(c, '#e8963c', 6, 6, 5, 3); R(c, '#c9742c', 4, 4, 1, 5); R(c, '#c9742c', 8, 4, 1, 5); R(c, '#f4b468', 2, 4, 1, 2); R(c, '#57a556', 6, 1, 1, 2); R(c, '#57a556', 6, 0, 2, 1); } },
+];
+const SPROUT = outlined(mk(3, 3, c => { R(c, '#79c268', 1, 1, 1, 2); R(c, '#79c268', 0, 0, 1, 1); R(c, '#79c268', 2, 0, 1, 1); }));
+const LEAFY = outlined(mk(7, 6, c => { R(c, '#57a556', 3, 2, 1, 4); R(c, '#79c268', 1, 1, 2, 2); R(c, '#79c268', 4, 0, 2, 2); R(c, '#57a556', 0, 3, 2, 1); R(c, '#57a556', 5, 3, 2, 1); }));
+for (const k of CROPS) k.spr = outlined(mk(11, 11, k.ripe));
+
+// 綿羊和雞：各兩格走路畫格，向左是向右的鏡射
+const SHEEP_C = { w: '#fdf6ea', s: '#d8ccbc', f: '#5a4652', e: '#ffffff', l: '#5a4652', p: '#f0a8a8' };
+const sheepRows = legs => ['...wwwwwww.....', '.wwwwwwwwwwpf..', 'wwwwwwwwwwffff.', 'wwwwwwwwwwfeff.', 'wwwwwwwwwwwfff.', 'swwwwwwwwwwsf..', '.sswwwwwwwss...', '..sssssssss....', ...legs];
+const SHEEP = [['..l.l...l.l....', '..l.l...l.l....'], ['...l.l...l.l...', '..l..l..l..l...']].map(l => outlined(grid(sheepRows(l), SHEEP_C)));
+const CHICK_C = { r: '#e2574c', w: '#fffaf0', s: '#e6dcc8', k: '#2a2130', o: '#f0a03c', y: '#f0a03c' };
+const chickRows = legs => ['.....rr..', '....www..', '....wkwo.', '.w..www..', '.wwwwws..', '.wwwwws..', '..ssss...', ...legs];
+const CHICK = [['...y.y...', '...y.y...'], ['..y...y..', '...y.y...']].map(l => outlined(grid(chickRows(l), CHICK_C)));
+const both = a => ({ right: a, left: a.map(flip) });
+const SHEEP_S = both(SHEEP), CHICK_S = both(CHICK);
+
+// ---------- 擺放 ----------
+for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
+  if (playable(i - S, j - S)) { if (isFence(i, j)) statics.push({ i: i + .5, j: j + .5, spr: fencePiece(i, j), ax: 17, ay: 20 }); continue; }
+  const r = hash(i * 3 + 1, j * 5 + 2);                    // 外圍的樹林
+  if (r < .72) put(i, j, r < .3 ? treePine : treeRound, r < .3 ? 12 : 14, r < .3 ? 39 : 36);
+}
+for (const [i, j, p] of [[5, 4, 0], [4, 9, 1], [6, 11, 0], [21, 5, 0], [22, 6, 1], [20, 4, 0], [23, 14, 0], [22, 22, 1], [16, 23, 0], [5, 22, 0], [9, 22, 1], [12, 4, 0], [23, 9, 0], [15, 4, 1], [4, 21, 1]])
+  { put(i + S, j + S, p ? treePine : treeRound, p ? 12 : 14, p ? 39 : 36); groundShadow(i + S + .5, j + S + .5, 9, 4); }
+for (const [i, j] of [[13, 12], [22, 16], [16, 22], [10, 11], [4, 12], [12, 9], [22, 8]]) { put(i + S, j + S, bush, 9, 10); groundShadow(i + S + .5, j + S + .5, 7, 3); }
+put(12 + S, 10 + S, well, 10, 22); groundShadow(12.5 + S, 10.5 + S, 8, 3);
+put(6 + S, 14 + S, hay, 9, 11); put(7 + S, 14 + S, hay, 9, 11);
+
+const crops = [];
+for (let i = GARDEN.i0; i <= GARDEN.i1; i++) for (let j = GARDEN.j0; j <= GARDEN.j1; j += 2) {
+  const kind = CROPS[((j - GARDEN.j0) / 2 + Math.floor((i - GARDEN.i0) / 3)) % CROPS.length];
+  crops.push({ i: i + S + .5, j: j + S + .5, kind, stage: Math.floor(hash(i, j) * 3), t: hash(j, i) * 8 });
+}
+const zone = (i0, i1, j0, j1) => ({ i0: i0 + S, i1: i1 + S, j0: j0 + S, j1: j1 + S });
+const critter = (kind, z, n) => Array.from({ length: n }, (_, k) => ({ kind, z, i: z.i0 + hash(k, n) * (z.i1 - z.i0), j: z.j0 + hash(n, k) * (z.j1 - z.j0),
+  ti: 0, tj: 0, wait: hash(k, 7) * 3, moving: false, face: 'right', hop: 0 }));
+const sheep = critter('sheep', zone(6.5, 11.5, 15.6, 19.5), 4);
+const chicks = critter('chick', zone(12.5, 17.5, 5.2, 6.4), 3);
+
+// ---------- 角色：迷你更衣室的分層素材，用斜俯視那一組 ----------
+const CAM = 'tilt';
+const DEFAULT = {
+  people: { skin: 'peach', eyes: 'green', clothes: 'overalls_denim', hair: 'twin_ginger', extra: 'strawhat_red' },
+  pets: { coat: 'dog_floppy_cream', marks: 'patch_dark', eyes: 'brown', collar: 'bandana_red', extra: 'none' },
+};
+function savedLook(set) {                                  // 更衣室存下來的造型；缺項目或名稱對不上就用預設
+  const s = store.get('mdr.look.' + set, null), T = window.SETS[set];
+  return s && T.order.every(k => T.slots[k][s[k]]) ? s : DEFAULT[set];
+}
+const LOOK = { people: savedLook('people'), pets: savedLook('pets') };
+const imgs = {}, scratch = {};
+function img(set, s, name) {
+  const k = (set === 'pets' ? 'pets/' : '') + 'layers/' + CAM + '/' + s + '/' + name + '.png';
+  if (!imgs[k]) { imgs[k] = new Image(); imgs[k].src = k; }
+  return imgs[k];
+}
+function compose(set, a, f, d) {                           // 疊圖後加輪廓線，回傳一張 1x 的暫存畫布
+  const T = window.SETS[set], [w, h] = T.frame;
+  const sc = scratch[set] ||= [mk(w, h, () => {}), mk(w, h, () => {})];
+  const row = T.directions.indexOf(d) * Object.keys(T.animations).length + T.animations[a].row, x = sc[0].getContext('2d');
+  x.clearRect(0, 0, w, h);
+  for (const s of T.order) { const im = img(set, s, LOOK[set][s]); if (im.complete && im.naturalWidth) x.drawImage(im, f * w, row * h, w, h, 0, 0, w, h); }
+  const o = sc[1].getContext('2d');
+  o.globalCompositeOperation = 'source-over'; o.clearRect(0, 0, w, h);
+  for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) o.drawImage(sc[0], dx, dy);
+  o.globalCompositeOperation = 'source-in'; o.fillStyle = T.outline; o.fillRect(0, 0, w, h);
+  o.globalCompositeOperation = 'source-over'; o.drawImage(sc[0], 0, 0);
+  return sc[1];
+}
+const DIR8 = ['right', 'down_right', 'down', 'down_left', 'left', 'up_left', 'up', 'up_right'];   // 畫面上的角度，從向右開始順時針
+const dirOf = (sx, sy) => DIR8[(Math.round(Math.atan2(sy, sx) / (Math.PI / 4)) + 8) % 8];
+const player = { i: 12.6 + S, j: 7.5 + S, dir: 'down_right', anim: 'idle', t: 0 };
+const dog = { i: 13.4 + S, j: 8.2 + S, dir: 'down_left', anim: 'idle', t: 0 };
+
+// 在畫面上以 (sx, sy) 的方向走 dist 個像素（垂直方向只算一半，等角投影看起來才是等速）；分 i、j 兩軸檢查，撞到就沿著滑
+function walk(e, sx, sy, dist, r = .22) {
+  const n = Math.hypot(sx, sy) || 1, vx = sx / n * dist, vy = sy / n * dist * .5;
+  const di = vx / 32 + vy / 16, dj = vy / 16 - vx / 32;
+  const free = (i, j) => !blocked(i - r, j - r) && !blocked(i + r, j - r) && !blocked(i - r, j + r) && !blocked(i + r, j + r);
+  let moved = false;
+  if (free(e.i + di, e.j)) { e.i += di; moved = true; }
+  if (free(e.i, e.j + dj)) { e.j += dj; moved = true; }
+  return moved;
+}
+
+// ---------- 輸入 ----------
+const keys = new Set();
+let target = null, pointerDown = false, coins = store.get('mdr.coins', 0);
+$('coins').textContent = coins;
+// 用實體按鍵的位置（e.code）判斷：注音等輸入法開著時，e.key 會變成 Process 或注音符號，用 e.key 會收不到 WASD
+const CODES = { ArrowUp: 'up', KeyW: 'up', ArrowDown: 'down', KeyS: 'down', ArrowLeft: 'left', KeyA: 'left', ArrowRight: 'right', KeyD: 'right',
+                ShiftLeft: 'run', ShiftRight: 'run', Space: 'act', Enter: 'act', NumpadEnter: 'act', KeyE: 'act' };
+const KEYS = { ArrowUp: 'up', w: 'up', ArrowDown: 'down', s: 'down', ArrowLeft: 'left', a: 'left', ArrowRight: 'right', d: 'right', Shift: 'run', ' ': 'act', Enter: 'act', e: 'act' };
+const keyOf = e => CODES[e.code] || KEYS[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+addEventListener('keydown', e => {
+  if (e.metaKey || e.ctrlKey || e.altKey) return;
+  const k = keyOf(e);
+  if (!k) return;
+  if (k === 'act' && e.target.closest && e.target.closest('a, button')) return;   // 焦點在按鈕或連結上時，空白鍵和 Enter 留給它
+  e.preventDefault();
+  if (k === 'act') { if (!e.repeat) act(); } else { keys.add(k); if (k !== 'run') target = null; }
+}, true);
+addEventListener('keyup', e => keys.delete(keyOf(e)), true);
+addEventListener('blur', () => keys.clear());
+const cv = $('game'), ctx = cv.getContext('2d');
+let Z = 3, VW = 320, VH = 200, camX = 0, camY = 0;
+function resize() {
+  Z = Math.max(2, Math.min(6, Math.floor(Math.sqrt(innerWidth * innerHeight / (340 * 220)))));   // 整數倍；畫面裡大約看得到 340×220 個場景像素
+  VW = Math.ceil(innerWidth / Z); VH = Math.ceil(innerHeight / Z);
+  cv.width = VW; cv.height = VH; cv.style.width = VW * Z + 'px'; cv.style.height = VH * Z + 'px'; ctx.imageSmoothingEnabled = false;
+}
+addEventListener('resize', resize); resize();
+const toWorld = e => { const x = e.clientX / Z + camX, y = e.clientY / Z + camY; return { i: x / 32 + y / 16, j: y / 16 - x / 32 }; };
+cv.addEventListener('pointerdown', e => { focus(); pointerDown = true; target = toWorld(e); cv.setPointerCapture(e.pointerId); });
+cv.addEventListener('pointermove', e => { if (pointerDown) target = toWorld(e); });
+cv.addEventListener('pointerup', () => pointerDown = false);
+cv.addEventListener('pointercancel', () => pointerDown = false);
+
+// ---------- 互動 ----------
+const dist = (a, i, j) => Math.hypot(a.i - i, a.j - j);
+function floatText(text, i, j, z = 26) {
+  const [x, y] = iso(i, j), e = Object.assign(document.createElement('div'), { className: 'float', textContent: text });
+  e.style.left = (x - camX) * Z - 8 + 'px'; e.style.top = (y - z - camY) * Z + 'px';
+  document.body.append(e); setTimeout(() => e.remove(), 900);
+}
+function nearest() {                                       // 現在按空白鍵會做什麼
+  if (dist(player, ...DOOR) < 1.25) return { label: '進入迷你更衣室', run: () => location.href = $('dress').href };
+  let best = null, bd = 1.1;
+  for (const c of crops) if (c.stage === 2) { const d = dist(player, c.i, c.j); if (d < bd) { bd = d; best = c; } }
+  if (best) return { label: '採收' + best.kind.name, run: () => { best.stage = 0; best.t = 0; coins += best.kind.coin; $('coins').textContent = coins; store.set('mdr.coins', coins); floatText('+' + best.kind.coin, best.i, best.j, 14); } };
+  for (const a of [...sheep, ...chicks]) if (dist(player, a.i, a.j) < 1.1)
+    return { label: a.kind === 'sheep' ? '摸摸綿羊' : '摸摸小雞', run: () => { a.hop = 1; a.wait = 1.2; a.moving = false; floatText('♥', a.i, a.j, 18); } };
+  if (dist(player, dog.i, dog.j) < 1) return { label: '摸摸' + (LOOK.pets.coat.startsWith('cat') ? '貓咪' : '狗狗'), run: () => floatText('♥', dog.i, dog.j, 20) };
+  return null;
+}
+let action = null;
+const act = () => action && action.run();
+$('act').onclick = act;
+
+// ---------- 每一格 ----------
+function stepCritter(a, dt) {
+  a.hop = Math.max(0, a.hop - dt * 3);
+  if (a.wait > 0) { a.wait -= dt; if (a.wait <= 0) { a.ti = a.z.i0 + Math.random() * (a.z.i1 - a.z.i0); a.tj = a.z.j0 + Math.random() * (a.z.j1 - a.z.j0); a.moving = true; } return; }
+  const [x0, y0] = iso(a.i, a.j), [x1, y1] = iso(a.ti, a.tj), sx = x1 - x0, sy = (y1 - y0) * 2;
+  if (Math.hypot(sx, sy) < 2 || !walk(a, sx, sy, (a.kind === 'sheep' ? 12 : 18) * dt, .2)) { a.moving = false; a.wait = 1 + Math.random() * 4; return; }
+  if (Math.abs(sx) > 1) a.face = sx > 0 ? 'right' : 'left';
+}
+// 模擬固定每 1/60 秒走一步，速度是 60 的倍數，所以小人每一步剛好移動整數個像素，畫面捲動的節奏才會平均
+const STEP = 1 / 60, WALK = 60, RUN = 120;
+let last = performance.now(), clock = 0, acc = 0;
+function step(dt) {
+  clock += dt;
+
+  // 小人：鍵盤優先，否則朝點的位置走
+  let sx = (keys.has('right') ? 1 : 0) - (keys.has('left') ? 1 : 0);
+  let sy = (keys.has('down') ? 1 : 0) - (keys.has('up') ? 1 : 0);
+  let run = keys.has('run'), gain = Math.hypot(sx, sy);      // 鍵盤斜走時兩個方向都用全速：每步橫 1 格、直 0.5 格，剛好沿著地磚的邊
+  if (!sx && !sy && target) {
+    const [x0, y0] = iso(player.i, player.j), [x1, y1] = iso(target.i, target.j);
+    sx = x1 - x0; sy = (y1 - y0) * 2;
+    const far = Math.hypot(sx, sy);
+    gain = 1;
+    if (far < 3) { sx = sy = 0; target = null; } else run = run || far > 110;
+  }
+  const was = player.anim;
+  if (sx || sy) {
+    player.dir = dirOf(sx, sy);
+    const ok = walk(player, sx, sy, (run ? RUN : WALK) * gain * dt);
+    player.anim = ok ? (run ? 'run' : 'walk') : 'idle';
+    if (!ok && !pointerDown) target = null;
+  } else player.anim = 'idle';
+  if (player.anim !== was) player.t = 0;
+  player.t += dt;
+
+  // 夥伴：離太遠就跟上來，再遠就直接出現在旁邊
+  { const [x0, y0] = iso(dog.i, dog.j), [x1, y1] = iso(player.i, player.j), dx = x1 - x0, dy = (y1 - y0) * 2, far = Math.hypot(dx, dy), w = dog.anim;
+    if (far > 260) { dog.i = player.i - .6; dog.j = player.j + .4; }
+    else if (far > (dog.anim === 'idle' ? 32 : 24)) {      // 速度跟距離成正比，跟在後面時會穩定在同一個速度，不會走走停停
+      const v = Math.min(RUN + 12, (far - 20) * 4);
+      dog.dir = dirOf(dx, dy); dog.anim = walk(dog, dx, dy, v * dt, .18) ? (v > 84 ? 'run' : 'walk') : 'idle';
+    } else dog.anim = 'idle';
+    if (dog.anim !== w) dog.t = 0; dog.t += dt; }
+
+  for (const a of sheep) stepCritter(a, dt);
+  for (const a of chicks) stepCritter(a, dt);
+  for (const c of crops) if (c.stage < 2 && (c.t += dt) > 9) { c.stage++; c.t = 0; }
+}
+function tick(now) {
+  acc += Math.min(.1, (now - last) / 1000); last = now;
+  for (let n = 0; n < 5 && acc >= STEP * .75; n++) { step(STEP); acc -= STEP; }   // 0.75：螢幕更新時間有一點誤差時，也不會這格走零步、下格走兩步
+  if (acc > STEP) acc = 0;
+
+  // 鏡頭跟著小人，不超出地圖。先把小人的位置取成整數再算鏡頭，兩邊就不會各自進位、差一格地抖
+  const [px, py] = iso(player.i, player.j);
+  camX = Math.max(-OX, Math.min(OX - VW, Math.round(px) - (VW >> 1))); camY = Math.max(0, Math.min(N * 16 - VH, Math.round(py) - 14 - (VH >> 1)));
+
+  R(ctx, '#2f6a48', 0, 0, VW, VH);
+  ctx.drawImage(ground, -camX - OX, -camY);
+  for (let k = 0; k < 14; k++) {                           // 池塘的水光
+    const i = POND[0] + S + (hash(k, Math.floor(clock * 1.5)) - .5) * 4, j = POND[1] + S + (hash(Math.floor(clock * 1.5), k) - .5) * 4;
+    if (inPond(i, j, -.5)) { const [x, y] = iso(i, j); R(ctx, '#d4f0fc', Math.round(x) - camX, Math.round(y) - camY, 3, 1); }
+  }
+
+  // 收集畫面內的物件，依深度（i + j）由遠到近畫。農舍佔好幾格，所以分三段：農舍後面的、農舍、農舍前面的。
+  const list = [];
+  const add = (i, j, spr, ax, ay, lift = 0, shadow = 0) => {
+    const [x, y] = iso(i, j), dx = Math.round(x) - camX - ax, dy = Math.round(y) - camY - ay;
+    if (dx > VW || dy > VH + 20 || dx + spr.width < 0 || dy + spr.height < 0) return;
+    list.push({ i, j, spr, dx, dy: dy - lift, shadow, sx: Math.round(x) - camX, sy: Math.round(y) - camY });
+  };
+  for (const s of statics) add(s.i, s.j, s.spr, s.ax, s.ay);
+  for (const c of crops) { const spr = c.stage === 0 ? SPROUT : c.stage === 1 ? LEAFY : c.kind.spr; add(c.i, c.j, spr, spr.width >> 1, spr.height - 2); }
+  for (const a of sheep) add(a.i, a.j, SHEEP_S[a.face][a.moving ? Math.floor(clock * 5) % 2 : 0], 8, 11, Math.round(Math.sin(a.hop * Math.PI) * 4), 6);
+  for (const a of chicks) add(a.i, a.j, CHICK_S[a.face][a.moving ? Math.floor(clock * 8) % 2 : 0], 5, 9, Math.round(Math.sin(a.hop * Math.PI) * 3), 3);
+  const actor = (e, set, shadow) => {
+    const T = window.SETS[set], A = T.animations[e.anim], f = Math.floor(e.t * A.fps) % A.frames;
+    add(e.i, e.j, { width: T.frame[0], height: T.frame[1], actor: [set, e.anim, f, e.dir] }, T.anchor[0], T.anchor[1], 0, shadow);
+  };
+  actor(dog, 'pets', 6); actor(player, 'people', 5);
+  list.sort((a, b) => (a.i + a.j) - (b.i + b.j));
+  const paint = o => {
+    if (o.shadow) blob(ctx, 'rgba(40,70,40,.3)', o.sx, o.sy, o.shadow, 2);
+    ctx.drawImage(o.spr.actor ? compose(...o.spr.actor) : o.spr, o.dx, o.dy);
+  };
+  const behind = o => o.i < HOUSE.i1 && o.j < HOUSE.j1;
+  for (const o of list) if (behind(o)) paint(o);
+  { const [x, y] = iso(HOUSE.i0, HOUSE.j0); ctx.drawImage(house, Math.round(x) - camX - HAX - 1, Math.round(y) - camY - HAY - 1); }
+  for (const o of list) if (!behind(o)) paint(o);
+
+  const next = nearest();
+  if ((next && next.label) !== (action && action.label)) { $('act').hidden = !next; if (next) $('actlabel').textContent = next.label; }
+  action = next;
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+</script>
+<script type="module" src="../../site/work-nav.js"></script>
+<script type="module" src="./src/info.js"></script>
+</body>
+</html>

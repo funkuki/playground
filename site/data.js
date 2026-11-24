@@ -230,20 +230,20 @@ export const WORKS = [
 // 作品頁放在 others/<id>/，一樣要在 vite.config.js 加入口；tool 是卡片上標出的製作工具。
 export const OTHERS = [
   {
-    id: 'mini-dressing-room',
-    title: '迷你更衣室',
-    subtitle: '分層像素紙娃娃',
-    en: 'Layered Pixel Paper Doll',
-    href: './others/mini-dressing-room/',
-    cover: './site/covers/mini-dressing-room.jpg',
-    preview: './site/previews/mini-dressing-room.mp4',
+    id: 'mini-farm',
+    title: '迷你牧場',
+    subtitle: '等角像素小農場',
+    en: 'Isometric Pixel Farm',
+    href: './others/mini-farm/',
+    cover: './site/covers/mini-farm.jpg',
+    preview: './site/previews/mini-farm.mp4',
     tool: 'Python + Canvas',
     toolColor: '#a8687a',
-    badgeFocus: '24.5% 48%', // 對準試穿鏡裡小人的臉
+    badgeFocus: '49.5% 53%', // 對準小人的臉
     kind: '互動',
     date: '2026.11.24',
-    desc: '幫 18×24 格的像素小人換裝。膚色、眼睛、衣服、頭髮、配件五張圖層共用同一套畫格，疊起來就是一個角色；八個方向、三種視角，還能切到貓和狗。',
-    tech: ['分層精靈圖', '共用畫格', '合成時才加輪廓線', '八方向 × 三視角', 'Canvas 2D'],
+    desc: '等角視角的像素小牧場，有農舍、菜園、圍著柵欄的牧場和池塘。操作 18×24 格的像素小人走動、採收、摸摸動物；到農舍的迷你更衣室用五張圖層幫小人和貓狗換裝，造型會帶回牧場。',
+    tech: ['等角地圖', '分層精靈圖', '共用畫格', '依深度排序遮擋', 'Canvas 2D'],
   },
   {
     id: 'cat-pounce',

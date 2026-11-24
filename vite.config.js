@@ -24,7 +24,9 @@ export default defineConfig({
         'alice-margins': resolve(root, 'works/alice-margins/index.html'),
         // Others：不是 three.js 的作品
         'others/cat-pounce': resolve(root, 'others/cat-pounce/index.html'),
-        'others/mini-dressing-room': resolve(root, 'others/mini-dressing-room/index.html'),
+        'others/mini-farm': resolve(root, 'others/mini-farm/index.html'),
+        'others/mini-farm/dressing-room': resolve(root, 'others/mini-farm/dressing-room.html'),
+        'others/mini-dressing-room': resolve(root, 'others/mini-dressing-room/index.html'), // 舊網址，轉到上面的更衣室
       },
     },
   },

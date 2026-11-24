@@ -1,6 +1,6 @@
-// 錄「迷你更衣室」的首頁預覽短片（720×450、24fps、8 秒）和封面。
+// 錄「迷你牧場」的首頁預覽短片（720×450、24fps、8 秒）和封面。
 // 先讓來源頁在 http://localhost:8781 跑起來（pixel 專案的 tiny-layered：python3 -m http.server 8781 --directory tiny_layered_test），再執行：
-//   node --experimental-websocket tools/record-mini-dressing-room.mjs
+//   node --experimental-websocket tools/record-mini-farm.mjs
 // 做法：用無頭 Chrome 開頁面，把 requestAnimationFrame、performance.now、Math.random 換成自己控制的版本，
 // 一格一格推進時間再截圖，所以每次錄出來的內容都一樣。最後用 ffmpeg 合成 mp4。
 import { spawn, execFileSync } from 'node:child_process';
@@ -8,21 +8,23 @@ import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 
-const URL_ = process.argv[2] || 'http://localhost:8781/';
+const URL_ = process.argv[2] || 'http://localhost:8781/farm.html';
 const ROOT = resolve(import.meta.dirname, '..');
-const OUT = join(ROOT, 'public/site/previews/mini-dressing-room.mp4');
-const COVER = join(ROOT, 'public/site/covers/mini-dressing-room.jpg');
+const OUT = join(ROOT, 'public/site/previews/mini-farm.mp4');
+const COVER = join(ROOT, 'public/site/covers/mini-farm.jpg');
 const FPS = 24, FRAMES = 192, W = 1200, H = 750, PORT = 9333;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-// 第幾格做什麼：Y 隨機換裝、→ 轉向、↑ 換視角，中段切到跑步再切回走路
-const KEY = (key) => `dispatchEvent(new KeyboardEvent('keydown', { key: '${key}' }))`;
-const ANIM = (label) => `[...document.querySelectorAll('#anims button')].find(b => b.textContent.includes('${label}')).click()`;
-const ACTIONS = {
-  18: KEY('y'), 30: KEY('ArrowRight'), 40: KEY('ArrowRight'), 52: KEY('y'), 64: KEY('ArrowRight'), 74: KEY('ArrowRight'),
-  86: KEY('y'), 96: ANIM('跑步'), 104: KEY('ArrowRight'), 112: KEY('ArrowRight'), 122: KEY('y'), 132: KEY('ArrowUp'),
-  142: KEY('ArrowRight'), 150: KEY('ArrowRight'), 158: KEY('y'), 166: ANIM('走路'), 174: KEY('ArrowDown'), 182: KEY('y'),
-};
+// 第幾格做什麼：D 按下、U 放開（用 e.code）。Space 是互動，每隔幾格按一次，旁邊有成熟的作物或動物才會有反應
+const D = (...codes) => codes.map((c) => `dispatchEvent(new KeyboardEvent('keydown', { code: '${c}', key: '${c}' }))`).join(';');
+const U = (...codes) => codes.map((c) => `dispatchEvent(new KeyboardEvent('keyup', { code: '${c}', key: '${c}' }))`).join(';');
+const ACTIONS = JSON.parse(process.env.ACTIONS || 'null') || {};
+if (!process.env.ACTIONS) {
+  const R = 'ArrowRight', L = 'ArrowLeft', Dn = 'ArrowDown', Up = 'ArrowUp';
+  Object.assign(ACTIONS, ROUTE(D, U, R, L, Dn, Up));
+  for (let f = 42; f < FRAMES; f += 6)   // 一開始站在農舍門口，太早按會進更衣室
+   ACTIONS[f] = (ACTIONS[f] ? ACTIONS[f] + ';' : '') + D('Space') + ';' + U('Space');
+}
 
 const INJECT = `
   { let s = 20261124; Math.random = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s);
@@ -32,6 +34,13 @@ const INJECT = `
   window.requestAnimationFrame = (f) => __q.push(f);
   window.__step = (t) => { __now = t; const q = __q; __q = []; for (const f of q) f(t); };
 `;
+
+// 路線：出門往右下走到菜園，沿著菜園採收，再跑到牧場
+function ROUTE(D, U, R, L, Dn, Up) {
+  return {
+    10: D(R, Dn), 34: U(R), 62: D(L), 86: U(Dn), 100: D('ShiftLeft'), 124: U(L) + ';' + D(Dn), 140: U('ShiftLeft', Dn) + ';' + D(R), 160: U(R),
+  };
+}
 
 const dir = mkdtempSync(join(tmpdir(), 'mdr-'));
 const chrome = spawn('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', [
@@ -64,12 +73,11 @@ try {
   await send('Page.addScriptToEvaluateOnNewDocument', { source: INJECT });
   await send('Page.navigate', { url: URL_ });
   await sleep(2500);                                  // 等字型、圖層和版面排好
-  // 衣櫃縮圖每 300 ms 才重畫一次，先把時間推到 400 讓它畫出來，再回到 0 開始錄
-  for (let k = 0; k < 4; k++) { await run('__step(400)'); await sleep(150); }
+  await run('__step(0)'); await sleep(300);          // 先畫一格，讓圖層開始載入
 
   for (let f = 0; f < FRAMES; f++) {
     const t = (f * 1000) / FPS;
-    if (ACTIONS[f]) { await run(ACTIONS[f]); await run(`__step(${t})`); await sleep(250); }   // 換裝後等新圖層載完
+    if (ACTIONS[f]) await run(ACTIONS[f]);
     await run(`__step(${t})`);
     await sleep(30);
     const { data } = await send('Page.captureScreenshot', { format: 'png' });

@@ -24,4 +24,4 @@
 2. 在 `vite.config.js` 的 `input` 加 `'others/<id>'` 入口
 3. 封面和預覽短片放 `public/site/covers/`、`public/site/previews/`，在 `site/data.js` 的 `OTHERS` 加一筆（`tool` 是卡片上「made with」標出的工具）
 
-`others/mini-dressing-room/` 是從 `../pixel/tiny_layered_test/` 同步過來的（頁面加上 playground 外框，圖層和字型放 `public/others/mini-dressing-room/`）。來源有改動時重跑 `python3 tools/sync-mini-dressing-room.py`，不要直接改這兩個資料夾。封面和預覽短片用 `node --experimental-websocket tools/record-mini-dressing-room.mjs` 重錄（要先讓來源頁在 localhost:8781 跑起來）。
+`others/mini-farm/` 是從 `../pixel/tiny_layered_test/` 同步過來的：`farm.html`（迷你牧場）是主頁 `index.html`，`index.html`（迷你更衣室）是 `dressing-room.html`；頁面加上 playground 外框，圖層和字型放 `public/others/mini-farm/`。舊網址 `others/mini-dressing-room/` 只剩一頁轉址。來源有改動時重跑 `python3 tools/sync-mini-farm.py`，不要直接改這些資料夾。封面和預覽短片用 `node --experimental-websocket tools/record-mini-farm.mjs` 重錄（要先讓來源頁在 localhost:8781 跑起來）。
